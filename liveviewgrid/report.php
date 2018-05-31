@@ -25,10 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-//require_once($CFG->dirroot . '/mod/quiz/report/liveviewgrid/liveviewgrid_form.php');
-
 /**
- * The quiz liveviewgrid report provides a dynamic spreadsheet of the quiz.
+ * The class quiz_liveviewgrid_report provides a dynamic spreadsheet of the quiz.
+ *
  * It gives the most recent answers from all students. It does not do grading.
  * There is an option to show what the grades would be if the quiz were graded at that moment.
  *
@@ -43,16 +42,23 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     /** @var quiz_liveviewgrid_table instance of table class used for main questions stats table. */
     protected $table;
 
-    /** @var \core\progress\base|null $progress Handles progress reporting or not. */
-    protected $progress = null;
+    /** @var int either 1 or 0 in the URL get determined by the teachere to show or hide grades of answers. */
     protected $evaluate = 0;
+    /** @var int either 1 or 0 in the URL get determined by the teachere to show or hide grading key. */
     protected $showkey = 0;
+    /** @var int The time of the last student response to a question. */
     protected $qmaxtime = 0;
+    /** @var int The course module id for the quiz. */
     protected $id = 0;
+    /** @var String The string that tells the code in quiz/report which sub-module to use. */
     protected $mode = '';
+    /** @var int The context id for the quiz. */
     protected $quizcontextid = 0;
+    /** @var Array The  array of the students who are attempting the quiz. */
     protected $users = array();
+    /** @var String The answer submitted to a question. */
     protected $answer = '';
+    /** @var String The URL where the program can find out if a new response has been submitted and thus update the spreadsheet. */
     protected $graphicshashurl = '';
 
     /**
@@ -98,10 +104,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         global $DB;
         $question = array();
         foreach ($slots as $questionid => $slotvalue) {
-            $myquestion = $DB->get_record('question', array('id' => $questionid));
-            $question['qtype'][$questionid] = $myquestion->qtype;
-            $question['name'][$questionid] = $myquestion->name;
-            $question['questiontext'][$questionid] = $myquestion->questiontext;
+            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+                $question['qtype'][$questionid] = $myquestion->qtype;
+                $question['name'][$questionid] = $myquestion->name;
+                $question['questiontext'][$questionid] = $myquestion->questiontext;
+            }
         }
         return $question;
     }
@@ -142,6 +149,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
     /**
      * Display the report.
+     * @param Obj $quiz The object from the quiz table.
+     * @param Obj $cm The object from the course_module table.
+     * @param Obj $course The object from the course table.
+     * @return bool True if successful.
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG;
@@ -156,8 +167,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $answer = '';
         $graphicshashurl = '';
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
-        $context = $DB->get_record('context', array('instanceid'=>$cm->id, 'contextlevel'=>70));
-        $quizcontextid = $context->id; 
+        $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
+        $quizcontextid = $context->id;
         $slots = $this->liveviewslots($quizid);
         $question = $this->liveviewquestion($slots);
         $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
@@ -196,11 +207,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "<table border=\"1\" width=\"100%\">\n";
             $head = "<tr>";
             for ($i = 0; $i < 11; $i++) {
-                $myfraction = $i / 10;
+                $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
-                $greenpart = intval(127 * $myfraction + 128);// Add in as much green as the answer is correct.
-                $redpart = 383 - $greenpart;// This is 255 - myfraction*127.
-                $head .= "style='background-color: rgb($redpart,$greenpart,126)'";
+                $greenpart = intval( 255* $myfraction + 0);// Add in as much green as the answer is correct.
+                $redpart = intval(255 - $myfraction*255);//383 - $greenpart;// This is 255 - myfraction*127.
+                $bluepart = intval(126*$myfraction);
+                $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
                 $head .= ">$myfraction</td>";
             }
             echo $head."\n</tr></table>\n<br />";
@@ -208,17 +220,19 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($showkey) {
             liveviewshowkey();
         }
-//        $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
-//        echo "\n<br />debug170 in report and cm is ".print_r($cm);exit;
+
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         if ($showkey) {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=0'>".get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=0'>";
+            echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
         } else {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=1'>".get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=1'>";
+            echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
         }
         echo "&nbsp&nbsp&nbsp&nbsp";
         if ($evaluate) {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=0&showkey=$showkey'>".get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=0&showkey=$showkey'>";
+            echo get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
             echo get_string('gradedexplain', 'quiz_liveviewgrid')."<br />\n";
         } else {
             echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=1&showkey=$showkey' ";
@@ -229,7 +243,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
-        echo "<th>Name</th>\n";
+        echo "<th>".get_string('name', 'quiz_liveviewgrid')."</th>\n";
 
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
@@ -267,9 +281,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     if ($evaluate) {
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
-                            $greenpart = intval(127 * $myfraction + 128);// Add in as much green as the answer is correct.
-                            $redpart = 383 - $greenpart;// This is 255 - myfraction*127.
-                            echo "style='background-color: rgb($redpart,$greenpart,126)'";
+                            $greenpart = intval( 255* $myfraction + 0);// Add in as much green as the answer is correct.
+                            $redpart = intval(255 - $myfraction*255);// Add in as much red as the answer is not correct.
+                            $bluepart = intval(126*$myfraction);
+                            echo "style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                         } else {
                             echo '';
                         }
@@ -285,8 +300,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo "</tr></tbody>\n";
             }
         }
-
-
         echo "\n</table>";
 
         // Javascript to refresh the page if the contents of the table change.
