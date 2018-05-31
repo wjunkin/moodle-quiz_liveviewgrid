@@ -17,7 +17,7 @@
 /**
  * This script provides the hash telling the page to update or not.
  *
- * @package    mod_quiz
+ * @package    quiz_liveviewgrid
  * @copyright  2016 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
