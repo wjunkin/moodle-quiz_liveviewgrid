@@ -33,6 +33,6 @@ $capabilities = array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
-        'clonepermissionsfrom' =>  'mod/quiz:viewreports'
+        'clonepermissionsfrom' => 'mod/quiz:viewreports'
     )
 );
