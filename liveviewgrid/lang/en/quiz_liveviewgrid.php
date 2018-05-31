@@ -22,14 +22,15 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Liveview Spreadsheet';
-$string['quizname'] = 'Quiz name';
-$string['liveviewgrid'] = 'Liveview Spreadsheet';
-$string['hidegradekey'] = 'Hide grading key';
-$string['showgradekey'] = 'Show grading key';
-$string['showgrades'] = 'Show Grade answers would receive';
-$string['hidegrades'] = 'Hide Grade answers would receive';
-$string['showgradetitle'] = 'This will show the grade so far but does not grade the quiz';
 $string['fractioncolors'] = 'Fraction Colors';
+$string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
+$string['hidegradekey'] = 'Hide Grading Legend';
+$string['hidegrades'] = 'Hide the &quot;Grade&quot; answers would receive';
+$string['liveviewgrid'] = 'Live Report';
+$string['name'] = 'Name';
+$string['pluginname'] = 'Live Report';
+$string['quizname'] = 'Quiz name';
 $string['responses'] = 'Responses';
-$string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;grade$quot; is not the grade for the quiz.';
+$string['showgradekey'] = 'Show Grading Legend';
+$string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
+$string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
