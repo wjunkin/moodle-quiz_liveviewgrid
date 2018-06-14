@@ -209,9 +209,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             for ($i = 0; $i < 11; $i++) {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
-                $greenpart = intval( 255* $myfraction + 0);// Add in as much green as the answer is correct.
-                $redpart = intval(255 - $myfraction*255);//383 - $greenpart;// This is 255 - myfraction*127.
-                $bluepart = intval(126*$myfraction);
+                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
+                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is wrong.
+                $bluepart = intval(126 * $myfraction);
                 $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
                 $head .= ">$myfraction</td>";
             }
@@ -281,9 +281,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     if ($evaluate) {
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
-                            $greenpart = intval( 255* $myfraction + 0);// Add in as much green as the answer is correct.
-                            $redpart = intval(255 - $myfraction*255);// Add in as much red as the answer is not correct.
-                            $bluepart = intval(126*$myfraction);
+                            $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
+                            $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
+                            $bluepart = intval(126 * $myfraction);
                             echo "style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                         } else {
                             echo '';
