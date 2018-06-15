@@ -248,7 +248,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
             if (isset($question['name'][$key])) {
-                echo substr(trim(strip_tags($question['name'][$key])), 0, 80);
+                    $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php?question_id='.$key."&quizid=".$quizid;
+                    echo "<a href='".$graphurl."' target=\"_blank\">";
+                    echo substr(trim(strip_tags($question['name'][$key])), 0, 80);
+                    echo "</a>";
             }
             echo "</th>\n";
         }
