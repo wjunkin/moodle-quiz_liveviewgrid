@@ -19,7 +19,7 @@
  *
  * It takes the values given to it to create the graph.
  * It does not access any information from the Moodle site.
- * @package   quiz_liveviewpoll
+ * @package   quiz_liveviewgrid
  * @copyright  2012 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

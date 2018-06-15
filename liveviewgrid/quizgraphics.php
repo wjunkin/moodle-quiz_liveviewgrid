@@ -19,7 +19,7 @@
  *
  * An indicaton of # of responses to this question/# of student responding to this quiz instance is printed.
  * After that the histogram or the text responses are printed, depending on the question type.
- * @package   quiz_liveviewpoll
+ * @package   quiz_liveviewgrid
  * @copyright  2018 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
