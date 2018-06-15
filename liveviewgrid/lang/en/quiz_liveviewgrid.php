@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['questionis'] = 'The question is';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
