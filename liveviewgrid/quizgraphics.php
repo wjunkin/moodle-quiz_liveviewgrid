@@ -266,6 +266,6 @@ if ($qtype == 'essay') {
     }
 } else {// Only show graph if question is not an essay question.
     $graphicurl = $CFG->wwwroot."/mod/quiz/report/liveviewpoll/graph.php";
-    echo "\n<br /><img src=\"".$graphicurl.$result[1]."\"></img>";
+    echo "\n<br /><img src=\"".$graphicurl.$result[1]."&cmid=".$cm->id."\"></img>";
 }
 echo "\n</body>\n</html>";

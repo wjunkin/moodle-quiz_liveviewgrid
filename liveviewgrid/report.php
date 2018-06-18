@@ -187,14 +187,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myresponse = array();
                 $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
                 foreach ($qattemptsteps as $qattemptstep) {
-                    $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
-                    foreach ($answers as $answer) {
-                        $myresponse[$answer->name] = $answer->value;
-                    }
-                    if (count($myresponse) > 0) {
-                        $response = $mydm->get_fraction($qattempt->slot, $myresponse);
-                        $stanswers[$usrid][$qattempt->questionid] = $response[0];
-                        $stfraction[$usrid][$qattempt->questionid] = $response[1];
+                    if ($qattemptstep->state == 'complete') {
+                        $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
+                        foreach ($answers as $answer) {
+                            $myresponse[$answer->name] = $answer->value;
+                        }
+                        if (count($myresponse) > 0) {
+                            $response = $mydm->get_fraction($qattempt->slot, $myresponse);
+                            $stanswers[$usrid][$qattempt->questionid] = $response[0];
+                            $stfraction[$usrid][$qattempt->questionid] = $response[1];
+                        }
                     }
                 }
             }
