@@ -52,16 +52,18 @@ echo "\n<br />The question is ".$questiontext->questiontext;
 $qanswerids = array();
 
 // For those questions that have answers, get the possible answers and create the labels for the histogram.
-if ($order) {
-    if ($answers = $DB->get_records('question_answers', array('question' => $questionid))) {
-        $labels = '';
-        $n = 0;
-        foreach ($answers as $answer) {
-            if ($order) {
-                $qanswerids[$n] = $answer->id;// Needed for truefalse questions.
-                $labels .= "&x[$n]=".substr(strip_tags($answer->answer), 0, 15);
-                $n++;
-            }
+if ($answers = $DB->get_records('question_answers', array('question' => $questionid))) {
+    $labels = '';
+    $n = 0;
+    foreach ($answers as $answer) {
+        if ($order) {
+            $qanswerids[$n] = $answer->id;// Needed for truefalse questions.
+            $labels .= "&x[$n]=".substr(strip_tags($answer->answer), 0, 15);
+            $n++;
+        }
+        if ($questiontext->qtype == 'ddwtos') {
+            $qanswertext[$n + 1] = $answer->answer;
+            $n++;
         }
     }
 }
@@ -106,7 +108,9 @@ foreach ($quizattempts as $quizattempt) {
                         }
                     }
                     if (preg_match('/p(\d)/', $name, $matches)) {
-                        $stanswer[] = $matches[1];
+                        if ($value > 0) {
+                            $stanswer[] = $qanswertext[$value];
+                        }
                     }
                 }
             }
