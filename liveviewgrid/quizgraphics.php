@@ -25,10 +25,8 @@
  */
 
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
-require_once($CFG->dirroot.'/lib/graphlib.php');
-require_once($CFG->dirroot . '/mod/quiz/locallib.php');// Needed for class question_engine.
 $quizid = optional_param('quizid', 0, PARAM_INT);
-$questionqid = optional_param('question_id', 0, PARAM_INT);
+$questionid = optional_param('question_id', 0, PARAM_INT);
 $quiz = $DB->get_record('quiz', array('id' => $quizid));
 $course = $DB->get_record('course', array('id' => $quiz->course), '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id, false, MUST_EXIST);
@@ -39,233 +37,109 @@ if (!(has_capability('mod/quiz:manage', $contextinstance))) {
     exit;
 }
 
-/**
- * Return the id for the desired question.
- * If no question is specified in the URL, then the active question (if there is one) will be returned.
- *
- * @param int $quizid The ID for the quiz instance
- * @return int The ID for the current question.
- */
-function quiz_show_current_question_id_graphics($quizid) {
-    global $DB;
-    $questionqid = optional_param('question_id', 0, PARAM_INT);// Used if we want a specific question.
-    if ($questionqid > 0) {
-        return($questionqid);
-    } else if ($DB->record_exists('quiz_active_questions', array('quiz_id' => $quizid))) {
-        $question = $DB->get_record('quiz_active_questions', array('quiz_id' => $quizid));
-        return($question->question_id);
-    }
-    return(0);
+$questionanswerids = array();
+$multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+if (!($questiontext = $DB->get_record('question', array('id' => $questionid)))) {
+    echo "\n<br />You must submit a valid questionid";
+    exit;
 }
-
-/**
- * Return the message about the number of users answering a question.
- * If the questionqid (questionid) is set, then all responses to this question will be given.
- * Otherwise the questionid is taken from the quiz_active_questions table.
- * Then only those responses sent after the active question was modified are used.
- * The responses will be returned indexed by userid.
- * The message states who have responded this time compared to the total number of users who have responded to this question.
- *
- * @param int $quizid The ID for the quiz instance
- * @param int $questionqid The questionid that is requested. If this is set, all responses are used.
- * @return int The number of students submitting answers to this question.
- */
-function quiz_question_answers($quizid, $questionqid) {
-    global $DB;
-
-    $message = '';
-    if ($questionqid) {
-        $timesent = 0;
-        $questionid = $questionqid;
-        $questiontext = $DB->get_record('question', array('id' => $questionid));
-        $message .= get_string('questionis', 'quiz_liveviewgrid')." -> ".strip_tags($questiontext->questiontext)."\n<br />";
-
-    } else {
-        $question = $DB->get_record('quiz_active_questions', array('quiz_id' => $quizid));
-        $questionid = $question->question_id;
-        $questiontext = $DB->get_record('question', array('id' => $questionid));
-        $timesent = $question->timemodified;
-    }
-    $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-    // An array, quizattpt, that has all rows from the quiz_attempts table indexed by userid and value of the quizattemptid.
-    $quizattpt = array();
-    // An array, quizattptnow, that has the last uniqueid of an attempt sent after the question was sent, indexed by user.
-    // If they answered after the last question was sent, they must have answered the last question, so don't check questionid.
-    $quizattptnow = array();
-    // An array of the last answer that each student has given, indexed by the student id.
-    $answerdata = array();
-    foreach ($quizattempts as $quizattempt) {
-        $quizattpt[$quizattempt->userid] = $quizattempt->id;
-        if ($quizattempt->timemodified > $timesent) {
-            $quizattptnow[$quizattempt->userid] = $quizattempt->uniqueid;
-        }
-    }
-
-    foreach ($quizattptnow as $userkey => $attptnow) {
-        if ($questionattempt = $DB->get_record('question_attempts',
-            array('questionusageid' => $attptnow, 'questionid' => $questionid))) {
-            // Only consider data submitted after the $timesent variable.
-            if ($questionattempt->timemodified > $timesent) {
-                $qattempt[$userkey] = $questionattempt->id;
-                if ($questionstep = $DB->get_records('question_attempt_steps',
-                    array('questionattemptid' => $questionattempt->id))) {
-                    $stepid = $orderid = 0;// We don't want results from other attempts.
-                    foreach ($questionstep as $step) {
-                        if ($step->sequencenumber == 0) {
-                            // Might be a step that sets the order of the question.
-                            $orderid = $step->id;
-                        } else {
-                            $stepid = $step->id;
-                        }
-                    }
-                    if ($questiondata = $DB->get_records('question_attempt_step_data',
-                        array('attemptstepid' => $stepid, 'name' => 'answer'))) {
-                        if ($questiontext->qtype == 'essay') {
-                            foreach ($questiondata as $data) {
-                                $answerdata[$userkey] = $data->value;
-                            }
-                        } else if ($questiontext->qtype == 'truefalse') {
-                            $questionanswers = $DB->get_records('question_answers', array('question' => $questionid));
-                            foreach ($questionanswers as $questionanswer) {
-                                if ($questionanswer->answer == 'True') {
-                                    $myanswer[1] = $questionanswer->id;
-                                } else {
-                                    $myanswer[0] = $questionanswer->id;
-                                }
-                            }
-                            foreach ($questiondata as $data) {
-                                $answerdata[$userkey] = $myanswer[$data->value];
-                            }
-                        } else {
-                            $order = array();
-                            $answer = '';
-                            foreach ($questiondata as $data) {
-                                $answer = intval($data->value);
-                            }
-                            if ($answer > -1) {// An answer to a multichoice question has been submitted.
-                                if ($steporder = $DB->get_record('question_attempt_step_data',
-                                    array('attemptstepid' => $orderid, 'name' => '_order'))) {
-                                    $order = explode(',', $steporder->value);
-                                    $answerdata[$userkey] = $order[$answer];
-                                } else {
-                                    echo "\n<br />Unable to get the answer from question_attempt_step_data table for user $userkey";
-                                    exit;
-                                }
-                            }
-                        }
-                    } else if ($questiondata = $DB->get_records_sql('SELECT * FROM {question_attempt_step_data}
-                        WHERE attemptstepid = ? AND name LIKE ?', array( $stepid , 'choice%' ))) {
-                        if ($steporder = $DB->get_record('question_attempt_step_data',
-                            array('attemptstepid' => $orderid, 'name' => '_order'))) {
-                            unset($answerdata[$userkey]);
-                            $order = explode(',', $steporder->value);
-                            foreach ($questiondata as $data) {
-                                if (($data->value) && preg_match("/choice(\d+)/", $data->name, $matches)) {
-                                    if (isset($answerdata[$userkey])) {
-                                        $answerdata[$userkey] .= "&q&".$order[$matches[1]];
-                                    } else {
-                                        $answerdata[$userkey] = $order[$matches[1]];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    $message .= get_string('responses', 'quiz_liveviewgrid')." --> ".count($answerdata).'/'.count($quizattpt);
-    $result = array($message, $answerdata);
-    return $result;
+if (in_array($questiontext->qtype, $multitype)) {
+    $order = true;
+} else {
+    $order = false;
 }
+echo "\n<br />The question is ".$questiontext->questiontext;
+$qanswerids = array();
 
-/**
- * Return a string = number of responses to each question and labels for questions.
- *
- * If no value is supplied for $questionqid, then only answers submitted after the questions
- * was sent are displayed. If $questionqid is supplied, all the last answers are displayed.
- * @param int $quizid The id of the quiz.
- * @param int $questionqid The id of the question for which the graph is displayed.
- * @return string The number of responses to each question and labels for questions.
- */
-function quiz_count_question_codes($quizid, $questionqid) {
-    global $DB;
-
-    if ($questionqid) {
-        $questionid = $questionqid;
-    } else {
-        $question = $DB->get_record('quiz_active_questions', array('quiz_id' => $quizid));
-        $questionid = $question->question_id;
-    }
+// For those questions that have answers, get the possible answers and create the labels for the histogram.
+if ($order) {
     if ($answers = $DB->get_records('question_answers', array('question' => $questionid))) {
-        // This is not an essay question.
         $labels = '';
         $n = 0;
         foreach ($answers as $answer) {
-            // Labels are indexed by the order that they appear in the database.
-            // Data on student responses are indexed by the answerid.
-            $answerid = $answer->id;
-            $labels .= "&x[$n]=".urlencode(substr(strip_tags($answer->answer), 0, 15));
-            $data[$answerid] = 0;
-            $n ++;
+            if ($order) {
+                $qanswerids[$n] = $answer->id;// Needed for truefalse questions.
+                $labels .= "&x[$n]=".substr(strip_tags($answer->answer), 0, 15);
+                $n++;
+            }
         }
-        // Now find out how many students have given each answer.
-        $myresult = quiz_question_answers($quizid, $questionqid);
-        $message = $myresult[0];
-        $stdata = $myresult[1];
-        if (count($stdata) > 0) {
-            foreach ($stdata as $answersent) {
-                if (preg_match("/\&q\&/", $answersent)) {
-                    // This is a multichoice question with more than one selection.
-                    $multichoiceanswers = explode('&q&', $answersent);
-                    foreach ($multichoiceanswers as $mcanswer) {
-                        $data[$mcanswer] ++;
+    }
+}
+
+$stans = array();// The string of answers for each student to this question, indexed by the $userid.
+$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+foreach ($quizattempts as $quizattempt) {
+    $userid = $quizattempt->userid;
+    $uniqueid = $quizattempt->uniqueid;
+    $questionattempts = $DB->get_records('question_attempts', array('questionusageid' => $uniqueid, 'questionid' => $questionid));
+    foreach ($questionattempts as $questionattempt) {
+        $attemptid = $questionattempt->id;
+        $attemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $attemptid));
+        foreach ($attemptsteps as $attemptstep) {
+            // Every time a student submits an answer, this generates a new question_attempt_step.
+            // Submitting one answer can generate several rows in the question_attempt_step_data table.
+            $stanswer = array();// The array of questionanswerids for this student for multichoice with several answers.
+            $attemptstepid = $attemptstep->id;
+            $attemptdata = $DB->get_records('question_attempt_step_data',  array('attemptstepid' => $attemptstepid));
+            foreach ($attemptdata as $datainfo) {
+                $name = $datainfo->name;
+                $value = $datainfo->value;
+                if ($name == '_order') {
+                    // The order step_data should always occur before the answers or choices, except for truefalse.
+                    $questionanswerids = explode(',', $value);
+                } else if ($attemptstep->state == 'complete') {
+                    if ($name == 'answer') {
+                        if ($order) {
+                            if ($questiontext->qtype == 'truefalse') {
+                                $truefalseindex = 1 - $value;
+                                $stans[$userid] = $qanswerids[$truefalseindex];
+                            } else {
+                                $stans[$userid] = $questionanswerids[$value];
+                            }
+                        } else {
+                            $stans[$userid] = $value;
+                        }
                     }
+                    if (preg_match('/choice(\d)/', $name, $matches)) {
+                        if ($value > 0) {
+                            $stanswer[] = $questionanswerids[$matches[1]];
+                        }
+                    }
+                    if (preg_match('/p(\d)/', $name, $matches)) {
+                        $stanswer[] = $matches[1];
+                    }
+                }
+            }
+            if (count($stanswer)) {
+                $stans[$userid] = implode(',', $stanswer);
+            }
+        }
+    }
+}
+if ($order) {
+    $myx = array();
+    foreach ($qanswerids as $qanswerid) {
+        $myx[$qanswerid] = 0;
+    }
+    foreach ($stans as $key => $value) {
+        if (strlen($value) > 0) {
+            $values = explode(',', $value);
+            foreach ($values as $qansid) {
+                if (isset($myx[$qansid])) {
+                    $myx[$qansid] ++;
                 } else {
-                    $data[$answersent] ++;
+                    echo "\n<br />Something is wrong with answer id $qansid";
                 }
             }
         }
-        $graphinfo = "?data=".implode(",", $data).$labels."&total=10";
-        $result = array($message, $graphinfo);
-        return $result;
-    } else {
-        // Might be an essay question.
-        $myresult = quiz_question_answers($quizid, $questionqid);
-        return $myresult;
     }
-}
 
-
-echo "\n<html>\n<head><title>Quiz Graph</title>\n</head>\n<body>";
-
-$result = quiz_count_question_codes($quizid, $questionqid);
-// The first member of the result array is a statement about how many have responded.
-echo $result[0];
-
-/**
- * A function to optain the question type of a given question.
- *
- *
- * Modified by Junkin
- * @param int $questionid The id of the question
- * @return int question type
- */
-function quiz_get_question_type($questionid) {
-    global $DB;
-    $questiontype = $DB->get_record('question', array('id' => $questionid));
-    return($questiontype->qtype);
-}
-
-
-$qtype = quiz_get_question_type(quiz_show_current_question_id_graphics($quizid));
-if ($qtype == 'essay') {
-    $answers = $result[1];
-    foreach ($answers as $answer) {
-        echo "\n<br />".strip_tags($answer);
-    }
-} else {// Only show graph if question is not an essay question.
+    $graphinfo = "?data=".implode(",", $myx).$labels."&total=10";
     $graphicurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php";
-    echo "\n<br /><img src=\"".$graphicurl.$result[1]."&cmid=".$cm->id."\"></img>";
+    echo "\n<br /><img src=\"".$graphicurl.$graphinfo."&cmid=".$cm->id."\"></img>";
+} else {
+    echo "\n<br />";
+    foreach ($stans as $textanswer) {
+        echo "\n<br />".strip_tags($textanswer);
+    }
 }
-echo "\n</body>\n</html>";
