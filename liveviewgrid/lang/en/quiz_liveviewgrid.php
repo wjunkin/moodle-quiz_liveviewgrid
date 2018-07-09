@@ -22,11 +22,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['questionis'] = 'The question is';
+$string['questionis'] = 'The question is: ';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
 $string['hidegrades'] = 'Hide the &quot;Grade&quot; answers would receive';
+$string['hidenames'] = 'Hide student names.';
 $string['liveviewgrid'] = 'Live Report';
 $string['name'] = 'Name';
 $string['pluginname'] = 'Live Report';
@@ -35,3 +36,5 @@ $string['responses'] = 'Responses';
 $string['showgradekey'] = 'Show Grading Legend';
 $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
+$string['shownames'] = 'Show student names.';
+

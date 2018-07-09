@@ -27,6 +27,7 @@
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
 $quizid = optional_param('quizid', 0, PARAM_INT);
 $questionid = optional_param('question_id', 0, PARAM_INT);
+$showstudents = optional_param('showstudents', 0, PARAM_INT);
 $quiz = $DB->get_record('quiz', array('id' => $quizid));
 $course = $DB->get_record('course', array('id' => $quiz->course), '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id, false, MUST_EXIST);
@@ -48,7 +49,6 @@ if (in_array($questiontext->qtype, $multitype)) {
 } else {
     $order = false;
 }
-echo "\n<br />The question is ".$questiontext->questiontext;
 $qanswerids = array();
 
 // For those questions that have answers, get the possible answers and create the labels for the histogram.
@@ -139,11 +139,26 @@ if ($order) {
     }
 
     $graphinfo = "?data=".implode(",", $myx).$labels."&total=10";
+    echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$questiontext->questiontext;
     $graphicurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php";
     echo "\n<br /><img src=\"".$graphicurl.$graphinfo."&cmid=".$cm->id."\"></img>";
 } else {
     echo "\n<br />";
-    foreach ($stans as $textanswer) {
-        echo "\n<br />".strip_tags($textanswer);
+    $quizgraphicsurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/quizgraphics.php";
+    if ($showstudents) {
+        echo "<a href='".$quizgraphicsurl."?question_id=$questionid&quizid=$quizid&showstudents=0'>";
+        echo get_string('hidenames', 'quiz_liveviewgrid')."</a>";
+    } else {
+        echo "<a href='".$quizgraphicsurl."?question_id=$questionid&quizid=$quizid&showstudents=1'>";
+        echo get_string('shownames', 'quiz_liveviewgrid')."</a>";
+    }
+    echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$questiontext->questiontext;
+    foreach ($stans as $usr => $textanswer) {
+        echo "\n<br />";
+        if ($showstudents) {
+            $user = $DB->get_record('user', array('id' => $usr));
+            echo $user->firstname." ".$user->lastname.": ";
+        }
+        echo strip_tags($textanswer);
     }
 }
