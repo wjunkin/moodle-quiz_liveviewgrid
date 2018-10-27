@@ -31,6 +31,7 @@ $string['hidenames'] = 'Hide student names.';
 $string['liveviewgrid'] = 'Live Report';
 $string['name'] = 'Name';
 $string['pluginname'] = 'Live Report';
+$string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';
 $string['quizname'] = 'Quiz name';
 $string['responses'] = 'Responses';
 $string['showgradekey'] = 'Show Grading Legend';
