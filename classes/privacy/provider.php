@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Privacy Subsystem implementation for quiz_liveviewgrid.
+ *
+ * @package    quiz_liveviewgrid
+ * @copyright  2018 William Junkin <junkinwf@eckerd.edu>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace quiz_liveviewgrid\privacy;
 
 defined('MOODLE_INTERNAL') || die();
@@ -24,7 +32,6 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2018 William Junkin <junkinwf@eckerd.edu>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class provider implements \core_privacy\local\metadata\null_provider {
 
     /**

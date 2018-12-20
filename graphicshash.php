@@ -31,12 +31,13 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 require_login($course, true, $cm);
 $contextinstance = context_module::instance($id);
 $quizcontextid = $contextinstance->id;
-$quiztime = $DB->get_records_sql("
+$quiztime = $DB->get_record_sql("
     SELECT max(qa.timemodified)
     FROM {question_attempts} qa
     JOIN {question_usages} qu ON qu.id = qa.questionusageid
     WHERE qu.contextid = ?", array($quizcontextid));
 foreach ($quiztime as $qkey => $qtm) {
-    $qmaxtime = intval($qkey) + 1;
+    $qmaxtime = intval($qtm) + 1;
 }
+
 echo $qmaxtime;
