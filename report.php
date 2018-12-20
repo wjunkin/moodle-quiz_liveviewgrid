@@ -172,15 +172,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $slots = $this->liveviewslots($quizid);
         $question = $this->liveviewquestion($slots);
         $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-        // An array, quizattpt, that has all rows from the quiz_attempts table indexed by userid and value of the quizattemptid.
-        $quizattpt = array();
-        foreach ($quizattempts as $key => $quizattempt) {
-            $quizattpt[$quizattempt->userid] = $quizattempt->uniqueid;// Getting the latest uniqueid for each user.
-        }
         // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
         $stanswers = array();
         $stfraction = array();
-        foreach ($quizattpt as $usrid => $qubaid) {
+        foreach ($quizattempts as $key => $quizattempt) {
+            $usrid = $quizattempt->userid;
+            $qubaid = $quizattempt->uniqueid;
             $mydm = new liveview_fraction($qubaid);
             $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
             foreach ($qattempts as $qattempt) {
