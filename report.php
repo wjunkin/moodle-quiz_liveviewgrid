@@ -80,6 +80,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $quizid = $quiz->id;
         $answer = '';
         $graphicshashurl = '';
+        // Check permissions.
+        $this->context = context_module::instance($cm->id);
+        require_capability('mod/quiz:viewreports', $this->context);
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
         $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
         $quizcontextid = $context->id;
