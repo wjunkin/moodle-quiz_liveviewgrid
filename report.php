@@ -62,92 +62,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     protected $graphicshashurl = '';
 
     /**
-     * Return the greatest time that a student responded to a given quiz.
-     *
-     * This is used to determine if the teacher view of the graph should be refreshed.
-     * @param int $quizcontextid The ID for the context for this quiz.
-     * @return int The integer for the greatest time.
-     */
-    private function liveviewquizmaxtime($quizcontextid) {
-        global $DB;
-        $quiztime = $DB->get_records_sql("
-            SELECT max(qa.timemodified)
-            FROM {question_attempts} qa
-            JOIN {question_usages} qu ON qu.id = qa.questionusageid
-            WHERE qu.contextid = ?", array($quizcontextid));
-        foreach ($quiztime as $qkey => $qtm) {
-            $qmaxtime = intval($qkey) + 1;
-        }
-        return $qmaxtime;
-    }
-
-    /**
-     * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
-     * @param int $quizid The id for this quiz.
-     * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
-     */
-    private function liveviewslots($quizid) {
-        global $DB;
-        $slots = array();
-        $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-        foreach ($myslots as $key => $value) {
-            $slots[$value->questionid] = $value->slot;
-        }
-        return $slots;
-    }
-    /**
-     * Function to get the qtype, name, questiontext for each question.
-     * @param array $slots and array of slot ids indexed by question ids.
-     * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
-     */
-    private function liveviewquestion($slots) {
-        global $DB;
-        $question = array();
-        foreach ($slots as $questionid => $slotvalue) {
-            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
-                $question['qtype'][$questionid] = $myquestion->qtype;
-                $question['name'][$questionid] = $myquestion->name;
-                $question['questiontext'][$questionid] = $myquestion->questiontext;
-            }
-        }
-        return $question;
-    }
-
-    /**
-     * Return the number of users who have submitted answers to this quiz instance.
-     *
-     * @param int $quizid The ID for the quiz instance
-     * @return array The userids for all the students submitting answers.
-     */
-    private function liveview_who_sofar_gridview($quizid) {
-        global $DB;
-
-        $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-
-        foreach ($records as $records) {
-            $userid[] = $records->userid;
-        }
-        if (isset($userid)) {
-            return(array_unique($userid));
-        } else {
-            return(null);
-        }
-    }
-
-    /**
-     * Return the first and last name of a student.
-     *
-     * @param int $userid The ID for the student.
-     * @return string The last name, first name of the student.
-     */
-    protected function liveview_find_student_gridview($userid) {
-         global $DB;
-         $user = $DB->get_record('user', array('id' => $userid));
-         $name = $user->lastname.", ".$user->firstname;
-         return($name);
-    }
-
-    /**
      * Display the report.
      * @param Obj $quiz The object from the quiz table.
      * @param Obj $cm The object from the course_module table.
@@ -319,4 +233,91 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         return true;
     }
+
+    /**
+     * Return the greatest time that a student responded to a given quiz.
+     *
+     * This is used to determine if the teacher view of the graph should be refreshed.
+     * @param int $quizcontextid The ID for the context for this quiz.
+     * @return int The integer for the greatest time.
+     */
+    private function liveviewquizmaxtime($quizcontextid) {
+        global $DB;
+        $quiztime = $DB->get_records_sql("
+            SELECT max(qa.timemodified)
+            FROM {question_attempts} qa
+            JOIN {question_usages} qu ON qu.id = qa.questionusageid
+            WHERE qu.contextid = ?", array($quizcontextid));
+        foreach ($quiztime as $qkey => $qtm) {
+            $qmaxtime = intval($qkey) + 1;
+        }
+        return $qmaxtime;
+    }
+
+    /**
+     * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
+     * @param int $quizid The id for this quiz.
+     * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
+     */
+    private function liveviewslots($quizid) {
+        global $DB;
+        $slots = array();
+        $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+        foreach ($myslots as $key => $value) {
+            $slots[$value->questionid] = $value->slot;
+        }
+        return $slots;
+    }
+    /**
+     * Function to get the qtype, name, questiontext for each question.
+     * @param array $slots and array of slot ids indexed by question ids.
+     * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
+     */
+    private function liveviewquestion($slots) {
+        global $DB;
+        $question = array();
+        foreach ($slots as $questionid => $slotvalue) {
+            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+                $question['qtype'][$questionid] = $myquestion->qtype;
+                $question['name'][$questionid] = $myquestion->name;
+                $question['questiontext'][$questionid] = $myquestion->questiontext;
+            }
+        }
+        return $question;
+    }
+
+    /**
+     * Return the number of users who have submitted answers to this quiz instance.
+     *
+     * @param int $quizid The ID for the quiz instance
+     * @return array The userids for all the students submitting answers.
+     */
+    private function liveview_who_sofar_gridview($quizid) {
+        global $DB;
+
+        $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+
+        foreach ($records as $records) {
+            $userid[] = $records->userid;
+        }
+        if (isset($userid)) {
+            return(array_unique($userid));
+        } else {
+            return(null);
+        }
+    }
+
+    /**
+     * Return the first and last name of a student.
+     *
+     * @param int $userid The ID for the student.
+     * @return string The last name, first name of the student.
+     */
+    protected function liveview_find_student_gridview($userid) {
+         global $DB;
+         $user = $DB->get_record('user', array('id' => $userid));
+         $name = $user->lastname.", ".$user->firstname;
+         return($name);
+    }
+
 }
