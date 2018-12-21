@@ -24,7 +24,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/liveview_fraction.php");
+require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_fraction.php");
 /**
  * The class quiz_liveviewgrid_report provides a dynamic spreadsheet of the quiz.
  *
@@ -95,7 +95,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         foreach ($quizattempts as $key => $quizattempt) {
             $usrid = $quizattempt->userid;
             $qubaid = $quizattempt->uniqueid;
-            $mydm = new liveview_fraction($qubaid);
+            $mydm = new quiz_liveviewgrid_fraction($qubaid);
             $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
             foreach ($qattempts as $qattempt) {
                 $myresponse = array();

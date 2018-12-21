@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz liveviewgrid liveview_fraction class.
+ * Quiz liveviewgrid quiz_liveviewgrid_fraction class.
  *
  * @package   quiz_liveviewgrid
  * @copyright 2018 W. F. Junkin, Eckerd College, http://www.eckerd.edu
@@ -34,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2016 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  **/
-class liveview_fraction {
+class quiz_liveviewgrid_fraction {
     /**
      * @var question_engine_data_mapper $dm
      */
