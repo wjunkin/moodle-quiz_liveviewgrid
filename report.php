@@ -198,10 +198,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
         }
-        /**
-         * Function to display the color key when answer grades are shown.
-         */
-        function liveviewshowkey() {
+
+        if ($showkey) {
             echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
             echo "<table border=\"1\" width=\"100%\">\n";
             $head = "<tr>";
@@ -215,9 +213,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $head .= ">$myfraction</td>";
             }
             echo $head."\n</tr></table>\n<br />";
-        }
-        if ($showkey) {
-            liveviewshowkey();
         }
 
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
