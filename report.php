@@ -150,6 +150,29 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
             echo get_string('showgrades', 'quiz_liveviewgrid')."</a><br />\n";
         }
+        // CSS style for blinking 'Refresh Page!' notice.
+        echo "\n<style>";
+        echo "\n .blinking{";
+        echo "\n    animation:blinkingText 0.8s infinite;";
+        echo "\n}";
+        echo "\n @keyframes blinkingText{";
+        echo "\n    0%{     color: red;    }";
+        echo "\n    50%{    color: transparent; }";
+        echo "\n    100%{   color: red;    }";
+        echo "\n}";
+        echo "\n .blinkhidden{";
+        echo "\n    color: transparent;";
+        echo "\n}";
+        echo "\n</style>";
+
+        // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
+        echo "\n<div id=\"blink1\" class=\"blinkhidden\">Refresh Page!</div>";
+        echo "\n<script>";
+        echo "\n  function myFunction() {";
+        echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
+        echo "\n }";
+        echo "\n</script>";
+
         echo "Responses\n<br />";
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
@@ -218,14 +241,30 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         // Javascript to refresh the page if the contents of the table change.
         $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
+        // The number of seconds before checking to see if the answers have changed is the $refreshtime.
+        $refreshtime = 10;
+        $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
+        $sessiontimeout = $sessionconfig->value;
+        $maxrepeat = intval($sessiontimeout/$refreshtime);
+        // The number of refreshes without a new answer is $numrefresh.
+        $numrefresh = 0;
+        $replacetime = $refreshtime*1000;
         echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
                 \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
                 {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
+            echo "\n var numrefresh = $numrefresh;";
+            echo "\n var maxrepeat = $maxrepeat;";
             echo "\n\nfunction replace() { ";
             $t = '&t='.time();
+            echo "\n numrefresh ++;";
             echo "\n x=document.getElementById('timemodified');";
             echo "\n myname = x.getAttribute('name');";
-            echo "\nvar t=setTimeout(\"replace()\",10000);\nhttp.open(\"GET\", \"".$graphicshashurl.$t."\", true);";
+            echo "\n if(numrefresh < $maxrepeat) {";
+            echo "\n    var t=setTimeout(\"replace()\",$replacetime);";
+            echo "\n } else {";
+            echo "\n myFunction();";
+            echo "\n }";
+            echo "\nhttp.open(\"GET\", \"".$graphicshashurl.$t."\", true);";
             echo "\nhttp.onreadystatechange=function() {\nif(http.readyState == 4) {";
             echo "\n if(parseInt(http.responseText) != parseInt(myname)){";
             echo "\n    location.reload(true);";
