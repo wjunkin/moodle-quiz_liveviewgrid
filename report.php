@@ -172,7 +172,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
         echo "\n }";
         echo "\n</script>";
-
         echo "Responses\n<br />";
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
@@ -285,14 +284,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     private function liveviewquizmaxtime($quizcontextid) {
         global $DB;
-        $quiztime = $DB->get_records_sql("
+        $quiztime = $DB->get_record_sql("
             SELECT max(qa.timemodified)
             FROM {question_attempts} qa
             JOIN {question_usages} qu ON qu.id = qa.questionusageid
             WHERE qu.contextid = ?", array($quizcontextid));
-        foreach ($quiztime as $qkey => $qtm) {
-            $qmaxtime = intval($qkey) + 1;
-        }
+        $arg = 'max(qa.timemodified)';
+        $qmaxtime = intval($quiztime->$arg) + 1;
         return $qmaxtime;
     }
 
