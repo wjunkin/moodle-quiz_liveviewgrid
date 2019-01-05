@@ -244,10 +244,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $refreshtime = 10;
         $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
         $sessiontimeout = $sessionconfig->value;
-        $maxrepeat = intval($sessiontimeout/$refreshtime);
+        $maxrepeat = intval($sessiontimeout / $refreshtime);
         // The number of refreshes without a new answer is $numrefresh.
         $numrefresh = 0;
-        $replacetime = $refreshtime*1000;
+        $replacetime = $refreshtime * 1000;
         echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
                 \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
                 {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
