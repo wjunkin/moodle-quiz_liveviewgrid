@@ -34,6 +34,7 @@ $string['pluginname'] = 'Live Report';
 $string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';
 $string['quizname'] = 'Quiz name';
 $string['responses'] = 'Responses';
+$string['refreshpage'] = 'Refresh Page!';
 $string['showgradekey'] = 'Show Grading Legend';
 $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';

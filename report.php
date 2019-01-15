@@ -166,13 +166,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n</style>";
 
         // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
-        echo "\n<div id=\"blink1\" class=\"blinkhidden\">Refresh Page!</div>";
+        echo "\n<div id=\"blink1\" class=\"blinkhidden\">".get_string('refreshpage', 'quiz_liveviewgrid')."</div>";
         echo "\n<script>";
         echo "\n  function myFunction() {";
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
         echo "\n }";
         echo "\n</script>";
-        echo "Responses\n<br />";
+        echo get_string('responses', 'quiz_liveviewgrid')."\n<br />";
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
