@@ -1,6 +1,6 @@
 # moodle-quiz_liveviewgrid
 Dynamic quiz spreadsheet.
-This version v1.1 (2019011500) is compatible for Moodle 3.2+.
+This version v1.1.1 (2019011600) is compatible for Moodle 3.2+.
 This quiz report module allows teachers to see, in real time, the responses from students as they are completing questions in a quiz. As students change their answers or submit more answers, the spreadsheet is refreshed. If desired, the grades that each response would be given can be shown as the background color in the cells of the spreadsheet, but this action is unrelated to the grading of the quiz.
 The top row in this spreadsheet/table has the names of the questions in the quiz. The teacher can click on any of these question names to obtain an overview of that question.
 For multichoice, truefalse, and calculatedmulti question types, a histogram is displayed.

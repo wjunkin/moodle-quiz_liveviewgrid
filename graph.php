@@ -35,7 +35,7 @@ $course = $DB->get_record('course', array('id' => $cm->course));
 require_login($course, true, $cm);
 $line = new graph(700, 500);
 $line->parameter['title']   = '';
-$line->parameter['y_label_left'] = 'Number of Responses';
+$line->parameter['y_label_left'] = get_string('numberofresponses', 'quiz_liveviewgrid');
 foreach ($labels as $key => $value) {
     $labels[$key] = urldecode($value);
 }
