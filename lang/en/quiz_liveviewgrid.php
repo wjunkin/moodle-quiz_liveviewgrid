@@ -40,4 +40,7 @@ $string['showgradekey'] = 'Show Grading Legend';
 $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
 $string['shownames'] = 'Show student names.';
+$string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
+$string['youmustbeauthorized'] = 'You must be authorized to access this site.';
+$string['youmustsubmitquestonid'] = 'You must submit a valid questionid.';
 

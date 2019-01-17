@@ -34,14 +34,14 @@ $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id, false, MUST
 require_login($course, true, $cm);
 $contextinstance = context_module::instance($cm->id);
 if (!(has_capability('mod/quiz:manage', $contextinstance))) {
-    echo "\n<br />You must be authorized to access this site";
+    echo "\n<br />".get_string('youmustbeauthorized', 'quiz_liveviewgrid');
     exit;
 }
 
 $questionanswerids = array();
 $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
 if (!($questiontext = $DB->get_record('question', array('id' => $questionid)))) {
-    echo "\n<br />You must submit a valid questionid";
+    echo "\n<br />".get_string('youmustsubmitquestonid', 'quiz_liveviewgrid');
     exit;
 }
 if (in_array($questiontext->qtype, $multitype)) {
@@ -132,7 +132,7 @@ if ($order) {
                 if (isset($myx[$qansid])) {
                     $myx[$qansid] ++;
                 } else {
-                    echo "\n<br />Something is wrong with answer id $qansid";
+                    echo "\n<br />".get_string('somethingiswrongwithanswerid', 'quiz_liveviewgrid')." $qansid";
                 }
             }
         }
