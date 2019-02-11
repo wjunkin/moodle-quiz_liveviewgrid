@@ -101,14 +101,39 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myresponse = array();
                 $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
                 foreach ($qattemptsteps as $qattemptstep) {
-                    if ($qattemptstep->state == 'complete') {
+                    if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')) {// Handling Cloze questions.
                         $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
                         foreach ($answers as $answer) {
                             $myresponse[$answer->name] = $answer->value;
                         }
                         if (count($myresponse) > 0) {
+                            $clozeresponse = array();// An array for the Close responses.
+                            foreach ($myresponse as $key => $respon) {
+                                // For cloze questions the key will be sub(\d*)_answer.
+                                // I need to take the answer that follows part (\d):(*)?;.
+                                if (preg_match('/sub(\d)*\_answer/', $key, $matches)) {
+                                    $clozequestionid = $qattempt->questionid;
+                                    // Finding the number of parts.
+                                    $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
+                                    $myres = array();
+                                    $myres[$key] = $respon;
+                                    $newres = $mydm->get_fraction($qattempt->slot, $myres);
+                                    $onemore = $numclozeparts + 1;
+                                    $tempans = $newres[0]."; part $onemore";
+                                    $index = $matches[1];
+                                    $nextindex = $index + 1;
+                                    $tempcorrect = 'part '.$matches[1].': ';
+                                    if (preg_match("/$tempcorrect(.*); part $nextindex/", $tempans, $ansmatch)) {
+                                        $clozeresponse[$matches[1]] = $ansmatch[1];
+                                    }
+                                }
+                            }
                             $response = $mydm->get_fraction($qattempt->slot, $myresponse);
-                            $stanswers[$usrid][$qattempt->questionid] = $response[0];
+                            if (count($clozeresponse) > 0) {
+                                $stanswers[$usrid][$qattempt->questionid] = $clozeresponse;
+                            } else {
+                                $stanswers[$usrid][$qattempt->questionid] = $response[0];
+                            }
                             $stfraction[$usrid][$qattempt->questionid] = $response[1];
                         }
                     }
