@@ -217,6 +217,22 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         $users = $this->liveview_who_sofar_gridview($quizid);
 
+        // Javascript and css for tooltips.
+            echo "\n<script type=\"text/javascript\">";
+            require_once("dw_tooltip_c.php");
+            echo "\n</script>";
+
+            echo "\n<style type=\"text/css\">";
+            echo "\ndiv#tipDiv {";
+                echo "\nfont-size:16px; line-height:1.2;";
+                echo "\ncolor:#000; background-color:#E1E5F1;";
+                echo "\nborder:1px solid #667295; padding:4px;";
+                echo "\nwidth:320px;";
+            echo "\n}";
+            echo "\n</style>";
+        // The array for storing the all the texts for tootips.
+        $tooltiptext = array();
+
         // Create the table.
         if (isset($users)) {
             foreach ($users as $user) {
@@ -255,13 +271,24 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     } else {
                         // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                         $safeanswer = htmlentities($answer);
-                        echo "><div title=\"$safeanswer\">".substr(trim(strip_tags($answer)), 0, 40)."</div></td>";
+                        $safeanswer1 = preg_replace("/\n/", "<br ?>", $safeanswer);
+                        $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
+                        echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
+                        echo "</div></td>";
                     }
                 }
                 echo "</tr></tbody>\n";
             }
         }
         echo "\n</table>";
+        if (count($tooltiptext) > 0) {
+            $tooltiptexts = implode(",", $tooltiptext);
+            echo "\n<script>";
+            echo "\ndw_Tooltip.content_vars = {";
+                echo $tooltiptexts;
+            echo "\n}";
+            echo "\n</script>";
+        }
 
         // Javascript to refresh the page if the contents of the table change.
         $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
