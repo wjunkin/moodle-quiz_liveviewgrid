@@ -42,10 +42,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     /** @var quiz_liveviewgrid_table instance of table class used for main questions stats table. */
     protected $table;
 
-    /** @var int either 1 or 0 in the URL get determined by the teachere to show or hide grades of answers. */
+    /** @var int either 1 or 0 in the URL get determined by the teacher to show or hide grades of answers. */
     protected $evaluate = 0;
-    /** @var int either 1 or 0 in the URL get determined by the teachere to show or hide grading key. */
+    /** @var int either 1 or 0 in the URL get determined by the teacher to show or hide grading key. */
     protected $showkey = 0;
+    /** @var int either 1 or 0 in the URL get determined by the teacher to order names by first name (1) or last name (0). */
+    protected $order = 0;
+    /** @var int the id of the group that is being displayed. If the value is 0, results are from all students. */
+    protected $group = 0;
     /** @var int The time of the last student response to a question. */
     protected $qmaxtime = 0;
     /** @var int The course module id for the quiz. */
@@ -54,8 +58,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     protected $mode = '';
     /** @var int The context id for the quiz. */
     protected $quizcontextid = 0;
-    /** @var Array The  array of the students who are attempting the quiz. */
+    /** @var Array The sorted array of the students who are attempting the quiz. */
     protected $users = array();
+    /** @var Array The array of the students who have attempted the quiz. */
+    protected $sofar = array();
     /** @var String The answer submitted to a question. */
     protected $answer = '';
     /** @var String The URL where the program can find out if a new response has been submitted and thus update the spreadsheet. */
@@ -72,11 +78,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         global $OUTPUT, $DB, $CFG;
         $evaluate = optional_param('evaluate', 0, PARAM_INT);
         $showkey = optional_param('showkey', 0, PARAM_INT);
+        $order = optional_param('order', 0, PARAM_INT);
+        $group = optional_param('group', 0, PARAM_INT);
         $id = optional_param('id', 0, PARAM_INT);
         $mode = optional_param('mode', '', PARAM_ALPHA);
         $slots = array();
         $question = array();
         $users = array();
+        $sofar = array();
         $quizid = $quiz->id;
         $answer = '';
         $graphicshashurl = '';
@@ -159,22 +168,51 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         if ($showkey) {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=0'>";
+            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
             echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
         } else {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=$evaluate&showkey=1'>";
+            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
             echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
         }
         echo "&nbsp&nbsp&nbsp&nbsp";
+        if ($order) {
+            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+            echo get_string('orderlastname', 'quiz_liveviewgrid')."</a>\n";
+        } else {
+            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+            echo get_string('orderfirstname', 'quiz_liveviewgrid')."</a>\n";
+        }
+        echo "&nbsp&nbsp&nbsp&nbsp";
         if ($evaluate) {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=0&showkey=$showkey'>";
+            $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
             echo get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
             echo get_string('gradedexplain', 'quiz_liveviewgrid')."<br />\n";
         } else {
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?id=$id&mode=$mode&evaluate=1&showkey=$showkey' ";
+            $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
             echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
             echo get_string('showgrades', 'quiz_liveviewgrid')."</a><br />\n";
         }
+        // Find out if there may be groups. If so, allow the teacher to choose a group.
+        if ($cm->groupmode) {
+            echo get_string('whichgroups', 'quiz_liveviewgrid');
+            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=0";
+            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+            echo get_string('allresponses', 'quiz_liveviewgrid')."</a>";
+            $groups = $DB->get_records('groups', array('courseid' => $course->id));
+            foreach ($groups as $grp) {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=".$grp->id;
+                echo get_string('or', 'quiz_liveviewgrid')."<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo $grp->name."</a>";
+            }
+
+        }
+
         // CSS style for blinking 'Refresh Page!' notice.
         echo "\n<style>";
         echo "\n .blinking{";
@@ -197,11 +235,45 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
         echo "\n }";
         echo "\n</script>";
-        echo get_string('responses', 'quiz_liveviewgrid')."\n<br />";
+        echo get_string('responses', 'quiz_liveviewgrid');
+        if ($group) {
+            $grpname = $DB->get_record('groups', array('id' => $group));
+            echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
+        }
+        echo "\n<br />";
+
+        $sofar = $this->liveview_who_sofar_gridview($quizid);
+
+        // Sorting the users.
+        foreach ($sofar as $unuser) {
+            // If only a group is desired, make sure this student is in the group.
+            if ($group) {
+                if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                    $getresponse = true;
+                } else {
+                    $getresponse = false;
+                }
+            } else {
+                $getresponse = true;
+            }
+            if ($getresponse) {
+                $usr = $DB->get_record('user', array('id' => $unuser));
+                if ($order) {
+                    $initials[$unuser] = $usr->firstname."_".$usr->lastname;
+                } else {
+                    $initials[$unuser] = $usr->lastname."_".$usr->firstname;
+                }
+            }
+        }
+        asort($initials);
+        foreach ($initials as $newkey => $initial) {
+            $users[] = $newkey;
+        }
+
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
-        echo "<th>".get_string('name', 'quiz_liveviewgrid')."</th>\n";
+        echo "<th>First Name</th><th>Last Name</th>\n";
 
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
@@ -214,8 +286,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "</th>\n";
         }
         echo "</tr>\n</thead>\n";
-
-        $users = $this->liveview_who_sofar_gridview($quizid);
 
         // Javascript and css for tooltips.
             echo "\n<script type=\"text/javascript\">";
@@ -281,6 +351,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         echo "\n</table>";
+
         if (count($tooltiptext) > 0) {
             $tooltiptexts = implode(",", $tooltiptext);
             echo "\n<script>";
@@ -408,7 +479,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     protected function liveview_find_student_gridview($userid) {
          global $DB;
          $user = $DB->get_record('user', array('id' => $userid));
-         $name = $user->lastname.", ".$user->firstname;
+         $name = $user->firstname."</td><td>".$user->lastname;
          return($name);
     }
 
