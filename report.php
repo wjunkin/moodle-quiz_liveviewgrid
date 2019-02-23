@@ -240,7 +240,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $grpname = $DB->get_record('groups', array('id' => $group));
             echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
         }
-        //echo "\n<br />";
 
         $sofar = $this->liveview_who_sofar_gridview($quizid);
 
