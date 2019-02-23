@@ -22,15 +22,21 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['questionis'] = 'The question is: ';
+$string['allresponses'] = 'All responses';
+ $string['questionis'] = 'The question is: ';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
 $string['hidegrades'] = 'Hide the &quot;Grade&quot; answers would receive';
 $string['hidenames'] = 'Hide student names.';
 $string['liveviewgrid'] = 'Live Report';
-$string['name'] = 'Name';
+$string['firstname'] = 'First Name';
+$string['from'] = ' from ';
+$string['lastname'] = 'Last Name';
 $string['numberofresponses'] = 'Number of Responses';
+$string['or'] = ' or ';
+$string['orderfirstname'] = 'Order table by first name';
+$string['orderlastname'] = 'Order table by last name';
 $string['pluginname'] = 'Live Report';
 $string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';
 $string['quizname'] = 'Quiz name';
@@ -41,6 +47,7 @@ $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
 $string['shownames'] = 'Show student names.';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
+$string['whichgroups'] = 'Which groups do you want to see? ';
 $string['youmustbeauthorized'] = 'You must be authorized to access this site.';
 $string['youmustsubmitquestonid'] = 'You must submit a valid questionid.';
 
