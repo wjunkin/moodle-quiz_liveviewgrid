@@ -150,22 +150,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
 
-        if ($showkey) {
-            echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
-            echo "<table border=\"1\" width=\"100%\">\n";
-            $head = "<tr>";
-            for ($i = 0; $i < 11; $i++) {
-                $myfraction = number_format($i / 10, 1, '.', ',');
-                $head .= "<td ";
-                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is wrong.
-                $bluepart = intval(126 * $myfraction);
-                $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
-                $head .= ">$myfraction</td>";
-            }
-            echo $head."\n</tr></table>\n<br />";
-        }
-
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         if ($showkey) {
             $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group";
@@ -235,12 +219,28 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
         echo "\n }";
         echo "\n</script>";
+        if ($showkey) {
+            echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
+            echo "<table border=\"1\" width=\"100%\">\n";
+            $head = "<tr>";
+            for ($i = 0; $i < 11; $i++) {
+                $myfraction = number_format($i / 10, 1, '.', ',');
+                $head .= "<td ";
+                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
+                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is wrong.
+                $bluepart = intval(126 * $myfraction);
+                $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
+                $head .= ">$myfraction</td>";
+            }
+            echo $head."\n</tr></table>";
+        }
+
         echo get_string('responses', 'quiz_liveviewgrid');
         if ($group) {
             $grpname = $DB->get_record('groups', array('id' => $group));
             echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
         }
-        echo "\n<br />";
+        //echo "\n<br />";
 
         $sofar = $this->liveview_who_sofar_gridview($quizid);
 
