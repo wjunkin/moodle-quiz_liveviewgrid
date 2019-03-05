@@ -28,4 +28,5 @@ $plugin->version   = 2019030500;
 $plugin->requires  = 2016120500;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_liveviewgrid';
+$plugin->maturity = MATURITY_STABLE;
 $plugin->release   = 'v1.1.4 (2019030500) for Moodle 3.2+';

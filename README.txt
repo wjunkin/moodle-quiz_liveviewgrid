@@ -17,3 +17,4 @@ After installing this quiz report module,
  teachers can click on the "Live Report" option in the "Report" drop-down menu to access this spreadsheet.
 Changes for version 1.1.3. Spreadsheet handles Cloze questions, has better formatting for tooltips,
   the students can be sorted by last or first name, results can be shown by group or all responses.
+Added "....' to long (truncated) answers to let the teacher know that the tooltip would show more of the answer.
