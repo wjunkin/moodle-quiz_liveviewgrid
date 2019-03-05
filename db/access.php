@@ -18,7 +18,7 @@
  * Capability definitions for the quiz liveviewgrid report.
  *
  * @package   quiz_liveviewgrid
- * @copyright 2008 Jamie Pratt
+ * @copyright 2019 William Junkin, Eckerd College (http://www.eckerd.edu)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
