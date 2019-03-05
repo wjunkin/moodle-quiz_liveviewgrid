@@ -340,7 +340,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     } else {
                         // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                         $safeanswer = htmlentities($answer);
-                        $safeanswer1 = preg_replace("/\n/", "<br ?>", $safeanswer);
+                        $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                         $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
                         echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
                         echo "</div></td>";
