@@ -343,7 +343,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                         $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                         $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
                         echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
-                        echo "</div></td>";
+                        echo " ....</div></td>";
                     }
                 }
                 echo "</tr></tbody>\n";
