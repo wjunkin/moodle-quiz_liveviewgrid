@@ -272,7 +272,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
-        echo "<th>First Name</th><th>Last Name</th>\n";
+        echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th><th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
 
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
