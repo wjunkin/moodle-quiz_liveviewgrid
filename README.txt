@@ -1,6 +1,6 @@
 # moodle-quiz_liveviewgrid
 Dynamic quiz spreadsheet. <br />
-This version v1.1.3 (2019022000) is compatible for Moodle 3.2+.<br />
+This version v1.2.0 (2019032000) is compatible for Moodle 3.2+.<br />
 This quiz report module allows teachers to see, in real time, 
 the responses from students as they are completing questions in a quiz.
  As students change their answers or submit more answers, the spreadsheet is refreshed. 
@@ -17,4 +17,5 @@ After installing this quiz report module,
  teachers can click on the "Live Report" option in the "Report" drop-down menu to access this spreadsheet.
 Changes for version 1.1.3. Spreadsheet handles Cloze questions, has better formatting for tooltips,
   the students can be sorted by last or first name, results can be shown by group or all responses.
-Added "....' to long (truncated) answers to let the teacher know that the tooltip would show more of the answer.
+  Added "....' to long (truncated) answers to let the teacher know that the tooltip would show more of the answer.
+Changes for version 1.2.0. Handles groups properly, including limiting teacher view unless accessallgroups is enabled.

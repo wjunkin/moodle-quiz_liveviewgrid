@@ -34,11 +34,16 @@ $string['firstname'] = 'First Name';
 $string['from'] = ' from ';
 $string['lastname'] = 'Last Name';
 $string['numberofresponses'] = 'Number of Responses';
+$string['notallowedgroup'] = "\n<br />You cannot view these results.
+Either you cannot see all groups or you are trying to see responses from students in a group that you are not allowed to see.";
+$string['notmember'] = "You are not a member of this group.\n<br />";
 $string['or'] = ' or ';
 $string['orderfirstname'] = 'Order table by first name';
 $string['orderlastname'] = 'Order table by last name';
+$string['pickgroup'] = 'You must pick a group. ';
 $string['pluginname'] = 'Live Report';
 $string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';
+$string['questionresponses'] = 'Responses for Live Report';
 $string['quizname'] = 'Quiz name';
 $string['responses'] = 'Responses';
 $string['refreshpage'] = 'Refresh Page!';
@@ -47,7 +52,7 @@ $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
 $string['shownames'] = 'Show student names.';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
-$string['whichgroups'] = 'Which groups do you want to see? ';
+$string['whichgroups'] = 'Which group do you want to see? ';
 $string['youmustbeauthorized'] = 'You must be authorized to access this site.';
 $string['youmustsubmitquestonid'] = 'You must submit a valid questionid.';
 

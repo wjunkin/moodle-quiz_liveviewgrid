@@ -75,7 +75,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      * @return bool True if successful.
      */
     public function display($quiz, $cm, $course) {
-        global $OUTPUT, $DB, $CFG;
+        global $OUTPUT, $DB, $CFG, $USER;
         $evaluate = optional_param('evaluate', 0, PARAM_INT);
         $showkey = optional_param('showkey', 0, PARAM_INT);
         $order = optional_param('order', 0, PARAM_INT);
@@ -149,38 +149,60 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
         }
+        // Check to see if the teacher has permissions to see all groups or the selected group.
+        $groupmode = groups_get_activity_groupmode($cm, $course);
+        $currentgroup = groups_get_activity_group($cm, true);
+        $contextmodule = context_module::instance($cm->id);
+        $showresponses = false;
+        if ($groupmode == 2 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
+            if ($currentgroup > 0) {
+                if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
+                    // The teacher is a member of this group.
+                    $showresponses = true;
+                } else {
+                    $showresponses = false;
+                    echo get_string('notmember', 'quiz_liveviewgrid');
+                }
+            } else {
+                echo get_string('pickgroup', 'quiz_liveviewgrid');
+            }
+        } else {
+            $showresponses = true;
+        }
 
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
-        if ($showkey) {
-            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
-        } else {
-            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
-        }
-        echo "&nbsp&nbsp&nbsp&nbsp";
-        if ($order) {
-            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('orderlastname', 'quiz_liveviewgrid')."</a>\n";
-        } else {
-            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('orderfirstname', 'quiz_liveviewgrid')."</a>\n";
-        }
-        echo "&nbsp&nbsp&nbsp&nbsp";
-        if ($evaluate) {
-            $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
-            echo get_string('gradedexplain', 'quiz_liveviewgrid')."<br />\n";
-        } else {
-            $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
-            echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
-            echo get_string('showgrades', 'quiz_liveviewgrid')."</a><br />\n";
+        if ($showresponses) {
+            if ($showkey) {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
+            } else {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
+            }
+            echo "&nbsp&nbsp&nbsp&nbsp";
+            if ($order) {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('orderlastname', 'quiz_liveviewgrid')."</a>\n";
+            } else {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('orderfirstname', 'quiz_liveviewgrid')."</a>\n";
+            }
+            echo "&nbsp&nbsp&nbsp&nbsp";
+            if ($evaluate) {
+                $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
+                echo get_string('gradedexplain', 'quiz_liveviewgrid')."<br />\n";
+            } else {
+                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
+                echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
+                echo get_string('showgrades', 'quiz_liveviewgrid')."</a><br />\n";
+            }
         }
         // Find out if there may be groups. If so, allow the teacher to choose a group.
         if ($cm->groupmode) {
@@ -219,7 +241,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
         echo "\n }";
         echo "\n</script>";
-        if ($showkey) {
+        if ($showkey && $showresponses) {
             echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
             echo "<table border=\"1\" width=\"100%\">\n";
             $head = "<tr>";
@@ -243,7 +265,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         $sofar = $this->liveview_who_sofar_gridview($quizid);
 
-        // Sorting the users.
+        // Getting and preparing to sorting users.
+        // The first and last name are in the initials array.
+        $initials = array();
         foreach ($sofar as $unuser) {
             // If only a group is desired, make sure this student is in the group.
             if ($group) {
@@ -264,11 +288,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
         }
-        asort($initials);
-        foreach ($initials as $newkey => $initial) {
-            $users[] = $newkey;
-        }
-
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
@@ -277,7 +296,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
             if (isset($question['name'][$key])) {
-                    $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php?question_id='.$key."&quizid=".$quizid;
+                    $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php';
+                    $graphurl .= '?question_id='.$key."&quizid=".$quizid.'&group='.$group;
                     echo "<a href='".$graphurl."' target=\"_blank\">";
                     echo substr(trim(strip_tags($question['name'][$key])), 0, 80);
                     echo "</a>";
@@ -286,78 +306,88 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         echo "</tr>\n</thead>\n";
 
-        // Javascript and css for tooltips.
-            echo "\n<script type=\"text/javascript\">";
-            require_once("dw_tooltip_c.php");
-            echo "\n</script>";
+        if ($showresponses) {
+            // Javascript and css for tooltips.
+                echo "\n<script type=\"text/javascript\">";
+                require_once("dw_tooltip_c.php");
+                echo "\n</script>";
 
-            echo "\n<style type=\"text/css\">";
-            echo "\ndiv#tipDiv {";
-                echo "\nfont-size:16px; line-height:1.2;";
-                echo "\ncolor:#000; background-color:#E1E5F1;";
-                echo "\nborder:1px solid #667295; padding:4px;";
-                echo "\nwidth:320px;";
-            echo "\n}";
-            echo "\n</style>";
-        // The array for storing the all the texts for tootips.
-        $tooltiptext = array();
-
-        // Create the table.
-        if (isset($users)) {
-            foreach ($users as $user) {
-                echo "<tbody><tr>";
-
-                echo "<td>".$this->liveview_find_student_gridview($user)."</td>\n";
-                foreach ($slots as $questionid => $slotvalue) {
-                    if (($questionid != "") and ($questionid != 0)) {
-                        if (isset($stanswers[$user][$questionid])) {
-                            if (count($stanswers[$user][$questionid]) == 1) {
-                                $answer = $stanswers[$user][$questionid];
-                            } else {
-                                $answer = '';
-                                foreach ($stanswers[$user][$questionid] as $key => $value) {
-                                    $answer .= $key."=".$value."; ";
-                                }
-                            }
-                        } else {
-                            $answer = ' ';
-                        }
-                    }
-                    echo "<td ";
-                    if ($evaluate) {
-                        if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
-                            $myfraction = $stfraction[$user][$questionid];
-                            $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                            $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
-                            $bluepart = intval(126 * $myfraction);
-                            echo "style='background-color: rgb($redpart, $greenpart, $bluepart)'";
-                        } else {
-                            echo '';
-                        }
-                    }
-                    if (strlen($answer) < 40) {
-                        echo ">".htmlentities($answer)."</td>";
-                    } else {
-                        // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
-                        $safeanswer = htmlentities($answer);
-                        $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
-                        $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
-                        echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
-                        echo " ....</div></td>";
-                    }
+                echo "\n<style type=\"text/css\">";
+                echo "\ndiv#tipDiv {";
+                    echo "\nfont-size:16px; line-height:1.2;";
+                    echo "\ncolor:#000; background-color:#E1E5F1;";
+                    echo "\nborder:1px solid #667295; padding:4px;";
+                    echo "\nwidth:320px;";
+                echo "\n}";
+                echo "\n</style>";
+            // The array for storing the all the texts for tootips.
+            $tooltiptext = array();
+            if (count($initials)) {
+                asort($initials);
+                foreach ($initials as $newkey => $initial) {
+                    $users[] = $newkey;
                 }
-                echo "</tr></tbody>\n";
             }
-        }
-        echo "\n</table>";
 
-        if (count($tooltiptext) > 0) {
-            $tooltiptexts = implode(",", $tooltiptext);
-            echo "\n<script>";
-            echo "\ndw_Tooltip.content_vars = {";
-                echo $tooltiptexts;
-            echo "\n}";
-            echo "\n</script>";
+            // Create the table.
+            if (isset($users)) {
+                foreach ($users as $user) {
+                    echo "<tbody><tr>";
+
+                    echo "<td>".$this->liveview_find_student_gridview($user)."</td>\n";
+                    foreach ($slots as $questionid => $slotvalue) {
+                        if (($questionid != "") and ($questionid != 0)) {
+                            if (isset($stanswers[$user][$questionid])) {
+                                if (count($stanswers[$user][$questionid]) == 1) {
+                                    $answer = $stanswers[$user][$questionid];
+                                } else {
+                                    $answer = '';
+                                    foreach ($stanswers[$user][$questionid] as $key => $value) {
+                                        $answer .= $key."=".$value."; ";
+                                    }
+                                }
+                            } else {
+                                $answer = ' ';
+                            }
+                        }
+                        echo "<td ";
+                        if ($evaluate) {
+                            if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                                $myfraction = $stfraction[$user][$questionid];
+                                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
+                                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
+                                $bluepart = intval(126 * $myfraction);
+                                echo "style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                            } else {
+                                echo '';
+                            }
+                        }
+                        if (strlen($answer) < 40) {
+                            echo ">".htmlentities($answer)."</td>";
+                        } else {
+                            // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
+                            $safeanswer = htmlentities($answer);
+                            $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
+                            $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
+                            echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
+                            echo " ....</div></td>";
+                        }
+                    }
+                    echo "</tr></tbody>\n";
+                }
+            }
+            echo "\n</table>";
+
+            if (count($tooltiptext) > 0) {
+                $tooltiptexts = implode(",", $tooltiptext);
+                echo "\n<script>";
+                echo "\ndw_Tooltip.content_vars = {";
+                    echo $tooltiptexts;
+                echo "\n}";
+                echo "\n</script>";
+            }
+        } else {
+            echo "\n</table>";
         }
 
         // Javascript to refresh the page if the contents of the table change.
