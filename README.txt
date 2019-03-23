@@ -19,3 +19,4 @@ Changes for version 1.1.3. Spreadsheet handles Cloze questions, has better forma
   the students can be sorted by last or first name, results can be shown by group or all responses.
   Added "....' to long (truncated) answers to let the teacher know that the tooltip would show more of the answer.
 Changes for version 1.2.0. Handles groups properly, including limiting teacher view unless accessallgroups is enabled.
+Changes for version 1.2.1. Tooltips now work for touchscreen laptops using Firefos browser.

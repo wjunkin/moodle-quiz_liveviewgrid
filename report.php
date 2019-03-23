@@ -381,6 +381,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             if (count($tooltiptext) > 0) {
                 $tooltiptexts = implode(",", $tooltiptext);
                 echo "\n<script>";
+                echo 'dw_Tooltip.defaultProps = {';
+                    echo 'supportTouch: true'; // False by default.
+                echo '}';
+
                 echo "\ndw_Tooltip.content_vars = {";
                     echo $tooltiptexts;
                 echo "\n}";
