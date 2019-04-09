@@ -46,16 +46,28 @@ $groupmode = groups_get_activity_groupmode($cm, $course);
 $currentgroup = groups_get_activity_group($cm, true);
 $contextmodule = context_module::instance($cm->id);
 $showresponses = false;
-if ($groupmode == 2 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
-    if ($currentgroup > 0) {
+
+if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
+    if ($group == 0) {
+        // Teacher cannot see all groups and no group has been selected.
+        $showresponses = false;
+        echo get_string('pickgroup', 'quiz_liveviewgrid');
+        exit;
+    } else if ($currentgroup > 0) {
         if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
             // The teacher is a member of this group.
             $showresponses = true;
+        } else {
+            // Teacher has picked a group but is not a member of this group.
+            $showresponses = false;
+            echo get_string('notmember', 'quiz_liveviewgrid');
+            exit;
         }
     }
 } else {
     $showresponses = true;
 }
+
 if (!($showresponses)) {
     echo get_string('notallowedgroup', 'quiz_liveviewgrid');
     echo "\n</body><html>";

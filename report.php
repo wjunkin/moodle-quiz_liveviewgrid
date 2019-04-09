@@ -154,17 +154,20 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
         $showresponses = false;
-        if ($groupmode == 2 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
-            if ($currentgroup > 0) {
+        if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
+            if ($group == 0) {
+                // Teacher cannot see all groups and no group has been selected.
+                $showresponses = false;
+                echo get_string('pickgroup', 'quiz_liveviewgrid');
+            } else if ($currentgroup > 0) {
                 if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
                     // The teacher is a member of this group.
                     $showresponses = true;
                 } else {
+                    // Teacher has picked a group but is not a member of this group.
                     $showresponses = false;
                     echo get_string('notmember', 'quiz_liveviewgrid');
                 }
-            } else {
-                echo get_string('pickgroup', 'quiz_liveviewgrid');
             }
         } else {
             $showresponses = true;
