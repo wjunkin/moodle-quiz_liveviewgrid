@@ -198,14 +198,20 @@ if ($order) {
         echo "<a href='".$quizgraphicsurl."?question_id=$questionid&quizid=$quizid&showstudents=1&group=$group'>";
         echo get_string('shownames', 'quiz_liveviewgrid')."</a>";
     }
-    echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$questiontext->questiontext;
+    echo '<table border=1><tr>';
+    if ($showstudents) {
+        echo "<td>".get_string('firstname', 'quiz_liveviewgrid')."</td><td>".get_string('lastname', 'quiz_liveviewgrid')."</td>";
+    }
+    echo "<td>".get_string('questionis', 'quiz_liveviewgrid').$questiontext->questiontext."</td></tr>";
     foreach ($stans as $usr => $textanswer) {
-        echo "\n<br />";
+        echo "\n<tr><td>";
         if ($showstudents) {
             $user = $DB->get_record('user', array('id' => $usr));
-            echo $user->firstname." ".$user->lastname.": ";
+            echo $user->firstname."</td><td>".$user->lastname."</td><td>";
         }
         echo strip_tags($textanswer);
+        echo "</td></tr>";
     }
+    echo "\n</table>";
 }
 echo "\n</body><html>";

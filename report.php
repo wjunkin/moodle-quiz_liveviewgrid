@@ -82,6 +82,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $group = optional_param('group', 0, PARAM_INT);
         $id = optional_param('id', 0, PARAM_INT);
         $mode = optional_param('mode', '', PARAM_ALPHA);
+        $compact = optional_param('compact', 0, PARAM_INT);
         $slots = array();
         $question = array();
         $users = array();
@@ -176,35 +177,47 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         if ($showresponses) {
             if ($showkey) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
                 echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
                 echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
             }
             echo "&nbsp&nbsp&nbsp&nbsp";
             if ($order) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
                 echo get_string('orderlastname', 'quiz_liveviewgrid')."</a>\n";
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
                 echo get_string('orderfirstname', 'quiz_liveviewgrid')."</a>\n";
             }
             echo "&nbsp&nbsp&nbsp&nbsp";
             if ($evaluate) {
-                $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('hidegrades', 'quiz_liveviewgrid')."</a><br />\n";
-                echo get_string('gradedexplain', 'quiz_liveviewgrid')."<br />\n";
+                echo get_string('hidegrades', 'quiz_liveviewgrid')."</a>\n";
+                echo get_string('gradedexplain', 'quiz_liveviewgrid')."\n";
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group";
+                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group&compact=$compact";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
                 echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
-                echo get_string('showgrades', 'quiz_liveviewgrid')."</a><br />\n";
+                echo get_string('showgrades', 'quiz_liveviewgrid')."</a>\n";
+            }
+            echo "&nbsp&nbsp&nbsp&nbsp";
+            if ($compact) {
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group&compact=0";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
+                echo get_string('expandtable', 'quiz_liveviewgrid')."</a><br />\n";
+                echo get_string('expandexplain', 'quiz_liveviewgrid')."<br />\n";
+            } else {
+                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group&compact=1";
+                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
+                echo "title=\"".get_string('compacttitle', 'quiz_liveviewgrid')."\">";
+                echo get_string('compact', 'quiz_liveviewgrid')."</a><br />\n";
             }
         }
         // Find out if there may be groups. If so, allow the teacher to choose a group.
@@ -291,19 +304,37 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
         }
+        if ($compact) {
+            $trun = 4;
+            $dotdot = '';
+            // Truncate responses to 4 if compact is desired, else 80.
+        } else {
+            $trun = 40;
+            $dotdot = '....';
+        }
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
         echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th><th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
+        // The array for storing the all the texts for tootips.
+        $tooltiptext = array();
 
         foreach ($slots as $key => $slotvalue) {
             echo "<th style=\"word-wrap: break-word;\">";
             if (isset($question['name'][$key])) {
-                    $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php';
-                    $graphurl .= '?question_id='.$key."&quizid=".$quizid.'&group='.$group;
-                    echo "<a href='".$graphurl."' target=\"_blank\">";
-                    echo substr(trim(strip_tags($question['name'][$key])), 0, 80);
-                    echo "</a>";
+                $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php';
+                $graphurl .= '?question_id='.$key."&quizid=".$quizid.'&group='.$group;
+                echo "<a href='".$graphurl."' target=\"_blank\">";
+                $safequestionname = trim(strip_tags($question['name'][$key]));
+                if (strlen($safequestionname) > $trun) {
+                    // Making a tooltip out of a question name. The htmlentities function leaves single quotes unchanged.
+                    $safename = htmlentities($safequestionname);
+                    $safename1 = preg_replace("/\n/", "<br />", $safename);
+                    $tooltiptext[] .= "\n    link".'q_'.$key.": '".addslashes($safename1)."'";
+                    echo "<div class=\"showTip link".'q_'.$key."\">";
+                }
+                echo substr(trim($safequestionname), 0, $trun);
+                echo "</a>";
             }
             echo "</th>\n";
         }
@@ -323,15 +354,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     echo "\nwidth:320px;";
                 echo "\n}";
                 echo "\n</style>";
-            // The array for storing the all the texts for tootips.
-            $tooltiptext = array();
             if (count($initials)) {
                 asort($initials);
                 foreach ($initials as $newkey => $initial) {
                     $users[] = $newkey;
                 }
             }
-
             // Create the table.
             if (isset($users)) {
                 foreach ($users as $user) {
@@ -365,15 +393,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 echo '';
                             }
                         }
-                        if (strlen($answer) < 40) {
+                        if (strlen($answer) < $trun) {
                             echo ">".htmlentities($answer)."</td>";
                         } else {
                             // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                             $safeanswer = htmlentities($answer);
                             $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                             $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
-                            echo "><div class=\"showTip link".$user.'_'.$questionid."\">".substr(trim(strip_tags($answer)), 0, 40);
-                            echo " ....</div></td>";
+                            echo "><div class=\"showTip link".$user.'_'.$questionid."\">";
+                            echo substr(trim(strip_tags($answer)), 0, $trun);
+                            echo " $dotdot</div></td>";
                         }
                     }
                     echo "</tr></tbody>\n";
