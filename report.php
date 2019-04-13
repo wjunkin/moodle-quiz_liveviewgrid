@@ -214,7 +214,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo get_string('expandtable', 'quiz_liveviewgrid')."</a><br />\n";
                 echo get_string('expandexplain', 'quiz_liveviewgrid')."<br />\n";
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group&compact=1";
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group&compact=1";
                 echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
                 echo "title=\"".get_string('compacttitle', 'quiz_liveviewgrid')."\">";
                 echo get_string('compact', 'quiz_liveviewgrid')."</a><br />\n";
@@ -228,7 +228,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo get_string('allresponses', 'quiz_liveviewgrid')."</a>";
             $groups = $DB->get_records('groups', array('courseid' => $course->id));
             foreach ($groups as $grp) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=".$grp->id;
+                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&compact=$compact&group=".$grp->id;
                 echo get_string('or', 'quiz_liveviewgrid')."<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
                 echo $grp->name."</a>";
             }
