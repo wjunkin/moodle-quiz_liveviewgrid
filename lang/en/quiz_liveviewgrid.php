@@ -24,15 +24,21 @@
 
 $string['allresponses'] = 'All responses';
  $string['questionis'] = 'The question is: ';
+$string['compact'] = 'Make table compact';
+$string['compacttitle'] = 'Click &quot;Make table compact&quot; to obtain a compact view of student responses.';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
 $string['hidegrades'] = 'Hide the &quot;Grade&quot; answers would receive';
 $string['hidenames'] = 'Hide student names.';
 $string['liveviewgrid'] = 'Live Report';
+$string['expandtable'] = 'Expand Table.';
+$string['expandexplain'] = 'Click &quot;Expand Table&quot; to return from the compact view.';
 $string['firstname'] = 'First Name';
 $string['from'] = ' from ';
 $string['lastname'] = 'Last Name';
+$string['liveviewgrid:componentname'] = 'Live Report';
+$string['liveviewgrid:view'] = 'View Live Report';
 $string['numberofresponses'] = 'Number of Responses';
 $string['notallowedgroup'] = "\n<br />You cannot view these results.
 Either you cannot see all groups or you are trying to see responses from students in a group that you are not allowed to see.";
