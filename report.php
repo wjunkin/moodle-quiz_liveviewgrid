@@ -222,7 +222,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         // Find out if there may be groups. If so, allow the teacher to choose a group.
-        if ($cm->groupmode) {
+        if ($groupmode) {
             echo get_string('whichgroups', 'quiz_liveviewgrid');
             $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=0";
             echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
