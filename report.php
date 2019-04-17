@@ -155,6 +155,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
         $showresponses = false;
+        echo "\n<br />debug158 in report and groupmode is $groupmode and has capability is ".has_capability('moodle/site:accessallgroups', $contextmodule);
         if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
             if ($group == 0) {
                 // Teacher cannot see all groups and no group has been selected.
