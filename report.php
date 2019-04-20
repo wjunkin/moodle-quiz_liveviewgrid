@@ -174,64 +174,79 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $showresponses = true;
         }
 
+        // The array of hidden values is hidden[].
+        $hidden = array();
+        $hidden['id'] = $id;
+        $hidden['mode'] = $mode;
+        $hidden['evaluate'] = $evaluate;
+        $hidden['showkey'] = $showkey;
+        $hidden['order'] = $order;
+        $hidden['compact'] = $compact;
+        $hidden['group'] = $group;
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
+
+        echo "<table border = 0><tr>";
         if ($showresponses) {
+            $info = '';
             if ($showkey) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=0&order=$order&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('hidegradekey', 'quiz_liveviewgrid')."</a>";
+                $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=1&order=$order&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('showgradekey', 'quiz_liveviewgrid')."</a>";
+                $buttontext = get_string('showgradekey', 'quiz_liveviewgrid');
             }
-            echo "&nbsp&nbsp&nbsp&nbsp";
+            $togglekey = 'showkey';
+            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($order) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=0&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('orderlastname', 'quiz_liveviewgrid')."</a>\n";
+                $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=1&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('orderfirstname', 'quiz_liveviewgrid')."</a>\n";
+                $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
             }
-            echo "&nbsp&nbsp&nbsp&nbsp";
+            $togglekey = 'order';
+            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($evaluate) {
-                $urlget = "id=$id&mode=$mode&evaluate=0&showkey=$showkey&order=$order&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('hidegrades', 'quiz_liveviewgrid')."</a>\n";
-                echo get_string('gradedexplain', 'quiz_liveviewgrid')."\n";
+                $buttontext = get_string('hidegrades', 'quiz_liveviewgrid');
+                $info = get_string('gradedexplain', 'quiz_liveviewgrid');
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=1&showkey=$showkey&order=$order&group=$group&compact=$compact";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
-                echo "title=\"".get_string('showgradetitle', 'quiz_liveviewgrid')."\">";
-                echo get_string('showgrades', 'quiz_liveviewgrid')."</a>\n";
+                $info = get_string('showgradetitle', 'quiz_liveviewgrid');
+                $buttontext = get_string('showgrades', 'quiz_liveviewgrid');
             }
-            echo "&nbsp&nbsp&nbsp&nbsp";
+            $togglekey = 'evaluate';
+            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
+            $info = '';
             if ($compact) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group&compact=0";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo get_string('expandtable', 'quiz_liveviewgrid')."</a><br />\n";
-                echo get_string('expandexplain', 'quiz_liveviewgrid')."<br />\n";
+                $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
+                $info = get_string('expandexplain', 'quiz_liveviewgrid');
             } else {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group&compact=1";
-                echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget' ";
-                echo "title=\"".get_string('compacttitle', 'quiz_liveviewgrid')."\">";
-                echo get_string('compact', 'quiz_liveviewgrid')."</a><br />\n";
+                $buttontext = get_string('compact', 'quiz_liveviewgrid');
             }
+            $togglekey = 'compact';
+            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
+            echo "</tr></table>";
         }
+
         // Find out if there may be groups. If so, allow the teacher to choose a group.
         if ($groupmode) {
-            echo get_string('whichgroups', 'quiz_liveviewgrid');
-            $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&group=0";
-            echo "<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-            echo get_string('allresponses', 'quiz_liveviewgrid')."</a>";
+            echo "\n<table border=0><tr><td>";
+            echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
+            $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
             $groups = $DB->get_records('groups', array('courseid' => $course->id));
-            foreach ($groups as $grp) {
-                $urlget = "id=$id&mode=$mode&evaluate=$evaluate&showkey=$showkey&order=$order&compact=$compact&group=".$grp->id;
-                echo get_string('or', 'quiz_liveviewgrid')."<a href='".$CFG->wwwroot."/mod/quiz/report.php?$urlget'>";
-                echo $grp->name."</a>";
+            echo "\n<td><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+            foreach ($hidden as $key => $value) {
+                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
             }
+            echo "\n<select name=\"group\">";
+            if ($canaccess) {
+                echo "\n<option value=\"0\">".get_string('allresponses', 'quiz_liveviewgrid')."</option>";
+            }
+            foreach ($groups as $grp) {
+                if ($DB->get_record('groups_members', array('groupid' => $grp->id, 'userid' => $USER->id)) || $canaccess) {
+                    $groupid = $grp->id;
+                    // This teacher can see this group.
+                    echo "\n<option value=\"$groupid\">".$grp->name."</option>";
+                }
+            }
+            echo "\n</select>";
+            echo "\n<input type='submit' value='Select this group'>";
+            echo "\n</form></td></tr></table>";
 
         }
 
@@ -277,6 +292,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($group) {
             $grpname = $DB->get_record('groups', array('id' => $group));
             echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
+        } else if ($canaccess) {
+            echo ' -- ('.get_string('allresponses', 'quiz_liveviewgrid').')';
         }
 
         $sofar = $this->liveview_who_sofar_gridview($quizid);
@@ -547,5 +564,38 @@ class quiz_liveviewgrid_report extends quiz_default_report {
          $name = $user->firstname."</td><td>".$user->lastname;
          return($name);
     }
+
+    /**
+     * Function to return the code for a button to select settings.
+     *
+     * @param string $buttontext The text for the button.
+     * @param string $hidden The array of the current hidden values.
+     * @param string $togglekey The key for the values that are to be toggled.
+     * @param string $info The string that gives information in the button tooltip.
+     * @return string. The html code for the button form.
+     */
+    protected function liveview_button($buttontext, $hidden, $togglekey, $info) {
+        global $CFG;
+        if (strlen($info) > 1) {
+            $title = " title=\"$info\"";
+        } else {
+            $title = '';
+        }
+        $mytext = "\n<td$title><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+        foreach ($hidden as $key => $value) {
+            // Toggle the value associated with the $togglekey.
+            if ($key == $togglekey) {
+                if ($value) {
+                    $value = 0;
+                } else {
+                    $value = 1;
+                }
+            }
+            $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+        }
+        $mytext .= "<input type=\"submit\" value=\"$buttontext\"></form></td>";
+        return $mytext;
+    }
+
 
 }

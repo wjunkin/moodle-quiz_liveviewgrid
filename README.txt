@@ -20,3 +20,7 @@ Changes for version 1.1.3. Spreadsheet handles Cloze questions, has better forma
   Added "....' to long (truncated) answers to let the teacher know that the tooltip would show more of the answer.
 Changes for version 1.2.0. Handles groups properly, including limiting teacher view unless accessallgroups is enabled.
 Changes for version 1.2.1. Tooltips now work for touchscreen laptops using Firefos browser.
+Changes for version 1.2.4. Shows groups in dropdown menu, only shows groups to teachers that they are allowed to see,
+  changed settings links to buttons, and made all information and help strings into tooltips.
+  Also, now supports a compact view of the table. In this view the question texts that are truncated have tooltips.
+  The page for essay questions now displays in a table, one row per student.
