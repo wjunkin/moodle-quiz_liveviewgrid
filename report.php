@@ -224,10 +224,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
 
         // Find out if there may be groups. If so, allow the teacher to choose a group.
+        $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         if ($groupmode) {
             echo "\n<table border=0><tr><td>";
             echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
-            $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
             $groups = $DB->get_records('groups', array('courseid' => $course->id));
             echo "\n<td><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
             foreach ($hidden as $key => $value) {
