@@ -18,13 +18,22 @@
  * Quiz liveviewgrid report class.
  *
  * @package   quiz_liveviewgrid
- * @copyright 2014 Open University
- * @author    James Pratt <me@jamiep.org>
+ * @copyright 2019 Eckerd College
+ * @author    William (Bill) Junkin <junkinwf@eckerd.edu>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_fraction.php");
+
+// Include reportlib.php to obtain the functions needed. This includes the following.
+// The function liveviewgrid_group_dropdownmenu($courseid, $GETurl, $canaccess, $hidden).
+// The function liveview_button($buttontext, $hidden, $togglekey, $info).
+// Thefunction liveview_find_student_gridview($userid).
+// The function liveview_who_sofar_gridview($quizid).
+// The function liveviewgrid_get_answers($quizid).
+
+require_once('locallib.php');
 /**
  * The class quiz_liveviewgrid_report provides a dynamic spreadsheet of the quiz.
  *
@@ -83,6 +92,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $id = optional_param('id', 0, PARAM_INT);
         $mode = optional_param('mode', '', PARAM_ALPHA);
         $compact = optional_param('compact', 0, PARAM_INT);
+        $singleqid = optional_param('singleqid', 0, PARAM_INT);
         $slots = array();
         $question = array();
         $users = array();
@@ -102,54 +112,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
         $stanswers = array();
         $stfraction = array();
-        foreach ($quizattempts as $key => $quizattempt) {
-            $usrid = $quizattempt->userid;
-            $qubaid = $quizattempt->uniqueid;
-            $mydm = new quiz_liveviewgrid_fraction($qubaid);
-            $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
-            foreach ($qattempts as $qattempt) {
-                $myresponse = array();
-                $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
-                foreach ($qattemptsteps as $qattemptstep) {
-                    if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')) {// Handling Cloze questions.
-                        $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
-                        foreach ($answers as $answer) {
-                            $myresponse[$answer->name] = $answer->value;
-                        }
-                        if (count($myresponse) > 0) {
-                            $clozeresponse = array();// An array for the Close responses.
-                            foreach ($myresponse as $key => $respon) {
-                                // For cloze questions the key will be sub(\d*)_answer.
-                                // I need to take the answer that follows part (\d):(*)?;.
-                                if (preg_match('/sub(\d)*\_answer/', $key, $matches)) {
-                                    $clozequestionid = $qattempt->questionid;
-                                    // Finding the number of parts.
-                                    $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
-                                    $myres = array();
-                                    $myres[$key] = $respon;
-                                    $newres = $mydm->get_fraction($qattempt->slot, $myres);
-                                    $onemore = $numclozeparts + 1;
-                                    $tempans = $newres[0]."; part $onemore";
-                                    $index = $matches[1];
-                                    $nextindex = $index + 1;
-                                    $tempcorrect = 'part '.$matches[1].': ';
-                                    if (preg_match("/$tempcorrect(.*); part $nextindex/", $tempans, $ansmatch)) {
-                                        $clozeresponse[$matches[1]] = $ansmatch[1];
-                                    }
-                                }
-                            }
-                            $response = $mydm->get_fraction($qattempt->slot, $myresponse);
-                            if (count($clozeresponse) > 0) {
-                                $stanswers[$usrid][$qattempt->questionid] = $clozeresponse;
-                            } else {
-                                $stanswers[$usrid][$qattempt->questionid] = $response[0];
-                            }
-                            $stfraction[$usrid][$qattempt->questionid] = $response[1];
-                        }
-                    }
-                }
-            }
-        }
+        list($stanswers, $stfraction) = liveviewgrid_get_answers($quizid);
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
@@ -183,25 +146,39 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['order'] = $order;
         $hidden['compact'] = $compact;
         $hidden['group'] = $group;
+        $hidden['singleqid'] = $singleqid;
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
+        $sofar = liveview_who_sofar_gridview($quizid);
+        // Put in a histogram if the question has a histogram and a single question is displayed.
+        if ($singleqid > 0) {
+            $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+            $questiontext = $DB->get_record('question', array('id' => $singleqid));
+            if (in_array($questiontext->qtype, $multitype)) {
+                liveviewgrid_display_histogram($questiontext, $quizid, $group, $cm->id);
+            }
+        }
 
         echo "<table border = 0><tr>";
         if ($showresponses) {
             $info = '';
             if ($showkey) {
+                $info = get_string('clickhidekey', 'quiz_liveviewgrid');
                 $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
             } else {
+                $info = get_string('clickshowkey', 'quiz_liveviewgrid');
                 $buttontext = get_string('showgradekey', 'quiz_liveviewgrid');
             }
             $togglekey = 'showkey';
-            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($order) {
+                $info = get_string('clickorderlastname', 'quiz_liveviewgrid');
                 $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
             } else {
+                $info = get_string('clickorderfirstname', 'quiz_liveviewgrid');
                 $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
             }
             $togglekey = 'order';
-            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($evaluate) {
                 $buttontext = get_string('hidegrades', 'quiz_liveviewgrid');
                 $info = get_string('gradedexplain', 'quiz_liveviewgrid');
@@ -210,44 +187,33 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $buttontext = get_string('showgrades', 'quiz_liveviewgrid');
             }
             $togglekey = 'evaluate';
-            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             $info = '';
-            if ($compact) {
-                $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
-                $info = get_string('expandexplain', 'quiz_liveviewgrid');
-            } else {
-                $buttontext = get_string('compact', 'quiz_liveviewgrid');
+            if ($singleqid == 0) {
+                // No compact option if a single question is being viewed.
+                if ($compact) {
+                    $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
+                    $info = get_string('expandexplain', 'quiz_liveviewgrid');
+                } else {
+                    $info = get_string('clickcompact', 'quiz_liveviewgrid');
+                    $buttontext = get_string('compact', 'quiz_liveviewgrid');
+                }
+                $togglekey = 'compact';
+                echo liveview_button($buttontext, $hidden, $togglekey, $info);
             }
-            $togglekey = 'compact';
-            echo $this->liveview_button($buttontext, $hidden, $togglekey, $info);
             echo "</tr></table>";
         }
 
         // Find out if there may be groups. If so, allow the teacher to choose a group.
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
+        $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
         if ($groupmode) {
-            echo "\n<table border=0><tr><td>";
-            echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
-            $groups = $DB->get_records('groups', array('courseid' => $course->id));
-            echo "\n<td><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
-            foreach ($hidden as $key => $value) {
-                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
-            }
-            echo "\n<select name=\"group\">";
-            if ($canaccess) {
-                echo "\n<option value=\"0\">".get_string('allresponses', 'quiz_liveviewgrid')."</option>";
-            }
-            foreach ($groups as $grp) {
-                if ($DB->get_record('groups_members', array('groupid' => $grp->id, 'userid' => $USER->id)) || $canaccess) {
-                    $groupid = $grp->id;
-                    // This teacher can see this group.
-                    echo "\n<option value=\"$groupid\">".$grp->name."</option>";
-                }
-            }
-            echo "\n</select>";
-            echo "\n<input type='submit' value='Select this group'>";
-            echo "\n</form></td></tr></table>";
-
+            $courseid = $course->id;
+            liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
+        }
+        // If a single question is being displayed, allow the teacher to select a different question.
+        if ($singleqid > 0) {
+            liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
         }
 
         // CSS style for blinking 'Refresh Page!' notice.
@@ -296,7 +262,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo ' -- ('.get_string('allresponses', 'quiz_liveviewgrid').')';
         }
 
-        $sofar = $this->liveview_who_sofar_gridview($quizid);
 
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
@@ -336,26 +301,21 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // The array for storing the all the texts for tootips.
         $tooltiptext = array();
 
+        $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
+        $togglekey = '';
         foreach ($slots as $key => $slotvalue) {
-            echo "<th style=\"word-wrap: break-word;\">";
             if (isset($question['name'][$key])) {
-                $graphurl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/quizgraphics.php';
-                $graphurl .= '?question_id='.$key."&quizid=".$quizid.'&group='.$group;
-                echo "<a href='".$graphurl."' target=\"_blank\">";
+                $hidden['singleqid'] = $key;
                 $safequestionname = trim(strip_tags($question['name'][$key]));
-                if (strlen($safequestionname) > $trun) {
-                    // Making a tooltip out of a question name. The htmlentities function leaves single quotes unchanged.
-                    $safename = htmlentities($safequestionname);
-                    $safename1 = preg_replace("/\n/", "<br />", $safename);
-                    $tooltiptext[] .= "\n    link".'q_'.$key.": '".addslashes($safename1)."'";
-                    echo "<div class=\"showTip link".'q_'.$key."\">";
-                }
-                echo substr(trim($safequestionname), 0, $trun);
-                echo "</a>";
+                    $buttontext = substr(trim($safequestionname), 0, $trun);
+                    $info = get_string('clicksingleq', 'quiz_liveviewgrid').trim($safequestionname);
+                    echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            } else {
+                echo "<td></td>";
             }
-            echo "</th>\n";
         }
         echo "</tr>\n</thead>\n";
+        $hidden['singleqid'] = $singleqid;
 
         if ($showresponses) {
             // Javascript and css for tooltips.
@@ -382,7 +342,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 foreach ($users as $user) {
                     echo "<tbody><tr>";
 
-                    echo "<td>".$this->liveview_find_student_gridview($user)."</td>\n";
+                    echo "<td>".liveview_find_student_gridview($user)."</td>\n";
                     foreach ($slots as $questionid => $slotvalue) {
                         if (($questionid != "") and ($questionid != 0)) {
                             if (isset($stanswers[$user][$questionid])) {
@@ -410,7 +370,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 echo '';
                             }
                         }
-                        if (strlen($answer) < $trun) {
+                        if ((strlen($answer) < $trun) || ($singleqid > 0)) {
                             echo ">".htmlentities($answer)."</td>";
                         } else {
                             // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
@@ -508,8 +468,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         global $DB;
         $slots = array();
         $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+        $singleqid = optional_param('singleqid', 0, PARAM_INT);
         foreach ($myslots as $key => $value) {
-            $slots[$value->questionid] = $value->slot;
+            if (($singleqid == 0) || ($value->questionid == $singleqid)) {
+                $slots[$value->questionid] = $value->slot;
+            }
         }
         return $slots;
     }
@@ -530,72 +493,5 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         return $question;
     }
-
-    /**
-     * Return the number of users who have submitted answers to this quiz instance.
-     *
-     * @param int $quizid The ID for the quiz instance
-     * @return array The userids for all the students submitting answers.
-     */
-    private function liveview_who_sofar_gridview($quizid) {
-        global $DB;
-
-        $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-
-        foreach ($records as $records) {
-            $userid[] = $records->userid;
-        }
-        if (isset($userid)) {
-            return(array_unique($userid));
-        } else {
-            return(null);
-        }
-    }
-
-    /**
-     * Return the first and last name of a student.
-     *
-     * @param int $userid The ID for the student.
-     * @return string The last name, first name of the student.
-     */
-    protected function liveview_find_student_gridview($userid) {
-         global $DB;
-         $user = $DB->get_record('user', array('id' => $userid));
-         $name = $user->firstname."</td><td>".$user->lastname;
-         return($name);
-    }
-
-    /**
-     * Function to return the code for a button to select settings.
-     *
-     * @param string $buttontext The text for the button.
-     * @param string $hidden The array of the current hidden values.
-     * @param string $togglekey The key for the values that are to be toggled.
-     * @param string $info The string that gives information in the button tooltip.
-     * @return string. The html code for the button form.
-     */
-    protected function liveview_button($buttontext, $hidden, $togglekey, $info) {
-        global $CFG;
-        if (strlen($info) > 1) {
-            $title = " title=\"$info\"";
-        } else {
-            $title = '';
-        }
-        $mytext = "\n<td$title><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
-        foreach ($hidden as $key => $value) {
-            // Toggle the value associated with the $togglekey.
-            if ($key == $togglekey) {
-                if ($value) {
-                    $value = 0;
-                } else {
-                    $value = 1;
-                }
-            }
-            $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
-        }
-        $mytext .= "<input type=\"submit\" value=\"$buttontext\"></form></td>";
-        return $mytext;
-    }
-
 
 }
