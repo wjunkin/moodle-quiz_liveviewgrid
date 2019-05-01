@@ -33,7 +33,7 @@ require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewg
 // The function liveview_who_sofar_gridview($quizid).
 // The function liveviewgrid_get_answers($quizid).
 
-require_once('locallib.php');
+require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
 /**
  * The class quiz_liveviewgrid_report provides a dynamic spreadsheet of the quiz.
  *
