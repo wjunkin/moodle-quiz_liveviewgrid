@@ -117,7 +117,6 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
         if ($DB->get_record('groups_members', array('groupid' => $grp->id, 'userid' => $USER->id)) || $canaccess) {
             $groupid = $grp->id;
             // This teacher can see this group.
-            //echo "\n<option value=\"$groupid\">".$grp->name."</option>";
             $okgroup[$groupid] = $grp->name;
         }
     }
@@ -226,6 +225,14 @@ function liveviewgrid_get_answers($quizid) {
 
 }
 
+/**
+ * A function create the historgram for multichoice and other questions that can have a histogram.
+ *
+ * @param obj $questiontext The row from the question table for this question.
+ * @param int $quizid The id for the quiz.
+ * @param int $group The id for the selected group. If no group is selected the value is 0.
+ * @param int $cmid The id for this quiz course module.
+ **/
 function liveviewgrid_display_histogram($questiontext, $quizid, $group, $cmid) {
     global $DB, $CFG;
     $questionid = $questiontext->id;
@@ -239,64 +246,58 @@ function liveviewgrid_display_histogram($questiontext, $quizid, $group, $cmid) {
             $n++;
         }
     }
-//******************
-$stans = array();// The string of answers for each student to this question, indexed by the $userid.
-$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-foreach ($quizattempts as $quizattempt) {
-    $userid = $quizattempt->userid;
-    // Check that groups are not being used or that the student is a member of the group.
-    if (($group == 0) || ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $userid)))) {
-        $uniqueid = $quizattempt->uniqueid;
-        $questionattempts = $DB->get_records('question_attempts'
-            , array('questionusageid' => $uniqueid, 'questionid' => $questionid));
-        foreach ($questionattempts as $questionattempt) {
-            $attemptid = $questionattempt->id;
-            $attemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $attemptid));
-            foreach ($attemptsteps as $attemptstep) {
-                // Every time a student submits an answer, this generates a new question_attempt_step.
-                // Submitting one answer can generate several rows in the question_attempt_step_data table.
-                $stanswer = array();// The array of questionanswerids for this student for multichoice with several answers.
-                $attemptstepid = $attemptstep->id;
-                $attemptdata = $DB->get_records('question_attempt_step_data',  array('attemptstepid' => $attemptstepid));
-                foreach ($attemptdata as $datainfo) {
-                    $name = $datainfo->name;
-                    $value = $datainfo->value;
-                    if ($name == '_order') {
-                        // The order step_data should always occur before the answers or choices, except for truefalse.
-                        $questionanswerids = explode(',', $value);
-                    } else if ($attemptstep->state == 'complete') {
-                        if ($name == 'answer') {
-//                            if ($order) {
+    $stans = array();// The string of answers for each student to this question, indexed by the $userid.
+    $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+    foreach ($quizattempts as $quizattempt) {
+        $userid = $quizattempt->userid;
+        // Check that groups are not being used or that the student is a member of the group.
+        if (($group == 0) || ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $userid)))) {
+            $uniqueid = $quizattempt->uniqueid;
+            $questionattempts = $DB->get_records('question_attempts'
+                , array('questionusageid' => $uniqueid, 'questionid' => $questionid));
+            foreach ($questionattempts as $questionattempt) {
+                $attemptid = $questionattempt->id;
+                $attemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $attemptid));
+                foreach ($attemptsteps as $attemptstep) {
+                    // Every time a student submits an answer, this generates a new question_attempt_step.
+                    // Submitting one answer can generate several rows in the question_attempt_step_data table.
+                    $stanswer = array();// The array of questionanswerids for this student for multichoice with several answers.
+                    $attemptstepid = $attemptstep->id;
+                    $attemptdata = $DB->get_records('question_attempt_step_data',  array('attemptstepid' => $attemptstepid));
+                    foreach ($attemptdata as $datainfo) {
+                        $name = $datainfo->name;
+                        $value = $datainfo->value;
+                        if ($name == '_order') {
+                            // The order step_data should always occur before the answers or choices, except for truefalse.
+                            $questionanswerids = explode(',', $value);
+                        } else if ($attemptstep->state == 'complete') {
+                            if ($name == 'answer') {
                                 if ($questiontext->qtype == 'truefalse') {
                                     $truefalseindex = 1 - $value;
                                     $stans[$userid] = $qanswerids[$truefalseindex];
                                 } else {
                                     $stans[$userid] = $questionanswerids[$value];
                                 }
-//                            } else {
-//                                $stans[$userid] = $value;
-//                            }
-                        }
-                        if (preg_match('/choice(\d)/', $name, $matches)) {
-                            if ($value > 0) {
-                                $stanswer[] = $questionanswerids[$matches[1]];
                             }
-                        }
-                        if (preg_match('/p(\d)/', $name, $matches)) {
-                            if ($value > 0) {
-                                $stanswer[] = $qanswertext[$value];
+                            if (preg_match('/choice(\d)/', $name, $matches)) {
+                                if ($value > 0) {
+                                    $stanswer[] = $questionanswerids[$matches[1]];
+                                }
+                            }
+                            if (preg_match('/p(\d)/', $name, $matches)) {
+                                if ($value > 0) {
+                                    $stanswer[] = $qanswertext[$value];
+                                }
                             }
                         }
                     }
-                }
-                if (count($stanswer)) {
-                    $stans[$userid] = implode(',', $stanswer);
+                    if (count($stanswer)) {
+                        $stans[$userid] = implode(',', $stanswer);
+                    }
                 }
             }
         }
     }
-}
-//if ($order) {
     $myx = array();
     foreach ($qanswerids as $qanswerid) {
         $myx[$qanswerid] = 0;
@@ -315,8 +316,6 @@ foreach ($quizattempts as $quizattempt) {
     }
 
     $graphinfo = "?data=".implode(",", $myx).$labels."&total=10";
-    echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$questiontext->questiontext;
     $graphicurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php";
     echo "\n<br /><img src=\"".$graphicurl.$graphinfo."&cmid=$cmid\"></img>";
-//}//***********************
 }

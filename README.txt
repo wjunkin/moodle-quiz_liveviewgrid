@@ -24,3 +24,6 @@ Changes for version 1.2.4. Shows groups in dropdown menu, only shows groups to t
   changed settings links to buttons, and made all information and help strings into tooltips.
   Also, now supports a compact view of the table. In this view the question texts that are truncated have tooltips.
   The page for essay questions now displays in a table, one row per student.
+Changes for version 1.2.5. The question names are now buttons with tooltips. 
+  If a teacher clicks on a button, the single question page is displayed with the buttons from the standard page.
+Changes for version 1.2.6. The teacher now has the option to show/hide student names and show/hide correct answers.  

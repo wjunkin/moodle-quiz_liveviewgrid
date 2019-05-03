@@ -93,6 +93,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $mode = optional_param('mode', '', PARAM_ALPHA);
         $compact = optional_param('compact', 0, PARAM_INT);
         $singleqid = optional_param('singleqid', 0, PARAM_INT);
+        $showanswer = optional_param('showanswer', 0, PARAM_INT);
+        $shownames = optional_param('shownames', 1, PARAM_INT);
         $slots = array();
         $question = array();
         $users = array();
@@ -147,20 +149,27 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['compact'] = $compact;
         $hidden['group'] = $group;
         $hidden['singleqid'] = $singleqid;
+        $hidden['showanswer'] = $showanswer;
+        $hidden['shownames'] = $shownames;
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         $sofar = liveview_who_sofar_gridview($quizid);
-        // Put in a histogram if the question has a histogram and a single question is displayed.
-        if ($singleqid > 0) {
-            $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
-            $questiontext = $DB->get_record('question', array('id' => $singleqid));
-            if (in_array($questiontext->qtype, $multitype)) {
-                liveviewgrid_display_histogram($questiontext, $quizid, $group, $cm->id);
-            }
-        }
 
         echo "<table border = 0><tr>";
         if ($showresponses) {
-            $info = '';
+            if ($singleqid > 0) {
+                $questiontext = $DB->get_record('question', array('id' => $singleqid));
+                $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
+                $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
+                echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
+                if ($showanswer) {
+                    $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                    foreach ($attempts as $attempt) {
+                        $rightanswer = $attempt->rightanswer;
+                    }
+                    echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
+                }
+            }
+
             if ($showkey) {
                 $info = get_string('clickhidekey', 'quiz_liveviewgrid');
                 $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
@@ -169,15 +178,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $buttontext = get_string('showgradekey', 'quiz_liveviewgrid');
             }
             $togglekey = 'showkey';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            if ($order) {
-                $info = get_string('clickorderlastname', 'quiz_liveviewgrid');
-                $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
-            } else {
-                $info = get_string('clickorderfirstname', 'quiz_liveviewgrid');
-                $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'order';
             echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($evaluate) {
                 $buttontext = get_string('hidegrades', 'quiz_liveviewgrid');
@@ -188,7 +188,26 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
             $togglekey = 'evaluate';
             echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            $info = '';
+            if ($shownames) {
+                if ($order) {
+                    $info = get_string('clickorderlastname', 'quiz_liveviewgrid');
+                    $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
+                } else {
+                    $info = get_string('clickorderfirstname', 'quiz_liveviewgrid');
+                    $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
+                }
+                $togglekey = 'order';
+                echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            }
+            if ($shownames) {
+                $buttontext = get_string('hidenames', 'quiz_liveviewgrid');
+                $info = get_string('clickhidenames', 'quiz_liveviewgrid');
+            } else {
+                $buttontext = get_string('shownames', 'quiz_liveviewgrid');
+                $info = get_string('clickshownames', 'quiz_liveviewgrid');
+            }
+            $togglekey = 'shownames';
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($singleqid == 0) {
                 // No compact option if a single question is being viewed.
                 if ($compact) {
@@ -199,6 +218,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $buttontext = get_string('compact', 'quiz_liveviewgrid');
                 }
                 $togglekey = 'compact';
+                echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            } else {
+                if ($showanswer) {
+                    $buttontext = "Hide correct answer";
+                    $info = "Click to hide correct answer";
+                } else {
+                    $info = "Click to show correct answer";
+                    $buttontext = "Show correct answer";
+                }
+                $togglekey = 'showanswer';
                 echo liveview_button($buttontext, $hidden, $togglekey, $info);
             }
             echo "</tr></table>";
@@ -262,7 +291,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo ' -- ('.get_string('allresponses', 'quiz_liveviewgrid').')';
         }
 
-
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
         $initials = array();
@@ -294,10 +322,20 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $trun = 40;
             $dotdot = '....';
         }
+        // Put in a histogram if the question has a histogram and a single question is displayed.
+        if ($singleqid > 0) {
+            $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+            if (in_array($questiontext->qtype, $multitype)) {
+                liveviewgrid_display_histogram($questiontext, $quizid, $group, $cm->id);
+            }
+        }
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
-        echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th><th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
+        if ($shownames) {
+            echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th>";
+            echo "<th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
+        }
         // The array for storing the all the texts for tootips.
         $tooltiptext = array();
 
@@ -341,8 +379,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             if (isset($users)) {
                 foreach ($users as $user) {
                     echo "<tbody><tr>";
-
-                    echo "<td>".liveview_find_student_gridview($user)."</td>\n";
+                    if ($shownames) {
+                        echo "<td>".liveview_find_student_gridview($user)."</td>\n";
+                    }
                     foreach ($slots as $questionid => $slotvalue) {
                         if (($questionid != "") and ($questionid != 0)) {
                             if (isset($stanswers[$user][$questionid])) {
