@@ -91,6 +91,26 @@ function liveview_button($buttontext, $hidden, $togglekey, $info) {
 }
 
 /**
+ * Function to return the code for a single question button with tooltip.
+ *
+ * @param string $buttontext The text for the button.
+ * @param string $hidden The array of the current hidden values.
+ * @param string $linkid The key for the button tooltip.
+ * @return string. The html code for the button form.
+ */
+function liveview_question_button($buttontext, $hidden, $linkid) {
+    global $CFG;
+    $mytext = "\n<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+    foreach ($hidden as $key => $value) {
+        $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+    }
+    $mytext .= "<div class=\"showTip $linkid\">";
+    $mytext .= "<input type=\"submit\" value=\"$buttontext\"></form>";
+    $mytext .= "</div>";
+    return $mytext;
+}
+
+/**
  * A function to create a dropdown menu for the groups.
  *
  * @param int $courseid The id for the course.

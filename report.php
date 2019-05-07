@@ -221,11 +221,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo liveview_button($buttontext, $hidden, $togglekey, $info);
             } else {
                 if ($showanswer) {
-                    $buttontext = "Hide correct answer";
-                    $info = "Click to hide correct answer";
+                    $buttontext = get_string('hidecorrectanswer', 'quiz_liveviewgrid');
+                    $info = get_string('clickhideanswer', 'quiz_liveviewgrid');
                 } else {
-                    $info = "Click to show correct answer";
-                    $buttontext = "Show correct answer";
+                    $info = get_string('clickshowanswer', 'quiz_liveviewgrid');
+                    $buttontext = get_string('showcorrectanswer', 'quiz_liveviewgrid');
                 }
                 $togglekey = 'showanswer';
                 echo liveview_button($buttontext, $hidden, $togglekey, $info);
@@ -294,23 +294,25 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
         $initials = array();
-        foreach ($sofar as $unuser) {
-            // If only a group is desired, make sure this student is in the group.
-            if ($group) {
-                if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+        if (count($sofar) > 0) {
+            foreach ($sofar as $unuser) {
+                // If only a group is desired, make sure this student is in the group.
+                if ($group) {
+                    if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                        $getresponse = true;
+                    } else {
+                        $getresponse = false;
+                    }
+                } else {
                     $getresponse = true;
-                } else {
-                    $getresponse = false;
                 }
-            } else {
-                $getresponse = true;
-            }
-            if ($getresponse) {
-                $usr = $DB->get_record('user', array('id' => $unuser));
-                if ($order) {
-                    $initials[$unuser] = $usr->firstname."_".$usr->lastname;
-                } else {
-                    $initials[$unuser] = $usr->lastname."_".$usr->firstname;
+                if ($getresponse) {
+                    $usr = $DB->get_record('user', array('id' => $unuser));
+                    if ($order) {
+                        $initials[$unuser] = $usr->firstname."_".$usr->lastname;
+                    } else {
+                        $initials[$unuser] = $usr->lastname."_".$usr->firstname;
+                    }
                 }
             }
         }
@@ -345,9 +347,27 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             if (isset($question['name'][$key])) {
                 $hidden['singleqid'] = $key;
                 $safequestionname = trim(strip_tags($question['name'][$key]));
-                    $buttontext = substr(trim($safequestionname), 0, $trun);
-                    $info = get_string('clicksingleq', 'quiz_liveviewgrid').trim($safequestionname);
-                    echo liveview_button($buttontext, $hidden, $togglekey, $info);
+                $buttontext = trim($safequestionname);
+                $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
+                $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
+                $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
+                $info = '';
+                echo "<td>";
+                $linkid = "linkqtext_$key";
+                if (strlen($buttontext) > $trun) {
+                    preg_match_all('/./u', $buttontext, $matches);
+                    $ntrun = 0;
+                    $truncated = '';
+                    foreach ($matches[0] as $m) {
+                        if ($ntrun < $trun) {
+                            $truncated .= $m;
+                        }
+                        $ntrun++;
+                    }
+                    $buttontext = $truncated;
+                }
+                echo liveview_question_button($buttontext, $hidden, $linkid);
+                echo "</td>";
             } else {
                 echo "<td></td>";
             }
@@ -417,7 +437,17 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                             $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                             $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
                             echo "><div class=\"showTip link".$user.'_'.$questionid."\">";
-                            echo substr(trim(strip_tags($answer)), 0, $trun);
+                            // Making sure we pick up whole words.
+                            preg_match_all('/./u', $answer, $matches);
+                            $ntrun = 0;
+                            $truncated = '';
+                            foreach ($matches[0] as $m) {
+                                if ($ntrun < $trun) {
+                                    $truncated .= $m;
+                                }
+                                $ntrun++;
+                            }
+                            echo $truncated;
                             echo " $dotdot</div></td>";
                         }
                     }
