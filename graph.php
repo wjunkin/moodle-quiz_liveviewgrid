@@ -24,22 +24,24 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
-require_once($CFG->dirroot.'/lib/graphlib.php');
+require_once($CFG->dirroot.'/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_graphlib.php');
 defined('MOODLE_INTERNAL') || die();
 $labels = optional_param_array('x', '', PARAM_TEXT);
+$fr = optional_param_array('fr', '', PARAM_FLOAT);
 $data = optional_param('data', '', PARAM_TAGLIST);
 $total = optional_param('total', '', PARAM_INT);
 $cmid = optional_param('cmid', 0, PARAM_INT);
 $cm = $DB->get_record('course_modules', array('id' => $cmid));
 $course = $DB->get_record('course', array('id' => $cm->course));
 require_login($course, true, $cm);
-$line = new graph(700, 500);
+$line = new quiz_liveviewgrid_graphlib(700, 500);
 $line->parameter['title']   = '';
 $line->parameter['y_label_left'] = get_string('numberofresponses', 'quiz_liveviewgrid');
 foreach ($labels as $key => $value) {
     $labels[$key] = urldecode($value);
 }
 $line->x_data = $labels;
+$line->fractions = $fr;
 $line->y_data['responses'] = explode(",", $data);
 $line->y_format['responses'] = array('colour' => 'blue', 'bar' => 'fill', 'shadow_offset' => 3);
 $line->y_order = array('responses');

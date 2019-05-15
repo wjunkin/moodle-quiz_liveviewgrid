@@ -255,14 +255,20 @@ function liveviewgrid_get_answers($quizid) {
  **/
 function liveviewgrid_display_histogram($questiontext, $quizid, $group, $cmid) {
     global $DB, $CFG;
+    $evaluate = optional_param('evaluate', 0, PARAM_INT);
     $questionid = $questiontext->id;
     // For those questions that have answers, get the possible answers and create the labels for the histogram.
     if ($answers = $DB->get_records('question_answers', array('question' => $questionid))) {
         $labels = '';
+        $fraction = '';
         $n = 0;
         foreach ($answers as $answer) {
             $qanswerids[$n] = $answer->id;// Needed for truefalse questions.
             $labels .= "&x[$n]=".substr(strip_tags($answer->answer), 0, 15);
+            $myfraction = $answer->fraction;
+            if ($evaluate) {
+                $fraction .= "&fr[$n]=$myfraction";
+            }
             $n++;
         }
     }
@@ -335,7 +341,7 @@ function liveviewgrid_display_histogram($questiontext, $quizid, $group, $cmid) {
         }
     }
 
-    $graphinfo = "?data=".implode(",", $myx).$labels."&total=10";
+    $graphinfo = "?data=".implode(",", $myx).$labels.$fraction."&total=10";
     $graphicurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php";
     echo "\n<br /><img src=\"".$graphicurl.$graphinfo."&cmid=$cmid\"></img>";
 }
