@@ -28,5 +28,9 @@ Changes for version 1.2.5. The question names are now buttons with tooltips.
   If a teacher clicks on a button, the single question page is displayed with the buttons from the standard page.
 Changes for version 1.2.6. The teacher now has the option to show/hide student names and show/hide correct answers.
 Changes for version 1.2.7. The question tooltip now has both question name and questiontext. Truncate splits on entire symbols. 
-Changes for version 1.2.8. If evaluate is set, th histogram bars are now colored according to how correct they are.
-   To do this I created a revised version of the lib/graphlib.php file, liveviewgrid/classes/quiz_liveviewgrid_graphlib.php.  
+Changes for version 1.2.8. If evaluate is set, the histogram bars are now colored according to how correct they are.
+   To do this I created a revised version of the lib/graphlib.php file, liveviewgrid/classes/quiz_liveviewgrid_graphlib.php.
+Changes for version 1.2.9. If a teacher attempts the quiz (preview) their resonses no longer show up.
+   Percentages of students vs class enrollment are displayed on the bars. If show names is set in single question view,
+   the student on the bars. Dropdown menus submit on change of value. Current value not shown.
+   Tooltips show complete choice options on the x-axis legend. These changes required displaying image in iframe.

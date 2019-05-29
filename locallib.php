@@ -34,9 +34,14 @@ function liveview_who_sofar_gridview($quizid) {
     global $DB;
 
     $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-
-    foreach ($records as $records) {
-        $userid[] = $records->userid;
+    $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+    $quiz = $DB->get_record('quiz', array('id' => $quizid));
+    $context = context_course::instance($quiz->course);
+    foreach ($records as $record) {
+        if ($DB->get_record('role_assignments', array('contextid' => $context->id,
+            'roleid' => $studentrole->id, 'userid' => $record->userid))) {
+            $userid[] = $record->userid;
+        }
     }
     if (isset($userid)) {
         return(array_unique($userid));
@@ -124,20 +129,26 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
     echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
     $groups = $DB->get_records('groups', array('courseid' => $courseid));
     echo "\n<td><form action=\"$geturl\">";
+    $mygroup = -1;
     foreach ($hidden as $key => $value) {
         if ($key <> 'group') {
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+        } else {
+            $mygroup = $value;
         }
     }
-    echo "\n<select name=\"group\">";
-    if ($canaccess) {
+    echo "\n<select name=\"group\" onchange='this.form.submit()'>";
+    echo "\n<option value=\"0\">".get_string('choosegroup', 'quiz_liveviewgrid')."</option>";
+    if ($canaccess && ($mygroup > 0)) {
         echo "\n<option value=\"0\">".get_string('allgroups', 'quiz_liveviewgrid')."</option>";
     }
     foreach ($groups as $grp) {
         if ($DB->get_record('groups_members', array('groupid' => $grp->id, 'userid' => $USER->id)) || $canaccess) {
             $groupid = $grp->id;
             // This teacher can see this group.
-            $okgroup[$groupid] = $grp->name;
+            if ($groupid <> $mygroup) {
+                $okgroup[$groupid] = $grp->name;
+            }
         }
     }
     asort($okgroup);
@@ -145,8 +156,6 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
         echo "\n<option value=\"$grpid\">$grpname</option>";
     }
     echo "\n</select>";
-    echo "\n<input type='submit' value='".get_string('submitgroup', 'quiz_liveviewgrid').
-        "' title='".get_string('clickgroup', 'quiz_liveviewgrid')."'>";
     echo "\n</form></td></tr></table>";
 }
 
@@ -163,20 +172,26 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
     echo get_string('whichquestion', 'quiz_liveviewgrid')."</td>";
     $slots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
     echo "\n<td><form action=\"$geturl\">";
+    $mysingleqid = 0;
     foreach ($hidden as $key => $value) {
         if ($key <> 'singleqid') {
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+        } else {
+            $mysingleqid = $value;
         }
     }
-    echo "\n<select name=\"singleqid\">";
-    echo "\n<option value=\"0\">".get_string('allquestions', 'quiz_liveviewgrid')."</option>";
+    echo "\n<select name=\"singleqid\" onchange='this.form.submit()'>";
+    echo "\n<option value=\"-1\">".get_string('choosequestion', 'quiz_liveviewgrid')."</option>";
+    if ($mysingleqid) {
+        echo "\n<option value=\"0\">".get_string('allquestions', 'quiz_liveviewgrid')."</option>";
+    }
     foreach ($slots as $slot) {
         $question = $DB->get_record('question', array('id' => $slot->questionid));
-        echo "\n<option value=\"".$question->id."\">".$question->name."</option>";
+        if ($question->id <> $mysingleqid) {
+            echo "\n<option value=\"".$question->id."\">".$question->name."</option>";
+        }
     }
     echo "\n</select>";
-    echo "\n<input type='submit' value='".get_string('submitquestion', 'quiz_liveviewgrid').
-        "' title='".get_string('clickquestion', 'quiz_liveviewgrid')."'>";
     echo "\n</form></td></tr></table>";
 }
 

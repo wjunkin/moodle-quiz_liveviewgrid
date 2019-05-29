@@ -1640,7 +1640,7 @@ class quiz_liveviewgrid_graphlib {
         $this->colour['ltltorange'] = imagecolorallocate ($this->image, 0xFF, 0xcc, 0x99);
         $this->colour['lime']     = imagecolorallocate ($this->image, 0x00, 0xFF, 0x00);
         $this->colour['yellow']   = imagecolorallocate ($this->image, 0xFF, 0xFF, 0x00);
-        $this->colour['blue']     = imagecolorallocate ($this->image, 0x00, 0x00, 0xFF);
+        $this->colour['blue']     = imagecolorallocate ($this->image, 0x80, 0x80, 0xFF);
         $this->colour['ltblue']   = imagecolorallocate ($this->image, 0x00, 0xCC, 0xFF);
         $this->colour['ltltblue'] = imagecolorallocate ($this->image, 0x99, 0xFF, 0xFF);
         $this->colour['fuchsia']  = imagecolorallocate ($this->image, 0xFF, 0x00, 0xFF);

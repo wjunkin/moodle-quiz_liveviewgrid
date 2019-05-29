@@ -208,18 +208,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
             $togglekey = 'shownames';
             echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            if ($singleqid == 0) {
-                // No compact option if a single question is being viewed.
-                if ($compact) {
-                    $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
-                    $info = get_string('expandexplain', 'quiz_liveviewgrid');
-                } else {
-                    $info = get_string('clickcompact', 'quiz_liveviewgrid');
-                    $buttontext = get_string('compact', 'quiz_liveviewgrid');
-                }
-                $togglekey = 'compact';
-                echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            if ($compact) {
+                $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
+                $info = get_string('expandexplain', 'quiz_liveviewgrid');
             } else {
+                $info = get_string('clickcompact', 'quiz_liveviewgrid');
+                $buttontext = get_string('compact', 'quiz_liveviewgrid');
+            }
+            $togglekey = 'compact';
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            if ($singleqid > 0) {
                 if ($showanswer) {
                     $buttontext = get_string('hidecorrectanswer', 'quiz_liveviewgrid');
                     $info = get_string('clickhideanswer', 'quiz_liveviewgrid');
@@ -288,7 +286,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $grpname = $DB->get_record('groups', array('id' => $group));
             echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
         } else if ($canaccess) {
-            echo ' -- ('.get_string('allresponses', 'quiz_liveviewgrid').')';
+            echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
         }
 
         // Getting and preparing to sorting users.
@@ -309,9 +307,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 if ($getresponse) {
                     $usr = $DB->get_record('user', array('id' => $unuser));
                     if ($order) {
-                        $initials[$unuser] = $usr->firstname."_".$usr->lastname;
+                        $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
                     } else {
-                        $initials[$unuser] = $usr->lastname."_".$usr->firstname;
+                        $initials[$unuser] = $usr->lastname.',&nbsp;'.$usr->firstname;
                     }
                 }
             }
@@ -328,7 +326,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($singleqid > 0) {
             $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
             if (in_array($questiontext->qtype, $multitype)) {
-                liveviewgrid_display_histogram($questiontext, $quizid, $group, $cm->id);
+                $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
+                $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
+                echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+                    frameBorder=0 height='520' width='720'>";
+                echo "</iframe>";
             }
         }
         echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
@@ -396,9 +398,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
             // Create the table.
+            echo "\n<tbody>";
             if (isset($users)) {
                 foreach ($users as $user) {
-                    echo "<tbody><tr>";
+                    echo "<tr>";
                     if ($shownames) {
                         echo "<td>".liveview_find_student_gridview($user)."</td>\n";
                     }
@@ -417,14 +420,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $answer = ' ';
                             }
                         }
-                        echo "<td ";
+                        echo "<td";
                         if ($evaluate) {
                             if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                 $myfraction = $stfraction[$user][$questionid];
                                 $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
                                 $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
                                 $bluepart = intval(126 * $myfraction);
-                                echo "style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                                echo " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                             } else {
                                 echo '';
                             }
@@ -451,8 +454,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                             echo " $dotdot</div></td>";
                         }
                     }
-                    echo "</tr></tbody>\n";
+                    echo "</tr>\n";
                 }
+                echo "</tbody>";
             }
             echo "\n</table>";
 
