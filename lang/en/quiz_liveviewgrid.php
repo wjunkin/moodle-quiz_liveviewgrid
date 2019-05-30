@@ -23,14 +23,12 @@
  */
 
 $string['allgroups'] = 'All groups';
-$string['allresponses'] = 'All responses';
 $string['allquestions'] = 'All questions';
 $string['questionis'] = 'The question is: ';
 $string['compact'] = 'Make table compact';
 $string['choosegroup'] = 'Choose a group';
 $string['choosequestion'] = 'Choose a question';
 $string['clickcompact'] = 'Click &quot;Make table compact&quot; to obtain a compact view of student responses.';
-$string['clickgroup'] = 'Click to select a group';
 $string['clickorderfirstname'] = 'Click to order the names in the table by first name.';
 $string['clickorderlastname'] = 'Click to order the names in the table by last name.';
 $string['clicksingleq'] = 'Click here to go to the single question view for question ';
@@ -40,7 +38,6 @@ $string['clickshowkey'] = 'Click to show the color key/legend for the grades.';
 $string['clickshownames'] = 'Click to show student names.';
 $string['clickshowanswer'] = 'Click to show correct answer';
 $string['clickhidenames'] = 'Click to hide student names.';
-$string['clickquestion'] = 'Click to select a question';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
@@ -76,8 +73,6 @@ $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
 $string['shownames'] = 'Show student names';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
-$string['submitgroup'] = 'Select this group';
-$string['submitquestion'] = 'Select this question';
 $string['whichgroups'] = 'Which group do you want to see? ';
 $string['whichquestion'] = 'Which question do you want to see? ';
 $string['youmustbeauthorized'] = 'You must be authorized to access this site.';
