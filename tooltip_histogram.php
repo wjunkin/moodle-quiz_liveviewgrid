@@ -34,7 +34,7 @@ $shownames = optional_param('shownames', 0, PARAM_INT);
 $order = optional_param('order', 0, PARAM_INT);
 $questiontext = $DB->get_record('question', array('id' => $questionid));
 $cmid = optional_param('cmid', 0, PARAM_INT);
-$cm = get_coursemodule_from_id('quiz', $quizid, 0, false, MUST_EXIST);
+$cm = get_coursemodule_from_id('quiz', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $courseid));
 require_login($course, true, $cm);
 $context = context_module::instance($cmid);
