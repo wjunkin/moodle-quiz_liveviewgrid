@@ -315,7 +315,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         if ($compact) {
-            $trun = 4;
+            $trun = 1;
             $dotdot = '';
             // Truncate responses to 4 if compact is desired, else 80.
         } else {
@@ -329,7 +329,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                 $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
                 echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-                    frameBorder=0 height='520' width='720'>";
+                    frameBorder=0 height='520' width='800'>";
                 echo "</iframe>";
             }
         }

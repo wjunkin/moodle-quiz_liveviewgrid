@@ -110,7 +110,7 @@ function liveview_question_button($buttontext, $hidden, $linkid) {
         $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
     }
     $mytext .= "<div class=\"showTip $linkid\">";
-    $mytext .= "<input type=\"submit\" value=\"$buttontext\"></form>";
+    $mytext .= "<input type=\"submit\" value=\"".htmlentities($buttontext)."\"></form>";
     $mytext .= "</div>";
     return $mytext;
 }

@@ -23,11 +23,11 @@
  */
 
 $string['allgroups'] = 'All groups';
-$string['allquestions'] = 'All questions';
+$string['allquestions'] = 'Or go back to All questions';
 $string['questionis'] = 'The question is: ';
 $string['compact'] = 'Make table compact';
 $string['choosegroup'] = 'Choose a group';
-$string['choosequestion'] = 'Choose a question';
+$string['choosequestion'] = 'Choose a question (navigate)';
 $string['clickcompact'] = 'Click &quot;Make table compact&quot; to obtain a compact view of student responses.';
 $string['clickorderfirstname'] = 'Click to order the names in the table by first name.';
 $string['clickorderlastname'] = 'Click to order the names in the table by last name.';

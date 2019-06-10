@@ -246,7 +246,7 @@ if ($evaluate == 1) {
 $xoffset = 47;
 $xwidth = intval(648 / $numofbars);
 $baroffset = intval(81 / $numofbars) + 47;
-echo "\n<image src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php?$mygraphinfo\">";
+echo "\n<image src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/graph.php?$mygraphinfo\" align='left'>";
 for ($i = 0; $i < $numofbars; $i++) {
     $left = $xoffset + ($i * $xwidth);
     echo "\n<div class=\"mytooltip\" style=\"left: $left\">&nbsp;";
