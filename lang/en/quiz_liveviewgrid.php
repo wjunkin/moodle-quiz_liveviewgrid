@@ -52,6 +52,11 @@ $string['from'] = ' from ';
 $string['lastname'] = 'Last Name';
 $string['liveviewgrid:componentname'] = 'Live Report';
 $string['liveviewgrid:view'] = 'View Live Report';
+$string['notice'] = 'Notice';
+$string['noticeexplain'] = "Most Live View pages are dynamic. This page is NOT.
+ You must click an option button or refresh the page to show student responses sent after the page loaded.
+ This page is useful if you want to compare responses at different times or want to print out results.
+  Responses as of ";
 $string['numberofresponses'] = 'Number of Responses';
 $string['notallowedgroup'] = "\n<br />You cannot view these results.
 Either you cannot see all groups or you are trying to see responses from students in a group that you are not allowed to see.";
@@ -59,6 +64,7 @@ $string['notmember'] = "You are not a member of this group.\n<br />";
 $string['or'] = ' or ';
 $string['orderfirstname'] = 'Order table by first name';
 $string['orderlastname'] = 'Order table by last name';
+$string['popoutinfo'] = "Click to give a new page that is static. You can use it to compare responses at different times and print out results";
 $string['pickgroup'] = 'You must pick a group. ';
 $string['pluginname'] = 'Live Report';
 $string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';

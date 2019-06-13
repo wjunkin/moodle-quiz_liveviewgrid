@@ -281,6 +281,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo $head."\n</tr></table>";
         }
 
+        echo "\n<table><tr><td>";
         echo get_string('responses', 'quiz_liveviewgrid');
         if ($group) {
             $grpname = $DB->get_record('groups', array('id' => $group));
@@ -288,6 +289,26 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         } else if ($canaccess) {
             echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
         }
+        $popoutpageurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/liveviewpopout.php";
+        $info = get_string('popoutinfo', 'quiz_liveviewgrid');
+        $buttontext = "New page, static & printable";
+        $togglekey = '';
+        echo "</td>";
+        echo "\n<td title=\"$info\" style=\"padding: 20px;\">
+            <form target='_blank' action=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/liveviewpopout.php\">";
+        foreach ($hidden as $key => $value) {
+            // Toggle the value associated with the $togglekey.
+            if ($key == $togglekey) {
+                if ($value) {
+                    $value = 0;
+                } else {
+                    $value = 1;
+                }
+            }
+            echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+        }
+        echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
+        echo "</tr></table>";
 
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
