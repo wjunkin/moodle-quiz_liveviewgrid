@@ -291,7 +291,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         $popoutpageurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/liveviewpopout.php";
         $info = get_string('popoutinfo', 'quiz_liveviewgrid');
-        $buttontext = "New page, static & printable";
+        $buttontext = get_string('newpage', 'quiz_liveviewgrid');
         $togglekey = '';
         echo "</td>";
         echo "\n<td title=\"$info\" style=\"padding: 20px;\">

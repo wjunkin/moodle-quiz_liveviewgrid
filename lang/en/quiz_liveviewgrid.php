@@ -52,6 +52,7 @@ $string['from'] = ' from ';
 $string['lastname'] = 'Last Name';
 $string['liveviewgrid:componentname'] = 'Live Report';
 $string['liveviewgrid:view'] = 'View Live Report';
+$string['newpage'] = "New page, static & printable";
 $string['notice'] = 'Notice';
 $string['noticeexplain'] = "Most Live View pages are dynamic. This page is NOT.
  You must click an option button or refresh the page to show student responses sent after the page loaded.
