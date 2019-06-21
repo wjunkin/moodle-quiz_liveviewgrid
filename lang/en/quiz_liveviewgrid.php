@@ -38,6 +38,7 @@ $string['clickshowkey'] = 'Click to show the color key/legend for the grades.';
 $string['clickshownames'] = 'Click to show student names.';
 $string['clickshowanswer'] = 'Click to show correct answer';
 $string['clickhidenames'] = 'Click to hide student names.';
+$string['dynamicpage'] = ' -- Dynamic Live Report Page';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
 $string['hidegradekey'] = 'Hide Grading Legend';
@@ -54,10 +55,10 @@ $string['liveviewgrid:componentname'] = 'Live Report';
 $string['liveviewgrid:view'] = 'View Live Report';
 $string['newpage'] = "New page, static & printable";
 $string['notice'] = 'Notice';
-$string['noticeexplain'] = "Most Live View pages are dynamic. This page is NOT.
+$string['noticeexplain'] = "Most Live Report pages are dynamic. This page is NOT.
  You must click an option button or refresh the page to show student responses sent after the page loaded.
  This page is useful if you want to compare responses at different times or want to print out results.
-  Responses as of ";
+ Use the Dynamic Live Report Page to navigate to other pages. Responses as of ";
 $string['numberofresponses'] = 'Number of Responses';
 $string['notallowedgroup'] = "\n<br />You cannot view these results.
 Either you cannot see all groups or you are trying to see responses from students in a group that you are not allowed to see.";
@@ -68,6 +69,8 @@ $string['orderlastname'] = 'Order table by last name';
 $string['popoutinfo'] = "Click to give a new page that is static. You can use it to compare responses at different times and print out results";
 $string['pickgroup'] = 'You must pick a group. ';
 $string['pluginname'] = 'Live Report';
+$string['printinfo'] = 'Click to print this page or save this page as a PDF document.';
+$string['printpage'] = 'Print Page';
 $string['privacy:metadata'] = 'The Quiz Live Report (liveviewgrid) plugin does not store any personal data. It provides an interface for teachers to view data from quizzes without storing any data itself.';
 $string['questionresponses'] = 'Responses for Live Report';
 $string['quizname'] = 'Quiz name';
@@ -80,6 +83,7 @@ $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
 $string['showgradetitle'] = 'This shows if an answer is correct but does not grade the quiz';
 $string['shownames'] = 'Show student names';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
+$string['staticpage'] = ' -- Static Page';
 $string['whichgroups'] = 'Which group do you want to see? ';
 $string['whichquestion'] = 'Which question do you want to see? ';
 $string['youmustbeauthorized'] = 'You must be authorized to access this site.';

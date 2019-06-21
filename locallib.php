@@ -125,7 +125,7 @@ function liveview_question_button($buttontext, $hidden, $linkid) {
  */
 function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden) {
     global $DB, $USER;
-    echo "\n<table border=0><tr><td>";
+    echo "\n<table border=0><tr><td valign=\"top\">";
     echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
     $groups = $DB->get_records('groups', array('courseid' => $courseid));
     echo "\n<td><form action=\"$geturl\">";

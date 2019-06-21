@@ -105,23 +105,27 @@ $hidden['showanswer'] = $showanswer;
 $hidden['shownames'] = $shownames;
 $sofar = liveview_who_sofar_gridview($quizid);
 
-echo "<table border = 0><tr>";
 if ($showresponses) {
-    echo $quiz->name;
+    echo "<span style=\"font-size:125%\">".$quiz->name.get_string('staticpage', 'quiz_liveviewgrid')." </span>";
+    echo "<input type=\"button\" id=\"printbutton\" onclick=\"window.print();\"
+        title=\"".get_string('printinfo', 'quiz_liveviewgrid')."\"
+        value=\"".get_string('printpage', 'quiz_liveviewgrid')."\" />";
     if ($singleqid > 0) {
         $questiontext = $DB->get_record('question', array('id' => $singleqid));
         $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
         $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
-        echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
+        echo "<span> ".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
         if ($showanswer) {
             $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
             foreach ($attempts as $attempt) {
                 $rightanswer = $attempt->rightanswer;
             }
-            echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
+            echo ": ".get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
         }
+        echo "</span>";
     }
 
+    echo "<table border = 0><tr>";
     if ($showkey) {
         $info = get_string('clickhidekey', 'quiz_liveviewgrid');
         $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
@@ -185,15 +189,12 @@ if ($showresponses) {
 
 // Find out if there may be groups. If so, allow the teacher to choose a group.
 $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
-$geturl = $CFG->wwwroot.'/mod/quiz/report.php';
+$geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/liveviewpopout.php';
 if ($groupmode) {
     $courseid = $course->id;
     liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
 }
-// If a single question is being displayed, allow the teacher to select a different question.
-if ($singleqid > 0) {
-    liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
-}
+
 if ($showkey && $showresponses) {
     echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
     echo "<table border=\"1\" width=\"100%\">\n";
@@ -297,7 +298,7 @@ foreach ($slots as $key => $slotvalue) {
             }
             $buttontext = $truncated;
         }
-        echo liveview_question_button($buttontext, $hidden, $linkid);
+        echo $buttontext;
         echo "</td>";
     } else {
         echo "<td></td>";

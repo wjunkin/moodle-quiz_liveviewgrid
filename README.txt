@@ -32,5 +32,10 @@ Changes for version 1.2.8. If evaluate is set, the histogram bars are now colore
    To do this I created a revised version of the lib/graphlib.php file, liveviewgrid/classes/quiz_liveviewgrid_graphlib.php.
 Changes for version 1.2.9. If a teacher attempts the quiz (preview) their resonses no longer show up.
    Percentages of students vs class enrollment are displayed on the bars. If show names is set in single question view,
-   the student on the bars. Dropdown menus submit on change of value. Current value not shown.
+   the student name shown on the bars. Dropdown menus submit on change of value. Current value not shown.
    Tooltips show complete choice options on the x-axis legend. These changes required displaying image in iframe.
+Changes for version 1.2.10. Removed bug in tooltip_histogram.php.
+Changes for eersion 1.2.11. Removed hardcoded URL bug.
+Changes for version 1.2.12. Made navigations workgin clearer, iframe a little wider and align left, and truncate=1 for compact view.
+Changes for version 1.2.13. Made a new file, liveviewpopout.php to provide a static page for comaprison and printing.
+Changes for version 1.2.14. Removed links to other pages from liveviewpopout.php, added a print button.

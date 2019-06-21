@@ -105,6 +105,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // Check permissions.
         $this->context = context_module::instance($cm->id);
         require_capability('mod/quiz:viewreports', $this->context);
+        $quiz->name .= get_string('dynamicpage', 'quiz_liveviewgrid');
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
         $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
         $quizcontextid = $context->id;
@@ -154,13 +155,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         $sofar = liveview_who_sofar_gridview($quizid);
 
-        echo "<table border = 0><tr>";
         if ($showresponses) {
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
                 $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
-                echo "\n<br />".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
+                echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($showanswer) {
                     $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
                     foreach ($attempts as $attempt) {
@@ -170,6 +170,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
 
+            echo "<table border = 0><tr>";
             if ($showkey) {
                 $info = get_string('clickhidekey', 'quiz_liveviewgrid');
                 $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
