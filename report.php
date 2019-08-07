@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_fraction.php");
 
-// Include reportlib.php to obtain the functions needed. This includes the following.
+// Include locallib.php to obtain the functions needed. This includes the following.
 // The function liveviewgrid_group_dropdownmenu($courseid, $GETurl, $canaccess, $hidden).
 // The function liveview_button($buttontext, $hidden, $togglekey, $info).
 // Thefunction liveview_find_student_gridview($userid).
@@ -244,7 +244,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
         }
 
-        // CSS style for blinking 'Refresh Page!' notice.
+        // CSS style for blinking 'Refresh Page!' notice and making the first column fixed..
         echo "\n<style>";
         echo "\n .blinking{";
         echo "\n    animation:blinkingText 0.8s infinite;";
@@ -256,6 +256,17 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n}";
         echo "\n .blinkhidden{";
         echo "\n    color: transparent;";
+        echo "\n}";
+
+        echo "\n.first-col {";
+        echo "\n  position: absolute;";
+        echo "\n	width: 10em;";
+        echo "\n	margin-left: -10.1em; background:#ffffff;";
+        echo "\n}";
+
+        echo "\n.table-wrapper {";
+        echo "\n    overflow-x: scroll;";
+        echo "\n	margin: 0 0 0 10em;";
         echo "\n}";
         echo "\n</style>";
 
@@ -355,12 +366,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo "</iframe>";
             }
         }
-        echo "<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
+        // This is needed to get the column lined up correctly.
+        echo "\n<div class=\"table-wrapper\">";
+        echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
         echo "<thead><tr>";
 
         if ($shownames) {
-            echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th>";
-            echo "<th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
+            echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
         }
         // The array for storing the all the texts for tootips.
         $tooltiptext = array();
@@ -425,7 +437,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 foreach ($users as $user) {
                     echo "<tr>";
                     if ($shownames) {
-                        echo "<td>".liveview_find_student_gridview($user)."</td>\n";
+                        echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
                     }
                     foreach ($slots as $questionid => $slotvalue) {
                         if (($questionid != "") and ($questionid != 0)) {
@@ -442,7 +454,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $answer = ' ';
                             }
                         }
-                        echo "<td";
+                        echo "<td style=\"height:10px\"";
                         if ($evaluate) {
                             if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                 $myfraction = $stfraction[$user][$questionid];
@@ -450,8 +462,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
                                 $bluepart = intval(126 * $myfraction);
                                 echo " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                                //echo " style='background-color: rgb($redpart, $greenpart, $bluepart)', 'height:100px'";
                             } else {
-                                echo '';
+                                echo ' ';
                             }
                         }
                         if ((strlen($answer) < $trun) || ($singleqid > 0)) {
@@ -481,6 +494,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo "</tbody>";
             }
             echo "\n</table>";
+            echo "\n</div>";
 
             if (count($tooltiptext) > 0) {
                 $tooltiptexts = implode(",", $tooltiptext);

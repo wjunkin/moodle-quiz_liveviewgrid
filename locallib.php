@@ -59,7 +59,7 @@ function liveview_who_sofar_gridview($quizid) {
 function liveview_find_student_gridview($userid) {
      global $DB;
      $user = $DB->get_record('user', array('id' => $userid));
-     $name = $user->firstname."</td><td>".$user->lastname;
+     $name = $user->firstname." ".$user->lastname;
      return($name);
 }
 
