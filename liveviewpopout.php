@@ -267,8 +267,7 @@ echo "<table border=\"1\" width=\"100%\">\n";
 echo "<thead><tr>";
 
 if ($shownames) {
-    echo "<th>".get_string('firstname', 'quiz_liveviewgrid')."</th>";
-    echo "<th>".get_string('lastname', 'quiz_liveviewgrid')."</th>\n";
+    echo "<th>".get_string('name', 'quiz_liveviewgrid')."</th>";
 }
 // The array for storing the all the texts for tootips.
 $tooltiptext = array();

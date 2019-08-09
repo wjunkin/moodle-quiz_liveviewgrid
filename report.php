@@ -454,7 +454,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $answer = ' ';
                             }
                         }
-                        echo "<td style=\"height:10px\"";
+                        echo "<td";
                         if ($evaluate) {
                             if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                 $myfraction = $stfraction[$user][$questionid];
@@ -462,13 +462,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
                                 $bluepart = intval(126 * $myfraction);
                                 echo " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
-                                //echo " style='background-color: rgb($redpart, $greenpart, $bluepart)', 'height:100px'";
                             } else {
-                                echo ' ';
+                                echo " ";
                             }
                         }
                         if ((strlen($answer) < $trun) || ($singleqid > 0)) {
-                            echo ">".htmlentities($answer)."</td>";
+                            echo ">&nbsp;".htmlentities($answer)."</td>";
                         } else {
                             // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                             $safeanswer = htmlentities($answer);
