@@ -358,13 +358,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($compact) {
             $trun = 1;
             $dotdot = '';
-            // Truncate responses to 4 if compact is desired, else 80.
+            // Truncate responses to 4 if compact is desired, else 40 or 200.
         } else {
             $trun = 40;
             $dotdot = '....';
         }
         // Put in a histogram if the question has a histogram and a single question is displayed.
         if ($singleqid > 0) {
+            $trun = 200;
             $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
             if (in_array($questiontext->qtype, $multitype)) {
                 $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;

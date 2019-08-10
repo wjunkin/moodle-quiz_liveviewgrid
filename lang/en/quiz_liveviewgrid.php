@@ -23,7 +23,7 @@
  */
 
 $string['allgroups'] = 'All groups';
-$string['allquestions'] = 'Or go back to All questions';
+$string['allquestions'] = 'Or go Back to All Questions';
 $string['questionis'] = '<b>The question is:</b> ';
 $string['compact'] = 'Make table compact';
 $string['choosegroup'] = '<b>Choose a group</b>';
@@ -76,7 +76,7 @@ $string['quizname'] = 'Quiz name';
 $string['responses'] = '<b>Responses</b>';
 $string['refreshpage'] = 'Refresh Page!';
 $string['rightanswer'] = ' <b>Right answer:</b> ';
-$string['rightansweressay'] = 'This is an essay question. No right answer in database.';
+$string['rightansweressay'] = 'This is an essay question.';
 $string['showcorrectanswer'] = 'Show correct answer';
 $string['showgradekey'] = 'Show Grading Legend';
 $string['showgrades'] = 'Show the &quot;Grade&quot; answers would receive';
