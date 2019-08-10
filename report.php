@@ -162,9 +162,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($showanswer) {
+                    if ($questiontext->qtype == 'essay') {
+                        $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
+                    } else {
                     $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
-                    foreach ($attempts as $attempt) {
-                        $rightanswer = $attempt->rightanswer;
+                        foreach ($attempts as $attempt) {
+                            $rightanswer = $attempt->rightanswer;
+                        }
                     }
                     echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
                 }
