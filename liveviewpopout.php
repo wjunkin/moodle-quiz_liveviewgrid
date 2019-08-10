@@ -120,7 +120,7 @@ if ($showresponses) {
             foreach ($attempts as $attempt) {
                 $rightanswer = $attempt->rightanswer;
             }
-            echo ": ".get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
+            echo " ".get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
         }
         echo "</span>";
     }

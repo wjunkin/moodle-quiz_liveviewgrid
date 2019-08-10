@@ -266,7 +266,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         echo "\n.table-wrapper {";
         echo "\n    overflow-x: scroll;";
-        echo "\n	margin: 0 0 0 10em;";
+        if ($shownames) {
+            echo "\n	margin: 0 0 0 10em;";
+        } else {
+            echo "\n     margin: 0 0 0 0;";
+        }
         echo "\n}";
         echo "\n</style>";
 
