@@ -188,7 +188,13 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
     foreach ($slots as $slot) {
         $question = $DB->get_record('question', array('id' => $slot->questionid));
         if ($question->id <> $mysingleqid) {
-            echo "\n<option value=\"".$question->id."\">".$question->name."</option>";
+            $questionname = $question->name;
+            if (strlen($questionname) > 80) {
+                $questionname1 = substr($questionname, 0, 80).'....';
+            } else {
+                $questionname1 = $questionname;
+            }
+            echo "\n<option value=\"".$question->id."\">".$questionname1."</option>";
         }
     }
     echo "\n</select>";

@@ -116,15 +116,15 @@ if ($showresponses) {
         $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
         echo "<span> ".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
         if ($showanswer) {
-                    if ($questiontext->qtype == 'essay') {
-                        $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
-                    } else {
-                    $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
-                        foreach ($attempts as $attempt) {
-                            $rightanswer = $attempt->rightanswer;
-                        }
-                    }
-                    echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
+            if ($questiontext->qtype == 'essay') {
+                $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
+            } else {
+                $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                foreach ($attempts as $attempt) {
+                    $rightanswer = $attempt->rightanswer;
+                }
+            }
+            echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
         }
         echo "</span>";
     }

@@ -165,7 +165,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     if ($questiontext->qtype == 'essay') {
                         $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
                     } else {
-                    $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                        $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
                         foreach ($attempts as $attempt) {
                             $rightanswer = $attempt->rightanswer;
                         }
@@ -328,7 +328,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
         }
         echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
-        echo "</tr></table>";
+        // Find any student who has not sbmitted an answer if names are hidden.
 
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
@@ -355,6 +355,113 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
         }
+        if (($singleqid > 0) && (!($shownames))) {
+            // Add in the style for the lvdropdown table and javascript for hover.
+            echo "\n<style>";
+            echo "\n.lvdropbtn {";
+            echo "\n  background-color: #3498DB;";
+            echo "\n  color: white;";
+            echo "\n  padding: 4px;";
+            echo "\n  font-size: 16px;";
+            echo "\n  border: none;";
+            echo "\n  cursor: pointer;";
+            echo "\n}";
+
+            echo "\n.lvdropbtn:hover, .lvdropbtn:focus {";
+            echo "\n  background-color: #2980B9;";
+            echo "\n}";
+
+            echo "\n.lvdropdown {";
+            echo "\n  position: relative;";
+            echo "\n  display: inline-block;";
+            echo "\n}";
+
+            echo "\n.lvdropdown-content {";
+            echo "\n  display: none;";
+            echo "\n  position: absolute;";
+            echo "\n  background-color: #f1f1f1;";
+            echo "\n  min-width: 160px;";
+            echo "\n  overflow: auto;";
+            echo "\n  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);";
+            echo "\n  z-index: 1;";
+            echo "\n}";
+
+            echo "\n.lvdropdown-content a {";
+            echo "\n  color: black;";
+            echo "\n  text-decoration: none;";
+            echo "\n  display: block;";
+            echo "\n}";
+
+            echo "\n.lvdropdown a:hover {background-color: #ddd;}";
+
+            echo "\n.show {display: block;}";
+            echo "\n</style>";
+
+            $answertext = get_string('answeredquizno', 'quiz_liveviewgrid');
+            if (count($initials) > 0) {
+                $noanswer = array();
+                $noa = 0;
+                $answertext = get_string('answeredqno', 'quiz_liveviewgrid');
+                foreach ($initials as $key => $initial) {
+                    if (isset($stanswers[$key][$singleqid])) {
+                        $answertext = get_string('answeredall', 'quiz_liveviewgrid');
+                    } else {
+                        $noanswer[$noa] = $initial;
+                        $noa ++;
+                    }
+                }
+                asort($noanswer);
+                if (count($noanswer) > 0) {
+                    if (count($noanswer) == 1) {
+                        $answertext = "1".get_string('answeredonenot', 'quiz_liveviewgrid');
+                    } else {
+                        $answertext = count($noanswer).get_string('answeredmanynot', 'quiz_liveviewgrid');
+                    }
+                    $content = '';
+                    foreach ($noanswer as $noans) {
+                        $content .= "\n<a>$noans</a>";
+                    }
+                }
+            }
+            echo "<td>";
+
+            echo "\n<div class=\"lvdropdown\" style='width: 100%'>";
+            echo "\n<button onclick=\"mylvdropdownFunction()\" class=\"lvdropbtn\" style='width: 100%'";
+            if ((count($initials) > 0) && (count($noanswer) > 0)) {
+                echo "title='".get_string('answeredinfo', 'quiz_liveviewgrid')."'";
+            }
+            echo ">";
+            echo $answertext;
+            echo "\n</button>";
+            echo    "\n<div id=\"mylvdropdown\" class=\"lvdropdown-content\">";
+            echo    $content;
+            echo    "\n</div>";
+            echo "\n</div>";
+
+            echo "<script>";
+            // When the user clicks on the button, toggle between hiding and showing the lvdropdown content.
+            echo "function mylvdropdownFunction() {
+              document.getElementById(\"mylvdropdown\").classList.toggle(\"show\");
+            }";
+
+            // Close the lvdropdown if the user clicks outside of it.
+            echo "\nwindow.onclick = function(event) {";
+            echo "\n  if (!event.target.matches('.lvdropbtn')) {";
+            echo "\n    var lvdropdowns = document.getElementsByClassName(\"lvdropdown-content\");";
+            echo "\n    var i;";
+            echo "\n    for (i = 0; i < lvdropdowns.length; i++) {";
+            echo "\n      var openlvdropdown = lvdropdowns[i];";
+            echo "\n      if (openlvdropdown.classList.contains('show')) {";
+            echo "\n        openlvdropdown.classList.remove('show');";
+            echo "\n      }";
+            echo "\n    }";
+            echo "\n  }";
+            echo "\n}";
+            echo "\n</script>";
+
+            echo "</td>";
+        }
+        echo "</tr></table>";
         if ($compact) {
             $trun = 1;
             $dotdot = '';
@@ -444,60 +551,61 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n<tbody>";
             if (isset($users)) {
                 foreach ($users as $user) {
-                    echo "<tr>";
-                    if ($shownames) {
-                        echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
-                    }
-                    foreach ($slots as $questionid => $slotvalue) {
-                        if (($questionid != "") and ($questionid != 0)) {
-                            if (isset($stanswers[$user][$questionid])) {
-                                if (count($stanswers[$user][$questionid]) == 1) {
-                                    $answer = $stanswers[$user][$questionid];
-                                } else {
-                                    $answer = '';
-                                    foreach ($stanswers[$user][$questionid] as $key => $value) {
-                                        $answer .= $key."=".$value."; ";
+                    // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
+                    if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
+                        echo "<tr>";
+                        if ($shownames) {
+                            echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
+                        }
+                        foreach ($slots as $questionid => $slotvalue) {
+                            if (($questionid != "") and ($questionid != 0)) {
+                                if (isset($stanswers[$user][$questionid])) {
+                                    if (count($stanswers[$user][$questionid]) == 1) {
+                                        $answer = $stanswers[$user][$questionid];
+                                    } else {
+                                        $answer = '';
+                                        foreach ($stanswers[$user][$questionid] as $key => $value) {
+                                            $answer .= $key."=".$value."; ";
+                                        }
                                     }
+                                } else {
+                                    $answer = ' ';
                                 }
-                            } else {
-                                $answer = ' ';
                             }
-                        }
-                        echo "<td";
-                        if ($evaluate) {
-                            if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
-                                $myfraction = $stfraction[$user][$questionid];
-                                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
-                                $bluepart = intval(126 * $myfraction);
-                                echo " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
-                            } else {
-                                echo " ";
-                            }
-                        }
-                        if ((strlen($answer) < $trun) || ($singleqid > 0)) {
-                            echo ">&nbsp;".htmlentities($answer)."</td>";
-                        } else {
-                            // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
-                            $safeanswer = htmlentities($answer);
-                            $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
-                            $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
-                            echo "><div class=\"showTip link".$user.'_'.$questionid."\">";
-                            // Making sure we pick up whole words.
-                            preg_match_all('/./u', $answer, $matches);
-                            $ntrun = 0;
-                            $truncated = '';
-                            foreach ($matches[0] as $m) {
-                                if ($ntrun < $trun) {
-                                    $truncated .= $m;
+                                $style = '<td';
+                            if ($evaluate) {
+                                if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                                    $myfraction = $stfraction[$user][$questionid];
+                                    $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
+                                    $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
+                                    $bluepart = intval(126 * $myfraction);
+                                        $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                                 }
-                                $ntrun++;
                             }
-                            echo $truncated;
-                            echo " $dotdot</div></td>";
+                            if ((strlen($answer) < $trun) || ($singleqid > 0)) {
+                                    echo $style.">&nbsp;".htmlentities($answer)."</td>";
+                            } else {
+                                // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
+                                $safeanswer = htmlentities($answer);
+                                $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
+                                $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
+                                    echo $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                                // Making sure we pick up whole words.
+                                preg_match_all('/./u', $answer, $matches);
+                                $ntrun = 0;
+                                $truncated = '';
+                                foreach ($matches[0] as $m) {
+                                    if ($ntrun < $trun) {
+                                        $truncated .= $m;
+                                    }
+                                    $ntrun++;
+                                }
+                                echo $truncated;
+                                echo " $dotdot</div></td>";
+                            }
                         }
+                        echo "</tr>\n";
                     }
-                    echo "</tr>\n";
                 }
                 echo "</tbody>";
             }

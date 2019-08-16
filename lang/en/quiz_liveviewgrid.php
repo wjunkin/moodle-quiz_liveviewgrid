@@ -23,7 +23,14 @@
  */
 
 $string['allgroups'] = 'All groups';
-$string['allquestions'] = 'Or go Back to All Questions';
+$string['allquestions'] = 'Back to All Questions';
+$string['answeredinfo'] = 'Click to show or hide the name(s) of student(s) who started this quiz but
+    have not answered this question yet';
+$string['answeredquizno'] = 'No student has started this quiz.';
+$string['answeredqno'] = 'No student has answered this question.';
+$string['answeredonenot'] = ' student has not answered.';
+$string['answeredmanynot'] = ' students have not answered.';
+$string['answeredall'] = 'All students have answered this question';
 $string['questionis'] = '<b>The question is:</b> ';
 $string['compact'] = 'Make table compact';
 $string['choosegroup'] = '<b>Choose a group</b>';
