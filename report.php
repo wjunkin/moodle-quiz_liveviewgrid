@@ -548,8 +548,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
             // Create the table.
-            echo "\n<tbody>";
             if (isset($users)) {
+                echo "\n<tbody>";
                 foreach ($users as $user) {
                     // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
                     if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
