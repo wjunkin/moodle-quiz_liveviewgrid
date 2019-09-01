@@ -85,6 +85,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
+        $rag = optional_param('rag', 0, PARAM_INT);
         $evaluate = optional_param('evaluate', 0, PARAM_INT);
         $showkey = optional_param('showkey', 0, PARAM_INT);
         $order = optional_param('order', 0, PARAM_INT);
@@ -142,6 +143,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         // The array of hidden values is hidden[].
         $hidden = array();
+        $hidden['rag'] = $rag;
         $hidden['id'] = $id;
         $hidden['mode'] = $mode;
         $hidden['evaluate'] = $evaluate;
@@ -233,6 +235,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $togglekey = 'showanswer';
                 echo liveview_button($buttontext, $hidden, $togglekey, $info);
             }
+            if ($rag) {
+                $buttontext = get_string('userainbow', 'quiz_liveviewgrid');
+                $info = get_string('clickforrainbow', 'quiz_liveviewgrid');
+            } else {
+                $info = get_string('clickforrag', 'quiz_liveviewgrid');
+                $buttontext = get_string('userag', 'quiz_liveviewgrid');
+            }
+            $togglekey = 'rag';
+            echo liveview_button($buttontext, $hidden, $togglekey, $info);
+
             echo "</tr></table>";
         }
 
@@ -292,9 +304,29 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             for ($i = 0; $i < 11; $i++) {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
-                $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is wrong.
-                $bluepart = intval(126 * $myfraction);
+                if ($rag == 1) {// Colors from image from Moodle.
+                    if ($myfraction == 0) {
+                        $redpart = 244;
+                        $greenpart = 67;
+                        $bluepart = 54;
+                    } else if ($myfraction == 1) {
+                        $redpart = 139;
+                        $greenpart = 195;
+                        $bluepart = 74;
+                    } else {
+                        $redpart = 255;
+                        $greenpart = 152;
+                        $bluepart = 0;
+                    }
+                } else {
+                    // Make .5 match up to Moodle amber even when making them different with gradation.
+                    $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+                    $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+                    if ($redpart > 255) {
+                        $redpart = 255;
+                    }
+                    $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+                }
                 $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
                 $head .= ">$myfraction</td>";
             }
@@ -476,7 +508,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
             if (in_array($questiontext->qtype, $multitype)) {
                 $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
-                $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
+                $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
                 echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
                     frameBorder=0 height='520' width='800'>";
                 echo "</iframe>";
@@ -576,10 +608,30 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                             if ($evaluate) {
                                 if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                     $myfraction = $stfraction[$user][$questionid];
-                                    $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                                    $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is not correct.
-                                    $bluepart = intval(126 * $myfraction);
-                                        $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                                    if ($rag == 1) {// Colors from image from Moodle.
+                                        if ($myfraction < 0.01) {
+                                            $redpart = 244;
+                                            $greenpart = 67;
+                                            $bluepart = 54;
+                                        } else if ($myfraction == 1) {
+                                            $redpart = 139;
+                                            $greenpart = 195;
+                                            $bluepart = 74;
+                                        } else {
+                                            $redpart = 255;
+                                            $greenpart = 152;
+                                            $bluepart = 0;
+                                        }
+                                    } else {
+                                        // Make .5 match up to Moodle amber even when making them different with gradation.
+                                        $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+                                        $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+                                        if ($redpart > 255) {
+                                            $redpart = 255;
+                                        }
+                                        $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+                                    }
+                                    $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                                 }
                             }
                             if ((strlen($answer) < $trun) || ($singleqid > 0)) {

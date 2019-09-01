@@ -45,6 +45,8 @@ $string['clickshowkey'] = 'Click to show the color key/legend for the grades.';
 $string['clickshownames'] = 'Click to show student names.';
 $string['clickshowanswer'] = 'Click to show correct answer';
 $string['clickhidenames'] = 'Click to hide student names.';
+$string['clickforrag'] = 'Click to use RAG colors';
+$string['clickforrainbow'] = 'Click to change grading colors to rainow colors';
 $string['dynamicpage'] = ' -- Dynamic Live Report Page';
 $string['fractioncolors'] = 'Fraction Colors';
 $string['gradedexplain'] = 'If a student has not finished the quiz or does several attempts, the indicated &quot;Grade&quot; is not the grade for the quiz.';
@@ -91,8 +93,9 @@ $string['showgradetitle'] = 'This shows if an answer is correct but does not gra
 $string['shownames'] = 'Show student names';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
 $string['staticpage'] = ' -- Static Page';
+$string['userag'] = 'Use RAG';
+$string['userainbow'] = 'Use rainbow';
 $string['whichgroups'] = '<b>Which group do you want to see?</b> ';
 $string['whichquestion'] = '<b>Which question do you want to see?</b> ';
 $string['youmustbeauthorized'] = '<b>You must be authorized to access this site.</b>';
 $string['youmustsubmitquestonid'] = '<b>You must submit a valid questionid.</b>';
-

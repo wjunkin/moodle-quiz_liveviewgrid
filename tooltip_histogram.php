@@ -25,6 +25,7 @@
  */
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
 defined('MOODLE_INTERNAL') || die();
+$rag = optional_param('rag', 0, PARAM_INT);
 $questionid = optional_param('questionid', 0, PARAM_INT);
 $quizid = optional_param('quizid', 0, PARAM_INT);
 $courseid = optional_param('courseid', 0, PARAM_INT);
@@ -50,6 +51,9 @@ if ($answers = $DB->get_records('question_answers', array('question' => $questio
         $labels .= "&x[$n]=".substr(strip_tags($answer->answer), 0, 15);
         $myfraction = $answer->fraction;
         if ($evaluate) {
+            if ($rag && ($myfraction <> 0) && ($myfraction <> 1)) {
+                $myfraction = 0.5;
+            }
             $fraction .= "&fr[$n]=$myfraction";
         }
         $n++;
