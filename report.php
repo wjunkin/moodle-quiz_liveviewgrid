@@ -96,6 +96,38 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $singleqid = optional_param('singleqid', 0, PARAM_INT);
         $showanswer = optional_param('showanswer', 0, PARAM_INT);
         $shownames = optional_param('shownames', 1, PARAM_INT);
+        // Putting all the options in a drop-down menu.
+        // The values from options override the get values.
+        $option = optional_param('option', 0, PARAM_INT);
+        if ($option == 1) {
+            $showkey = 1;
+        } else if ($option == 2) {
+            $showkey = 0;
+        } else if ($option == 3) {
+            $evaluate = 1;
+        } else if ($option == 4) {
+            $evaluate = 0;
+        } else if ($option == 5) {
+            $shownames = 1;
+        } else if ($option == 6) {
+            $shownames = 0;
+        } else if ($option == 7) {
+            $order = 1;
+        } else if ($option == 8) {
+            $order = 0;
+        } else if ($option == 9) {
+            $compact = 1;
+        } else if ($option == 10) {
+            $compact = 0;
+        } else if ($option == 11) {
+            $showanswer = 1;
+        } else if ($option == 12) {
+            $showanswer = 0;
+        } else if ($option == 13) {
+            $rag = 1;
+        } else if ($option == 14) {
+            $rag = 0;
+        }
         $slots = array();
         $question = array();
         $users = array();
@@ -156,7 +188,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['shownames'] = $shownames;
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         $sofar = liveview_who_sofar_gridview($quizid);
-
+        // The array for storing the all the texts for tootips.
+        $tooltiptext = array();
         if ($showresponses) {
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
@@ -176,76 +209,70 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
             }
 
-            echo "<table border = 0><tr>";
+            $linkid = "linkqtext_666";
+            echo "\n<table><tr><td width='50%'><div class=\"showTip $linkid\">".get_string('hoverforinfo', 'quiz_liveviewgrid');
+            echo " </div></td><td><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+            $optiontooltip = '';
+            foreach ($hidden as $key => $value) {
+                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+            }
+            $n = 1;
+            echo "<select name='option'>";
+            echo "<option value=0>Select an option if you wish to change it</option>";
             if ($showkey) {
-                $info = get_string('clickhidekey', 'quiz_liveviewgrid');
-                $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
+                echo "<option value=2>$n.".get_string('hidegradekey', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "$n.".get_string('clickhidekey', 'quiz_liveviewgrid');$n++;
             } else {
-                $info = get_string('clickshowkey', 'quiz_liveviewgrid');
-                $buttontext = get_string('showgradekey', 'quiz_liveviewgrid');
+                echo "<option value=1>$n.".get_string('showgradekey', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "$n.".get_string('clickshowkey', 'quiz_liveviewgrid');$n++;
             }
-            $togglekey = 'showkey';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($evaluate) {
-                $buttontext = get_string('hidegrades', 'quiz_liveviewgrid');
-                $info = get_string('gradedexplain', 'quiz_liveviewgrid');
+                echo "<option value=4>$n.".get_string('hidegrades', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('hidegrades', 'quiz_liveviewgrid');$n++;
             } else {
-                $info = get_string('showgradetitle', 'quiz_liveviewgrid');
-                $buttontext = get_string('showgrades', 'quiz_liveviewgrid');
+                echo "<option value=3>$n.".get_string('showgrades', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('showgradetitle', 'quiz_liveviewgrid');$n++;
             }
-            $togglekey = 'evaluate';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($shownames) {
                 if ($order) {
-                    $info = get_string('clickorderlastname', 'quiz_liveviewgrid');
-                    $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
+                    echo "<option value=8>$n.".get_string('orderlastname', 'quiz_liveviewgrid')."</option>";
+                    $optiontooltip .= "<br />$n. ".get_string('clickorderlastname', 'quiz_liveviewgrid');$n++;
                 } else {
-                    $info = get_string('clickorderfirstname', 'quiz_liveviewgrid');
-                    $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
+                    echo "<option value=7>$n.".get_string('orderfirstname', 'quiz_liveviewgrid')."</option>";
+                    $optiontooltip .= "<br />$n. ".get_string('clickorderfirstname', 'quiz_liveviewgrid');$n++;
                 }
-                $togglekey = 'order';
-                echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            }
-            if ($shownames) {
-                $buttontext = get_string('hidenames', 'quiz_liveviewgrid');
-                $info = get_string('clickhidenames', 'quiz_liveviewgrid');
+                echo "<option value=6>$n.".get_string('hidenames', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('clickhidenames', 'quiz_liveviewgrid');$n++;
             } else {
-                $buttontext = get_string('shownames', 'quiz_liveviewgrid');
-                $info = get_string('clickshownames', 'quiz_liveviewgrid');
+                echo "<option value=5>$n.".get_string('shownames', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('clickshownames', 'quiz_liveviewgrid');$n++;
             }
-            $togglekey = 'shownames';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($compact) {
-                $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
-                $info = get_string('expandexplain', 'quiz_liveviewgrid');
+                echo "<option value=10>$n.".get_string('expandtable', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('expandexplain', 'quiz_liveviewgrid');$n++;
             } else {
-                $info = get_string('clickcompact', 'quiz_liveviewgrid');
-                $buttontext = get_string('compact', 'quiz_liveviewgrid');
+                echo "<option value=9>$n.".get_string('compact', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('clickcompact', 'quiz_liveviewgrid');$n++;
             }
-            $togglekey = 'compact';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
             if ($singleqid > 0) {
                 if ($showanswer) {
-                    $buttontext = get_string('hidecorrectanswer', 'quiz_liveviewgrid');
-                    $info = get_string('clickhideanswer', 'quiz_liveviewgrid');
+                    echo "<option value=12>$n.".get_string('hidecorrectanswer', 'quiz_liveviewgrid')."</option>";
+                    $optiontooltip .= "<br />$n. ".get_string('clickhideanswer', 'quiz_liveviewgrid');$n++;
                 } else {
-                    $info = get_string('clickshowanswer', 'quiz_liveviewgrid');
-                    $buttontext = get_string('showcorrectanswer', 'quiz_liveviewgrid');
+                    echo "<option value=11>$n.".get_string('showcorrectanswer', 'quiz_liveviewgrid')."</option>";
+                    $optiontooltip .= "<br />$n. ".get_string('clickshowanswer', 'quiz_liveviewgrid');$n++;
                 }
-                $togglekey = 'showanswer';
-                echo liveview_button($buttontext, $hidden, $togglekey, $info);
             }
             if ($rag) {
-                $buttontext = get_string('userainbow', 'quiz_liveviewgrid');
-                $info = get_string('clickforrainbow', 'quiz_liveviewgrid');
+                echo "<option value=14>$n.".get_string('userainbow', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('clickforrainbow', 'quiz_liveviewgrid');$n++;
             } else {
-                $info = get_string('clickforrag', 'quiz_liveviewgrid');
-                $buttontext = get_string('userag', 'quiz_liveviewgrid');
+                echo "<option value=13>$n.".get_string('userag', 'quiz_liveviewgrid')."</option>";
+                $optiontooltip .= "<br />$n. ".get_string('clickforrag', 'quiz_liveviewgrid');$n++;
             }
-            $togglekey = 'rag';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-
-            echo "</tr></table>";
+            echo "<\select>";
+            $tooltiptext[] .= "\n    linkqtext_666: '".$optiontooltip."'";
+            echo "<input type=\"submit\" value=\"Change an option\"></form></td></tr></table>";
         }
 
         // Find out if there may be groups. If so, allow the teacher to choose a group.
@@ -361,7 +388,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
         // Find any student who has not sbmitted an answer if names are hidden.
-
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
         $initials = array();
@@ -494,6 +520,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "</td>";
         }
         echo "</tr></table>";
+
         if ($compact) {
             $trun = 1;
             $dotdot = '';
@@ -522,8 +549,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($shownames) {
             echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
         }
-        // The array for storing the all the texts for tootips.
-        $tooltiptext = array();
 
         $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
         $togglekey = '';
