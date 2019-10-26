@@ -39,3 +39,5 @@ Changes for eersion 1.2.11. Removed hardcoded URL bug.
 Changes for version 1.2.12. Made navigations workgin clearer, iframe a little wider and align left, and truncate=1 for compact view.
 Changes for version 1.2.13. Made a new file, liveviewpopout.php to provide a static page for comaprison and printing.
 Changes for version 1.2.14. Removed links to other pages from liveviewpopout.php, added a print button.
+Changes for version 1.2.24. Changed the options so that they are radio buttons that can be hidden and displayed.
+Changes for version 1.2.25. Changed some of the language srings to make things clearer.

@@ -165,10 +165,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n  var b=document.getElementById(\"button1\");";
             echo "\n  if(e.style.display == \"none\") { ";
             echo "\n      e.style.display = \"block\";";
-            echo "\n        b.innerHTML = \"Click to hide options\";";
+            echo "\n        b.innerHTML = \"".get_string('clicktohide', 'quiz_liveviewgrid')."\";";
             echo "\n  } else {";
             echo "\n      e.style.display=\"none\";";
-            echo "\n      b.innerHTML = \"Click to display options\";";
+            echo "\n      b.innerHTML = \"".get_string('clicktodisplay', 'quiz_liveviewgrid')."\";";
             echo "\n  }";
             echo "\n}";
             echo "\n</script>  ";
