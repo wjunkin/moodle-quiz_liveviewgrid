@@ -158,6 +158,20 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $sofar = liveview_who_sofar_gridview($quizid);
 
         if ($showresponses) {
+            // Script to hide or display the option form.
+            echo "\n<script>";
+            echo "\nfunction optionfunction() {";
+            echo "\n  var e=document.getElementById(\"option1\");";
+            echo "\n  var b=document.getElementById(\"button1\");";
+            echo "\n  if(e.style.display == \"none\") { ";
+            echo "\n      e.style.display = \"block\";";
+            echo "\n        b.innerHTML = \"Click to hide options\";";
+            echo "\n  } else {";
+            echo "\n      e.style.display=\"none\";";
+            echo "\n      b.innerHTML = \"Click to display options\";";
+            echo "\n  }";
+            echo "\n}";
+            echo "\n</script>  ";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
@@ -174,78 +188,66 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     }
                     echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
                 }
+                echo "\n<br />";
+            }
+            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">Click to display options</button>";
+            echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
+            echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+            echo "<input type='hidden' name='id' value=$id>";
+            echo "<input type='hidden' name='mode' value=$mode>";
+            echo "<input type='hidden' name='singleqid' value=$singleqid>";
+            $checked = array();
+            $notchecked = array();
+            foreach ($hidden as $hiddenkey => $hiddenvalue) {
+                if ($hiddenvalue) {
+                    $checked[$hiddenkey] = 'checked';
+                    $notchecked[$hiddenkey] = '';
+                } else {
+                    $checked[$hiddenkey] = '';
+                    $notchecked[$hiddenkey] = 'checked';
+                }
             }
 
-            echo "<table border = 0><tr>";
-            if ($showkey) {
-                $info = get_string('clickhidekey', 'quiz_liveviewgrid');
-                $buttontext = get_string('hidegradekey', 'quiz_liveviewgrid');
-            } else {
-                $info = get_string('clickshowkey', 'quiz_liveviewgrid');
-                $buttontext = get_string('showgradekey', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'showkey';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            if ($evaluate) {
-                $buttontext = get_string('hidegrades', 'quiz_liveviewgrid');
-                $info = get_string('gradedexplain', 'quiz_liveviewgrid');
-            } else {
-                $info = get_string('showgradetitle', 'quiz_liveviewgrid');
-                $buttontext = get_string('showgrades', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'evaluate';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            if ($shownames) {
-                if ($order) {
-                    $info = get_string('clickorderlastname', 'quiz_liveviewgrid');
-                    $buttontext = get_string('orderlastname', 'quiz_liveviewgrid');
-                } else {
-                    $info = get_string('clickorderfirstname', 'quiz_liveviewgrid');
-                    $buttontext = get_string('orderfirstname', 'quiz_liveviewgrid');
-                }
-                $togglekey = 'order';
-                echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            }
-            if ($shownames) {
-                $buttontext = get_string('hidenames', 'quiz_liveviewgrid');
-                $info = get_string('clickhidenames', 'quiz_liveviewgrid');
-            } else {
-                $buttontext = get_string('shownames', 'quiz_liveviewgrid');
-                $info = get_string('clickshownames', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'shownames';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-            if ($compact) {
-                $buttontext = get_string('expandtable', 'quiz_liveviewgrid');
-                $info = get_string('expandexplain', 'quiz_liveviewgrid');
-            } else {
-                $info = get_string('clickcompact', 'quiz_liveviewgrid');
-                $buttontext = get_string('compact', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'compact';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
+            echo get_string('show', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='showkey' value=1 ".$checked['showkey'].">";
+            echo get_string('orhide', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='showkey' value=0 ".$notchecked['showkey'].">";
+            echo get_string('thecolorkey', 'quiz_liveviewgrid');
+            echo "<br />".get_string('show', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='evaluate' value=1 ".$checked['evaluate'].">";
+            echo get_string('orhide', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate'].">";
+            echo get_string('colorindicategrades', 'quiz_liveviewgrid');
+            echo "<br />".get_string('show', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='shownames' value=1 ".$checked['shownames'].">";
+            echo get_string('orhide', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='shownames' value=0 ".$notchecked['shownames'].">";
+            echo get_string('studentsnames', 'quiz_liveviewgrid');
+            echo "<br />".get_string('orderfirstname', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='order' value=1 ".$checked['order'].">";
+            echo get_string('orlastname', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='order' value=0 ".$notchecked['order'].">";
+            echo " .";
+            echo "<br />".get_string('makecompact', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='compact' value=1 ".$checked['compact'].">";
+            echo get_string('orexpanded', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='compact' value=0 ".$notchecked['compact'].">";
+            echo ".";
             if ($singleqid > 0) {
-                if ($showanswer) {
-                    $buttontext = get_string('hidecorrectanswer', 'quiz_liveviewgrid');
-                    $info = get_string('clickhideanswer', 'quiz_liveviewgrid');
-                } else {
-                    $info = get_string('clickshowanswer', 'quiz_liveviewgrid');
-                    $buttontext = get_string('showcorrectanswer', 'quiz_liveviewgrid');
-                }
-                $togglekey = 'showanswer';
-                echo liveview_button($buttontext, $hidden, $togglekey, $info);
+                echo "<br />".get_string('show', 'quiz_liveviewgrid');
+                echo "<input type='radio' name='showanswer' value=1 ".$checked['showanswer'].">";
+                echo get_string('orhide', 'quiz_liveviewgrid');
+                echo "<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer'].">";
+                echo get_string('correctanswer', 'quiz_liveviewgrid');
             }
-            if ($rag) {
-                $buttontext = get_string('userainbow', 'quiz_liveviewgrid');
-                $info = get_string('clickforrainbow', 'quiz_liveviewgrid');
-            } else {
-                $info = get_string('clickforrag', 'quiz_liveviewgrid');
-                $buttontext = get_string('userag', 'quiz_liveviewgrid');
-            }
-            $togglekey = 'rag';
-            echo liveview_button($buttontext, $hidden, $togglekey, $info);
-
-            echo "</tr></table>";
+            echo "<br />".get_string('userag', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='rag' value=1 ".$checked['rag'].">";
+            echo get_string('orrainbow', 'quiz_liveviewgrid');
+            echo "<input type='radio' name='rag' value=0 ".$notchecked['rag'].">";
+            echo get_string('colorindicategrade', 'quiz_liveviewgrid');
+            $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
+            echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
+            echo "</div>";
         }
 
         // Find out if there may be groups. If so, allow the teacher to choose a group.
@@ -291,10 +293,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n</style>";
 
         // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
-        echo "\n<div id=\"blink1\" class=\"blinkhidden\">".get_string('refreshpage', 'quiz_liveviewgrid')."</div>";
+        echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
+        echo get_string('refreshpage', 'quiz_liveviewgrid')."</div>";
         echo "\n<script>";
         echo "\n  function myFunction() {";
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
+        echo "\n    var bl = document.getElementById('blink1');";
+        echo "\n    bl.style.display = \"block\";";
         echo "\n }";
         echo "\n</script>";
         if ($showkey && $showresponses) {
