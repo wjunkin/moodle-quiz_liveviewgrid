@@ -190,7 +190,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
                 echo "\n<br />";
             }
-            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">Click to display options</button>";
+            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+            echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
             echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
             echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
             echo "<input type='hidden' name='id' value=$id>";
@@ -207,44 +208,41 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $notchecked[$hiddenkey] = 'checked';
                 }
             }
-
-            echo get_string('show', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='showkey' value=1 ".$checked['showkey'].">";
-            echo get_string('orhide', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='showkey' value=0 ".$notchecked['showkey'].">";
-            echo get_string('thecolorkey', 'quiz_liveviewgrid');
-            echo "<br />".get_string('show', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='evaluate' value=1 ".$checked['evaluate'].">";
-            echo get_string('orhide', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate'].">";
-            echo get_string('colorindicategrades', 'quiz_liveviewgrid');
-            echo "<br />".get_string('show', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='shownames' value=1 ".$checked['shownames'].">";
-            echo get_string('orhide', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='shownames' value=0 ".$notchecked['shownames'].">";
-            echo get_string('studentsnames', 'quiz_liveviewgrid');
-            echo "<br />".get_string('orderfirstname', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='order' value=1 ".$checked['order'].">";
-            echo get_string('orlastname', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='order' value=0 ".$notchecked['order'].">";
-            echo " .";
-            echo "<br />".get_string('makecompact', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='compact' value=1 ".$checked['compact'].">";
-            echo get_string('orexpanded', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='compact' value=0 ".$notchecked['compact'].">";
-            echo ".";
+            $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
+            echo "\n<table>";
+            echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='showkey' value=1 ".$checked['showkey']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='showkey' value=0 ".$notchecked['showkey']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
+            echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='order' value=0 ".$notchecked['order']."> ";
+            echo get_string('lastname', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('makecompact', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='compact' value=1 ".$checked['compact']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='compact' value=0 ".$notchecked['compact']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
             if ($singleqid > 0) {
-                echo "<br />".get_string('show', 'quiz_liveviewgrid');
-                echo "<input type='radio' name='showanswer' value=1 ".$checked['showanswer'].">";
-                echo get_string('orhide', 'quiz_liveviewgrid');
-                echo "<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer'].">";
-                echo get_string('correctanswer', 'quiz_liveviewgrid');
+                echo "\n<tr>".$td.get_string('correctanswer', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showanswer' value=1 ".$checked['showanswer']."> ";
+                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer']."> ";
+                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
             }
-            echo "<br />".get_string('userag', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='rag' value=1 ".$checked['rag'].">";
-            echo get_string('orrainbow', 'quiz_liveviewgrid');
-            echo "<input type='radio' name='rag' value=0 ".$notchecked['rag'].">";
-            echo get_string('colorindicategrade', 'quiz_liveviewgrid');
+            echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n</table>";
             $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
             echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
             echo "</div>";
