@@ -197,6 +197,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "<input type='hidden' name='id' value=$id>";
             echo "<input type='hidden' name='mode' value=$mode>";
             echo "<input type='hidden' name='singleqid' value=$singleqid>";
+            echo "<input type='hidden' name='group' value=$group>";
             $checked = array();
             $notchecked = array();
             foreach ($hidden as $hiddenkey => $hiddenvalue) {
