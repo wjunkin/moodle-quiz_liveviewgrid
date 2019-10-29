@@ -85,6 +85,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
+        // Debug at line 717-719.
+        $debug = optional_param('debug', 0, PARAM_INT);
         $rag = optional_param('rag', 0, PARAM_INT);
         $evaluate = optional_param('evaluate', 0, PARAM_INT);
         $showkey = optional_param('showkey', 0, PARAM_INT);
@@ -710,7 +712,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n }";
             echo "\nhttp.open(\"GET\", \"".$graphicshashurl."\", true);";
             echo "\nhttp.onreadystatechange=function() {\nif(http.readyState == 4) {";
-            echo "\n if(parseInt(http.responseText) != parseInt(myname)){";
+            echo "var newresponse = parseInt(http.responseText);";
+            echo "var priormyname = parseInt(myname);";
+            if ($debug) {
+                echo "alert('Values are ' + newresponse + ' and '+priormyname);";
+            }
+            echo "\n if(newresponse != priormyname){";
             echo "\n    location.reload(true);";
             echo "\n}\n}\n}";
             echo "\n http.send(null);";
