@@ -700,7 +700,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n var numrefresh = $numrefresh;";
             echo "\n var maxrepeat = $maxrepeat;";
             echo "\n\nfunction replace() { ";
-            $t = '&t='.time();
             echo "\n numrefresh ++;";
             echo "\n x=document.getElementById('timemodified');";
             echo "\n myname = x.getAttribute('name');";
@@ -709,7 +708,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n } else {";
             echo "\n myFunction();";
             echo "\n }";
-            echo "\nhttp.open(\"GET\", \"".$graphicshashurl.$t."\", true);";
+            echo "\nhttp.open(\"GET\", \"".$graphicshashurl."\", true);";
             echo "\nhttp.onreadystatechange=function() {\nif(http.readyState == 4) {";
             echo "\n if(parseInt(http.responseText) != parseInt(myname)){";
             echo "\n    location.reload(true);";
