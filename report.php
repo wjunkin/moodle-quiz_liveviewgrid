@@ -699,29 +699,33 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
                 \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
                 {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
-            echo "\n var numrefresh = $numrefresh;";
-            echo "\n var maxrepeat = $maxrepeat;";
-            echo "\n\nfunction replace() { ";
-            echo "\n numrefresh ++;";
-            echo "\n x=document.getElementById('timemodified');";
-            echo "\n myname = x.getAttribute('name');";
-            echo "\n if(numrefresh < $maxrepeat) {";
-            echo "\n    var t=setTimeout(\"replace()\",$replacetime);";
-            echo "\n } else {";
-            echo "\n myFunction();";
-            echo "\n }";
-            echo "\nhttp.open(\"GET\", \"".$graphicshashurl."\", true);";
-            echo "\nhttp.onreadystatechange=function() {\nif(http.readyState == 4) {";
-            echo "var newresponse = parseInt(http.responseText);";
-            echo "var priormyname = parseInt(myname);";
-            if ($debug) {
-                echo "alert('Values are ' + newresponse + ' and '+priormyname);";
-            }
-            echo "\n if(newresponse != priormyname){";
-            echo "\n    location.reload(true);";
-            echo "\n}\n}\n}";
-            echo "\n http.send(null);";
-            echo "\n}\nreplace();";
+        echo "\n var numrefresh = $numrefresh;";
+        echo "\n var maxrepeat = $maxrepeat;";
+        echo "\n\nfunction replace() { ";
+        echo "\n    numrefresh ++;";
+        echo "\n    x=document.getElementById('timemodified');";
+        echo "\n    myname = x.getAttribute('name');";
+        echo "\n    if(numrefresh < $maxrepeat) {";
+        echo "\n       var t=setTimeout(\"replace()\",$replacetime);";
+        echo "\n    } else {";
+        echo "\n       myFunction();";
+        echo "\n    }";
+        echo "\n    http.open(\"GET\", \"".$graphicshashurl."\", true);";
+        echo "\n    http.onreadystatechange=function() {";
+        echo "\n       if(http.readyState == 4) {";
+        echo "\n          var newresponse = parseInt(http.responseText);";
+        echo "\n          var priormyname = parseInt(myname);";
+        echo "\n          if(newresponse == priormyname){";//Don't do anything.
+        echo "\n             } else {";
+        if ($debug) {
+            echo "\n            alert('Reload because values are ' + newresponse + ' and '+priormyname);";
+        }
+        echo "\n                location.reload(true);";
+        echo "\n             }";
+        echo "\n        }";
+        echo "\n     }";
+        echo "\n  http.send(null);";
+        echo "\n}\nreplace();";
         echo "\n</script>";
 
         return true;
