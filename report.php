@@ -85,8 +85,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
-        // Debug at line 717-719.
-        $debug = optional_param('debug', 0, PARAM_INT);
+        $changeoption = optional_param('changeoption', 0, PARAM_INT);
         $rag = optional_param('rag', 0, PARAM_INT);
         $evaluate = optional_param('evaluate', 0, PARAM_INT);
         $showkey = optional_param('showkey', 0, PARAM_INT);
@@ -156,6 +155,19 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['singleqid'] = $singleqid;
         $hidden['showanswer'] = $showanswer;
         $hidden['shownames'] = $shownames;
+        foreach ($hidden as $hiddenkey => $hiddenvalue) {
+            if (!($hiddenkey == 'id')) {// Don't carry the id from one quiz to another.
+                if ($changeoption) {
+                    $_SESSION[$hiddenkey] = $hiddenvalue;
+                } else {
+                    if (isset($_SESSION[$hiddenkey])) {
+                        $$hiddenkey = $_SESSION[$hiddenkey];
+                        $hidden[$hiddenkey] = $_SESSION[$hiddenkey];
+                    }
+                }
+            }
+        }
+
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         $sofar = liveview_who_sofar_gridview($quizid);
 
@@ -196,6 +208,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
             echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
             echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+            echo "<input type='hidden' name='changeoption' value=1>";
             echo "<input type='hidden' name='id' value=$id>";
             echo "<input type='hidden' name='mode' value=$mode>";
             echo "<input type='hidden' name='singleqid' value=$singleqid>";
@@ -295,7 +308,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
         echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
-        echo get_string('refreshpage', 'quiz_liveviewgrid')."</div>";
+        echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php?mode=liveviewgrid\">";
+        foreach ($hidden as $key => $value) {
+            echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+        }
+        echo "<input type='submit' value='".get_string('refreshpage', 'quiz_liveviewgrid')."' class=\"blinking\"></form></div>";
         echo "\n<script>";
         echo "\n  function myFunction() {";
         echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
@@ -338,7 +355,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
             echo $head."\n</tr></table>";
         }
-
         echo "\n<table><tr><td>";
         echo get_string('responses', 'quiz_liveviewgrid');
         if ($group) {
@@ -715,11 +731,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "\n       if(http.readyState == 4) {";
         echo "\n          var newresponse = parseInt(http.responseText);";
         echo "\n          var priormyname = parseInt(myname);";
-        echo "\n          if(newresponse == priormyname){";//Don't do anything.
+        echo "\n          if(newresponse == priormyname){";// Don't do anything.
         echo "\n             } else {";
-        if ($debug) {
-            echo "\n            alert('Reload because values are ' + newresponse + ' and '+priormyname);";
-        }
         echo "\n                location.reload(true);";
         echo "\n             }";
         echo "\n        }";

@@ -222,7 +222,9 @@ function liveviewgrid_get_answers($quizid) {
             $myresponse = array();
             $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
             foreach ($qattemptsteps as $qattemptstep) {
-                if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')) {// Handling Cloze questions.
+                if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
+                    || ($qattemptstep->state == 'todo')) {
+                    // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
                     $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;

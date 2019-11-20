@@ -41,4 +41,7 @@ Changes for version 1.2.13. Made a new file, liveviewpopout.php to provide a sta
 Changes for version 1.2.14. Removed links to other pages from liveviewpopout.php, added a print button.
 Changes for version 1.2.24. Changed the options so that they are radio buttons that can be hidden and displayed.
 Changes for version 1.2.25. Changed some of the language srings to make things clearer.
-Changes for version 1.2.27. Removed bug (group added in to option form) and changed color to colout in strings.
+Changes for version 1.2.27. Removed bug (group added in to option form) and changed color to colour in strings.
+Changes for version 1.2.30. Changed the "Refresh Page" text to a button,
+     added session values so that the options would follow the user, 
+     and added || $qattemptstep->state == 'todo' in locallib to handle preferredbehaviour=immediatefeedback.
