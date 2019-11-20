@@ -79,6 +79,7 @@ $string['responses'] = '<b>Responses</b>';
 $string['refreshpage'] = 'Refresh Page!';
 $string['rightanswer'] = ' <b>Right answer:</b> ';
 $string['rightansweressay'] = 'This is an essay question.';
+$string['showstudentnames'] = 'Show student names';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';
 $string['staticpage'] = ' -- Static Page';
 $string['studentsnames'] = "Order student names by";

@@ -236,6 +236,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo get_string('yes', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
             echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='shownames' value=0 ".$notchecked['shownames']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
             echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
             echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
