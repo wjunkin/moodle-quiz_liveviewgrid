@@ -97,6 +97,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $singleqid = optional_param('singleqid', 0, PARAM_INT);
         $showanswer = optional_param('showanswer', 0, PARAM_INT);
         $shownames = optional_param('shownames', 1, PARAM_INT);
+        $status = optional_param('status', 0, PARAM_INT);
         $slots = array();
         $question = array();
         $users = array();
@@ -155,6 +156,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['singleqid'] = $singleqid;
         $hidden['showanswer'] = $showanswer;
         $hidden['shownames'] = $shownames;
+        $hidden['status'] = $status;
         foreach ($hidden as $hiddenkey => $hiddenvalue) {
             if (!($hiddenkey == 'id')) {// Don't carry the id from one quiz to another.
                 if ($changeoption) {
@@ -262,6 +264,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
             echo get_string('yes', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('showstatus', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='status' value=1 ".$checked['status']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='status' value=0 ".$notchecked['status']."> ";
             echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
             echo "\n</table>";
             $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
@@ -549,6 +556,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($shownames) {
             echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
         }
+        if ($status) {
+            echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
+        }
         // The array for storing the all the texts for tootips.
         $tooltiptext = array();
 
@@ -616,6 +626,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                         if ($shownames) {
                             echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
                         }
+                        $myrow = '';
                         foreach ($slots as $questionid => $slotvalue) {
                             if (($questionid != "") and ($questionid != 0)) {
                                 if (isset($stanswers[$user][$questionid])) {
@@ -626,6 +637,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                         foreach ($stanswers[$user][$questionid] as $key => $value) {
                                             $answer .= $key."=".$value."; ";
                                         }
+                                    }
+                                    if ($status) {
+                                        $ststatus[$user][$questionid] = 1;//Array to keep track of student progress.
                                     }
                                 } else {
                                     $answer = ' ';
@@ -662,13 +676,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 }
                             }
                             if ((strlen($answer) < $trun) || ($singleqid > 0)) {
-                                    echo $style.">&nbsp;".htmlentities($answer)."</td>";
+                                    $myrow .= $style.">&nbsp;".htmlentities($answer)."</td>";
                             } else {
                                 // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                                 $safeanswer = htmlentities($answer);
                                 $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                                 $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
-                                    echo $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                                    $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
                                 // Making sure we pick up whole words.
                                 preg_match_all('/./u', $answer, $matches);
                                 $ntrun = 0;
@@ -679,10 +693,15 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                     }
                                     $ntrun++;
                                 }
-                                echo $truncated;
-                                echo " $dotdot</div></td>";
+                                $myrow .= $truncated;
+                                $myrow .= " $dotdot</div></td>";
                             }
                         }
+                        if ($status) {
+                            $percentdone = 100*count($ststatus[$user])/count($slots);
+                            echo "<td>".number_format($percentdone, 1).'%</td>';
+                        }
+                        echo $myrow;
                         echo "</tr>\n";
                     }
                 }
