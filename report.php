@@ -158,7 +158,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['shownames'] = $shownames;
         $hidden['status'] = $status;
         foreach ($hidden as $hiddenkey => $hiddenvalue) {
-            if (!($hiddenkey == 'id')) {// Don't carry the id from one quiz to another.
+            if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid'))) {// Don't carry the id or singleqid.
                 if ($changeoption) {
                     $_SESSION[$hiddenkey] = $hiddenvalue;
                 } else {
