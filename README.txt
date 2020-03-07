@@ -48,4 +48,4 @@ Changes for version 1.2.30. Changed the "Refresh Page" text to a button,
      and added || $qattemptstep->state == 'todo' in locallib to handle preferredbehaviour=immediatefeedback.
 Changes for version 1.2.32. Added a feature so that teachers could see the progress students were making in a quiz.
 Changes for version 1.2.33. Don't carry singleqid to the next quiz.
-
+Changes for version 1.2.38. Checked against Moodle coding guidelines and remove all reference to lesson module.

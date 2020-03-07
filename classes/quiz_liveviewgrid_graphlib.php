@@ -314,10 +314,12 @@ class quiz_liveviewgrid_graphlib {
                 }                                                                               // Moodle.
                 if (isset($myfractions[$index])) {
                     $myfraction = $myfractions[$index];
-                    $greenpart = intval( 255 * $myfraction);// Add in as much green as the answer is correct.
-                    $redpart = intval(255 - $myfraction * 255);// Add in as much red as the answer is wrong.
-                    $bluepart = intval(126 * $myfraction);
-
+                    $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+                    $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+                    if ($redpart > 255) {
+                        $redpart = 255;
+                    }
+                    $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
                     $this->colour['grade'] = imagecolorallocate ($this->image, $redpart, $greenpart, $bluepart);
                     $mycolor = 'grade';
                 } else {

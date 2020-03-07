@@ -639,7 +639,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                         }
                                     }
                                     if ($status) {
-                                        $ststatus[$user][$questionid] = 1;//Array to keep track of student progress.
+                                        $ststatus[$user][$questionid] = 1;// Array to keep track of student progress.
                                     }
                                 } else {
                                     $answer = ' ';
@@ -698,7 +698,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                             }
                         }
                         if ($status) {
-                            $percentdone = 100*count($ststatus[$user])/count($slots);
+                            $percentdone = 100 * count($ststatus[$user]) / count($slots);
                             echo "<td>".number_format($percentdone, 1).'%</td>';
                         }
                         echo $myrow;
