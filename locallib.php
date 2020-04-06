@@ -51,6 +51,32 @@ function liveview_who_sofar_gridview($quizid) {
 }
 
 /**
+ * Return the number of users who have submitted answers to this lesson instance.
+ *
+ * @param int $lessonid The ID for the lesson instance.
+ * @return array The userids for all the students submitting answers.
+ */
+function liveview_who_sofar_lesson($lessonid) {
+    global $DB;
+
+    $records = $DB->get_records('lesson_attempts', array('lessonid' => $lessonid));
+    $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+    $lesson = $DB->get_record('lesson', array('id' => $lessonid));
+    $context = context_course::instance($lesson->course);
+    foreach ($records as $record) {
+        if ($DB->get_record('role_assignments', array('contextid' => $context->id,
+            'roleid' => $studentrole->id, 'userid' => $record->userid))) {
+            $userid[] = $record->userid;
+        }
+    }
+    if (isset($userid)) {
+        return(array_unique($userid));
+    } else {
+        return(null);
+    }
+}
+
+/**
  * Return the first and last name of a student.
  *
  * @param int $userid The ID for the student.

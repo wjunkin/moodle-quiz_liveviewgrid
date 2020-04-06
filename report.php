@@ -98,6 +98,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $showanswer = optional_param('showanswer', 0, PARAM_INT);
         $shownames = optional_param('shownames', 1, PARAM_INT);
         $status = optional_param('status', 0, PARAM_INT);
+        $refresht = optional_param('refresht', 1, PARAM_INT);
+        if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
+            $haslesson = 1;
+            $lessonid = optional_param('lessonid', 0, PARAM_INT);
+            $showlesson = optional_param('showlesson', 0, PARAM_INT);
+        } else {
+            $haslesson = 0;
+            $lessonid = 0;
+            $showlesson = 0;
+        }
         $slots = array();
         $question = array();
         $users = array();
@@ -123,6 +133,38 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
+
+        // The array of hidden values is hidden[].
+        $hidden = array();
+        $hidden['rag'] = $rag;
+        $hidden['id'] = $id;
+        $hidden['mode'] = $mode;
+        $hidden['evaluate'] = $evaluate;
+        $hidden['showkey'] = $showkey;
+        $hidden['order'] = $order;
+        $hidden['compact'] = $compact;
+        $hidden['group'] = $group;
+        $hidden['singleqid'] = $singleqid;
+        $hidden['showanswer'] = $showanswer;
+        $hidden['shownames'] = $shownames;
+        $hidden['status'] = $status;
+        $hidden['haslesson'] = $haslesson;
+        $hidden['showlesson'] = $showlesson;
+        $hidden['lessonid'] = $lessonid;
+        $hidden['refresht'] = $refresht;
+        foreach ($hidden as $hiddenkey => $hiddenvalue) {
+            if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
+                && (!($hiddenkey == 'lessonid'))) {// Don't carry the id, singleqid, haslesson, or lessonid.
+                if ($changeoption) {
+                    $_SESSION[$hiddenkey] = $hiddenvalue;
+                } else {
+                    if (isset($_SESSION[$hiddenkey])) {
+                        $$hiddenkey = $_SESSION[$hiddenkey];
+                        $hidden[$hiddenkey] = $_SESSION[$hiddenkey];
+                    }
+                }
+            }
+        }
         $showresponses = false;
         if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
             if ($group == 0) {
@@ -143,35 +185,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $showresponses = true;
         }
 
-        // The array of hidden values is hidden[].
-        $hidden = array();
-        $hidden['rag'] = $rag;
-        $hidden['id'] = $id;
-        $hidden['mode'] = $mode;
-        $hidden['evaluate'] = $evaluate;
-        $hidden['showkey'] = $showkey;
-        $hidden['order'] = $order;
-        $hidden['compact'] = $compact;
-        $hidden['group'] = $group;
-        $hidden['singleqid'] = $singleqid;
-        $hidden['showanswer'] = $showanswer;
-        $hidden['shownames'] = $shownames;
-        $hidden['status'] = $status;
-        foreach ($hidden as $hiddenkey => $hiddenvalue) {
-            if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid'))) {// Don't carry the id or singleqid.
-                if ($changeoption) {
-                    $_SESSION[$hiddenkey] = $hiddenvalue;
-                } else {
-                    if (isset($_SESSION[$hiddenkey])) {
-                        $$hiddenkey = $_SESSION[$hiddenkey];
-                        $hidden[$hiddenkey] = $_SESSION[$hiddenkey];
-                    }
-                }
-            }
-        }
-
         $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
         $sofar = liveview_who_sofar_gridview($quizid);
+        if ($lessonid > 0) {
+            $lessonsofar = liveview_who_sofar_lesson($lessonid);
+            if (count($lessonsofar) > 0) {
+                // Add in those who have started the lesson.
+                $allsofar = array_merge($sofar, $lessonsofar);
+                $sofar = array_unique($allsofar);
+            }
+        }
 
         if ($showresponses) {
             // Script to hide or display the option form.
@@ -215,6 +238,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "<input type='hidden' name='mode' value=$mode>";
             echo "<input type='hidden' name='singleqid' value=$singleqid>";
             echo "<input type='hidden' name='group' value=$group>";
+            if ($haslesson) {
+                echo "<input type='hidden' name='lessonid' value=$lessonid>";
+            }
             $checked = array();
             $notchecked = array();
             foreach ($hidden as $hiddenkey => $hiddenvalue) {
@@ -224,6 +250,15 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 } else {
                     $checked[$hiddenkey] = '';
                     $notchecked[$hiddenkey] = 'checked';
+                }
+            }
+            $twait = array(1, 2, 3, 6, 200);
+            foreach ($twait as $myt) {
+                $tindex = 'refresht'.$myt;
+                if ($refresht == $myt) {
+                    $checked[$tindex] = 'checked';
+                } else {
+                    $checked[$tindex] = '';
                 }
             }
             $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
@@ -270,24 +305,111 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo get_string('yes', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='status' value=0 ".$notchecked['status']."> ";
             echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr><td>".get_string('checkt', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='refresht' value=1 ".$checked['refresht1'].">10 ";
+            echo " <input type='radio' name='refresht' value=2 ".$checked['refresht2'].">20 ";
+            echo " <input type='radio' name='refresht' value=3 ".$checked['refresht3'].">30 ";
+            echo " <input type='radio' name='refresht' value=6 ".$checked['refresht6'].">60 ";
+            echo " <input type='radio' name='refresht' value=200 ".$checked['refresht200'].">".
+                get_string('nevert', 'quiz_liveviewgrid')."</td></tr>";
+
+            if ($haslesson) {
+                echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
+                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showlesson' value=0 ".$notchecked['showlesson']."> ";
+                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            }
             echo "\n</table>";
             $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
             echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
             echo "</div>";
         }
-
-        // Find out if there may be groups. If so, allow the teacher to choose a group.
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
+        $courseid = $course->id;
+        // Button to select lesson.
+        if ($showlesson) {
+            $this->liveviewlessonmenu($courseid, $geturl, $canaccess, $hidden);
+        }
+
+        // Find out if there may be groups. If so, allow the teacher to choose a group.
         if ($groupmode) {
-            $courseid = $course->id;
             liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
         }
         // If a single question is being displayed, allow the teacher to select a different question.
         if ($singleqid > 0) {
             liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
         }
+        // Display progress of lesson. This code is taken from mod/lesson/locallib.php.
+        // If the code there changes, this will have to be modified accordingly.
+        if (($lessonid) && (count($sofar))) {
+            require_once($CFG->dirroot.'/mod/lesson/locallib.php');
+            $lessonmoduleid = $DB->get_record('modules', array('name' => 'lesson'));
+            $lmid = $lessonmoduleid->id;
+            $cm = $DB->get_record('course_modules', array('instance' => $lessonid, 'course' => $course->id, 'module' => $lmid));
+            $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST), $cm, $course);
+            // I can't use any method from the lesson class that uses the $USER global variable.
+            $pages = $lesson->load_all_pages();
+            $lessonstatus = array();// The array that has the text for lesson status.
+            foreach ($sofar as $myuserid) {
+                foreach ($pages as $page) {
+                    if ($page->prevpageid == 0) {
+                        $pageid = $page->id;  // Find the first page id.
+                        break;
+                    }
+                }
+                if (!$ntries = $DB->count_records("lesson_grades", array("lessonid" => $lessonid, "userid" => $myuserid))) {
+                    $ntries = 0;  // May not be necessary.
+                }
+                $viewedpageids = array();
+                $myparams = array("lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries);
+                if ($attempts = $DB->get_records('lesson_attempts', $myparams, 'timeseen ASC')) {
+                    foreach ($attempts as $attempt) {
+                        $viewedpageids[$attempt->pageid] = $attempt;
+                    }
+                }
+                $viewedbranches = array();
+                // Collect all of the branch tables viewed.
+                if ($branches = $lesson->get_content_pages_viewed($ntries, $myuserid, 'timeseen ASC', 'id, pageid')) {
+                    foreach ($branches as $branch) {
+                        $viewedbranches[$branch->pageid] = $branch;
+                    }
+                    $viewedpageids = array_merge($viewedpageids, $viewedbranches);
+                }
+                // Filter out the following pages:
+                // - End of Cluster
+                // - End of Branch
+                // - Pages found inside of Clusters
+                // Do not filter out Cluster Page(s) because we count a cluster as one.
+                // By keeping the cluster page, we get our 1.
+                $validpages = array();
+                while ($pageid != 0) {
+                    $pageid = $pages[$pageid]->valid_page_and_view($validpages, $viewedpageids);
+                }
 
+                // Progress calculation as a percent.
+                $progress = round(count($viewedpageids) / count($validpages), 2) * 100;
+                $lessonstatus[$myuserid] = '';
+                if ($ntries > 0) {
+                    $tr = '';
+                    if ($ntries == 1) {
+                        $ty = get_string('try', 'quiz_liveviewgrid');
+                    } else {
+                        $ty = get_string('tries', 'quiz_liveviewgrid');
+                    }
+                    $lessonstatus[$myuserid] = $ntries.$ty.get_string('completed', 'quiz_liveviewgrid');
+
+                }
+                if ($progress > 0) {
+                    $lessonstatus[$myuserid] .= ' '.get_string('current', 'quiz_liveviewgrid').
+                        get_string('try', 'quiz_liveviewgrid').$progress.'% '.get_string('completed', 'quiz_liveviewgrid');
+                }
+                if ($lessonstatus[$myuserid] == '') {
+                    $lessonstatus[$myuserid] = get_string('lessonnotstarted', 'quiz_liveviewgrid');
+                }
+            }
+        }
         // CSS style for blinking 'Refresh Page!' notice and making the first column fixed..
         echo "\n<style>";
         echo "\n .blinking{";
@@ -556,6 +678,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($shownames) {
             echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
         }
+        if ($showlesson) {
+            if ($lessonid) {
+                echo "<td>".$lesson->name."</td>";
+            } else {
+                echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+            }
+        }
         if ($status) {
             echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
         }
@@ -697,6 +826,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 $myrow .= " $dotdot</div></td>";
                             }
                         }
+                        if ($showlesson) {
+                            if ($lessonid > 0) {
+                                echo "<td>".$lessonstatus[$user]."</td>";
+                            } else {
+                                echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+                            }
+                        }
                         if ($status) {
                             $percentdone = 100 * count($ststatus[$user]) / count($slots);
                             echo "<td>".number_format($percentdone, 1).'%</td>';
@@ -729,7 +865,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // Javascript to refresh the page if the contents of the table change.
         $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
         // The number of seconds before checking to see if the answers have changed is the $refreshtime.
-        $refreshtime = 10;
+        $refreshtime = 10 * $refresht;
         $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
         $sessiontimeout = $sessionconfig->value;
         $maxrepeat = intval($sessiontimeout / $refreshtime);
@@ -767,7 +903,35 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
         return true;
     }
-
+    /**
+     * Prints out the drop down menu (form) to select the desired lesson.
+     *
+     * This is used if there is a lesson and the teacher chooses to show lesson progress.
+     * @param int $courseid The ID for the course.
+     * @param string $geturl The URL for the form action.
+     * @param int $canaccess The integer (1 or 0) if the teacher has necessary permissions.
+     * @param array $hidden The hidden option values that are used in the form.
+     */
+    private function liveviewlessonmenu($courseid, $geturl, $canaccess, $hidden) {
+        global $DB, $USER;
+        echo "\n<table border=0><tr>";
+        $lessons = $DB->get_records('lesson', array('course' => $courseid));
+        echo "\n<td><form action=\"$geturl\">";
+        foreach ($hidden as $key => $value) {
+            if ($key <> 'lessonid') {
+                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+            }
+        }
+        echo "\n<select name=\"lessonid\" onchange='this.form.submit()'>";
+        echo "\n<option value=\"0\">".get_string('chooselesson', 'quiz_liveviewgrid')."</option>";
+        foreach ($lessons as $lesson) {
+            $lessonid = $lesson->id;
+            $lessonname = $lesson->name;
+            echo "\n<option value=\"$lessonid\">$lessonname</option>";
+        }
+        echo "\n</select>";
+        echo "\n</form></td></tr></table>";
+    }
     /**
      * Return the greatest time that a student responded to a given quiz.
      *
