@@ -224,7 +224,22 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
         }
     }
     echo "\n</select>";
-    echo "\n</form></td></tr></table>";
+    echo "\n</form></td>";
+    if ($mysingleqid) {
+        echo "<td>";
+        echo "<form action=\"$geturl\">";
+        foreach ($hidden as $key => $value) {
+            if ($key <> 'singleqid') {
+                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+            } else {
+                echo "\n<input type=\"hidden\" name=\"singleqid\" value=\"0\">";
+            }
+        }
+        echo "<input type=\"submit\" value=\"".get_string('allquestions', 'quiz_liveviewgrid')."\">";
+        echo "</form>";
+        echo "</td>";
+    }
+    echo "</tr></table>";
 }
 
 /**

@@ -133,7 +133,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
-
         // The array of hidden values is hidden[].
         $hidden = array();
         $hidden['rag'] = $rag;
@@ -154,7 +153,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['refresht'] = $refresht;
         foreach ($hidden as $hiddenkey => $hiddenvalue) {
             if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
-                && (!($hiddenkey == 'lessonid'))) {// Don't carry the id, singleqid, haslesson, or lessonid.
+                && (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
+                // Don't carry group, id, singleqid, haslesson, or lessonid.
                 if ($changeoption) {
                     $_SESSION[$hiddenkey] = $hiddenvalue;
                 } else {
@@ -166,6 +166,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         $showresponses = false;
+
         if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
             if ($group == 0) {
                 // Teacher cannot see all groups and no group has been selected.
@@ -305,7 +306,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo get_string('yes', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='status' value=0 ".$notchecked['status']."> ";
             echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr><td>".get_string('checkt', 'quiz_liveviewgrid')."</td>";
+            echo "\n<tr>".$td.get_string('checkt', 'quiz_liveviewgrid')."</td>";
             echo $td."<input type='radio' name='refresht' value=1 ".$checked['refresht1'].">10 ";
             echo " <input type='radio' name='refresht' value=2 ".$checked['refresht2'].">20 ";
             echo " <input type='radio' name='refresht' value=3 ".$checked['refresht3'].">30 ";

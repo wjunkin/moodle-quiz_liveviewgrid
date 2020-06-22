@@ -50,3 +50,6 @@ Changes for version 1.2.32. Added a feature so that teachers could see the progr
 Changes for version 1.2.33. Don't carry singleqid to the next quiz.
 Changes for version 1.2.38. Checked against Moodle coding guidelines and remove all reference to lesson module.
 Changes for version 1.2.40. Put back in reference to lesson and checked against Moodle coding guidelines.
+Changes for version 1.2.41. Added in the "Back to all qustions" button.
+Changes for version 1.2.42. Added in the option for teachers to select the refresh time and to see progress in lessons.
+Changes for version 1.2.43. Changed code so that the group is not carried as a session value.
