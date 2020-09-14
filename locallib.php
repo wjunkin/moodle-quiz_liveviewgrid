@@ -292,13 +292,19 @@ function liveviewgrid_get_answers($quizid) {
                                 }
                             }
                         }
-                        $response = $mydm->get_fraction($qattempt->slot, $myresponse);
+                        if (isset($myresponse['answer'])) {
+                            $response = $mydm->get_fraction($qattempt->slot, $myresponse);
+                        }
                         if (count($clozeresponse) > 0) {
                             $stanswers[$usrid][$qattempt->questionid] = $clozeresponse;
                         } else {
-                            $stanswers[$usrid][$qattempt->questionid] = $response[0];
+                            if (isset($response[0])) {
+                                $stanswers[$usrid][$qattempt->questionid] = $response[0];
+                            } 
                         }
-                        $stfraction[$usrid][$qattempt->questionid] = $response[1];
+                        if (isset($response[1])) {
+                            $stfraction[$usrid][$qattempt->questionid] = $response[1];
+                        }
                     }
                 }
             }
