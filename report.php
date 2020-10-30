@@ -196,7 +196,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $sofar = array_unique($allsofar);
             }
         }
-
+        if (isset($_SERVER['HTTP_REFERER'])) {
+            echo "\n<br /><a href='".$_SERVER['HTTP_REFERER']."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+        }
         if ($showresponses) {
             // Script to hide or display the option form.
             echo "\n<script>";
@@ -701,6 +703,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $buttontext = trim($safequestionname);
                 $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
                 $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
+                // Get rid of any <script> tags that may mess things up.
+                $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
                 $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
                 $info = '';
                 echo "<td>";

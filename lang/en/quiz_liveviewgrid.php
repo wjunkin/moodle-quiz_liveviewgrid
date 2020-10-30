@@ -31,6 +31,7 @@ $string['answeredqno'] = 'No student has answered this question.';
 $string['answeredonenot'] = ' student has not answered.';
 $string['answeredmanynot'] = ' students have not answered.';
 $string['answeredall'] = 'All students have answered this question';
+$string['back'] = 'Back';
 $string['questionis'] = '<b>The question is:</b> ';
 $string['checkt'] = 'Check for new responses after ';
 $string['choosegroup'] = '<b>Choose a group</b>';
