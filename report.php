@@ -98,7 +98,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $showanswer = optional_param('showanswer', 0, PARAM_INT);
         $shownames = optional_param('shownames', 1, PARAM_INT);
         $status = optional_param('status', 0, PARAM_INT);
-        $refresht = optional_param('refresht', 1, PARAM_INT);
+        $refresht = optional_param('refresht', 3, PARAM_INT);
         if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
             $haslesson = 1;
             $lessonid = optional_param('lessonid', 0, PARAM_INT);
@@ -199,6 +199,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if (isset($_SERVER['HTTP_REFERER'])) {
             echo "\n<br /><a href='".$_SERVER['HTTP_REFERER']."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
         }
+        $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
+        $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
+        $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
+        echo "\n<a href='$allresponsesurl'><button>".get_string('viewresponses', 'quiz_liveviewgrid')."</button></a>";
         if ($showresponses) {
             // Script to hide or display the option form.
             echo "\n<script>";

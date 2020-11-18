@@ -24,6 +24,7 @@
 
 $string['allgroups'] = 'All groups';
 $string['allquestions'] = 'Back to All Questions';
+$string['allresponses'] = 'All responses for ';
 $string['answeredinfo'] = 'Click to show or hide the name(s) of student(s) who started this quiz but
     have not answered this question yet';
 $string['answeredquizno'] = 'No student has started this quiz.';
@@ -99,6 +100,7 @@ $string['thecolorkey'] = 'Show the colour key/legend for grades';
 $string['tries'] = ' tries ';
 $string['try'] = ' try ';
 $string['userag'] = 'Use RAG colours ';
+$string['viewresponses'] = 'Responses/histograms for all questions';
 $string['whichgroups'] = '<b>Which group do you want to see?</b> ';
 $string['whichquestion'] = '<b>Which question do you want to see?</b> ';
 $string['yes'] = 'Yes';
