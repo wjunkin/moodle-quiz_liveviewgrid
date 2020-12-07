@@ -300,7 +300,7 @@ function liveviewgrid_get_answers($quizid) {
                         } else {
                             if (isset($response[0])) {
                                 $stanswers[$usrid][$qattempt->questionid] = $response[0];
-                            } 
+                            }
                         }
                         if (isset($response[1])) {
                             $stfraction[$usrid][$qattempt->questionid] = $response[1];
