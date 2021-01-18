@@ -57,3 +57,4 @@ Versions in-between here: Added back button, added checks to be sure answer exis
 Changes for version 1.3.0  Added page for all responses (allresponse.php, singleq_histogram.php, qidhash.php, javascript_teach_refreshG3.js.
 This version will refresh the individual iframes without refreshing the entire page. Changed the default for $refresht to 3.
 Changes for version 1.3.2 Corrected bug that carried values of the $response array from one user to the other. $response = array(); in locallib.php, line 295.
+Changes for version 1.3.3 Changed default values for rag, evaluate, showkey, and compact = 1

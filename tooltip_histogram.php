@@ -25,11 +25,11 @@
  */
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
 defined('MOODLE_INTERNAL') || die();
-$rag = optional_param('rag', 0, PARAM_INT);
+$rag = optional_param('rag', 1, PARAM_INT);
 $questionid = optional_param('questionid', 0, PARAM_INT);
 $quizid = optional_param('quizid', 0, PARAM_INT);
 $courseid = optional_param('courseid', 0, PARAM_INT);
-$evaluate = optional_param('evaluate', 0, PARAM_INT);
+$evaluate = optional_param('evaluate', 1, PARAM_INT);
 $group = optional_param('group', 0, PARAM_INT);
 $shownames = optional_param('shownames', 0, PARAM_INT);
 $order = optional_param('order', 0, PARAM_INT);
