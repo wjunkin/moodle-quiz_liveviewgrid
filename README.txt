@@ -54,7 +54,6 @@ Changes for version 1.2.41. Added in the "Back to all qustions" button.
 Changes for version 1.2.42. Added in the option for teachers to select the refresh time and to see progress in lessons.
 Changes for version 1.2.43. Changed code so that the group is not carried as a session value.
 Versions in-between here: Added back button, added checks to be sure answer exists.
-Changes for version 1.3.0  Added page for all responses (allresponse.php, singleq_histogram.php, qidhash.php,
-and javascript_teach_refreshG3.js.
+Changes for version 1.3.0  Added page for all responses (allresponse.php, singleq_histogram.php, qidhash.php, javascript_teach_refreshG3.js.
 This version will refresh the individual iframes without refreshing the entire page. Changed the default for $refresht to 3.
-Changes for version 1.3.1 Cleaned up the code for Moodle standards.
+Changes for version 1.3.2 Corrected bug that carried values of the $response array from one user to the other. $response = array(); in locallib.php, line 295.

@@ -324,8 +324,7 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
                 , array('questionusageid' => $uniqueid, 'questionid' => $questionid));
             foreach ($questionattempts as $questionattempt) {
                 $attemptid = $questionattempt->id;
-                $attemptsteps = $DB->get_records('question_attempt_steps',
-                    array('questionattemptid' => $attemptid, 'state' => 'complete'));
+                $attemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $attemptid, 'state' => 'complete'));
                 foreach ($attemptsteps as $attemptstep) {
                     // Every time a student submits an answer, this generates a new question_attempt_step.
                     $attemptstepsdata = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $attemptstep->id));
@@ -350,7 +349,7 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
             }
         }
         $row[$rown] .= "<td style=\"white-space: nowrap;\">".$myanswer."</td></tr>";
-        $rown++;
+        $rown++;        
     }
     asort($row);
 
@@ -360,6 +359,8 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
     if ($shownames) {
         echo "<th>".get_string('name', 'quiz_liveviewgrid')."</th>";
     }
+    // The array for storing the all the texts for tootips.
+    //$tooltiptext = array();
 
     $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $questiontext->name);
     echo "<td>$myquestiontext";
