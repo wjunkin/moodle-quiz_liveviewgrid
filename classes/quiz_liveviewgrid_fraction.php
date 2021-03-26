@@ -62,8 +62,8 @@ class quiz_liveviewgrid_fraction {
      * Function to return the graded responses to the question.
      *
      * @param int $slot The value of the id for this question in the slot table.
-     * @param string $myresponse The response that the student gave.
-     * @return real The fraction for the answer the student gave.
+     * @param string $response[0] The response that the student gave.
+     * @return real $response[1] The fraction for the answer the student gave.
      */
     public function get_fraction ($slot, $myresponse) {
         $myquestion = $this->dm->get_question($slot);
@@ -82,5 +82,20 @@ class quiz_liveviewgrid_fraction {
         }
         return $response;
     }
+    
+    public function attachment_link($slot) {
+        $myoptions = new question_display_options();
+        $myoptions->readonly = 1;        
+        $question = $this->dm->render_question($slot, $myoptions, $number = null);
+        $attachment = preg_match("/\<div class\=\"attachments\"(.+?)\<\/div\>/is", $question, $matches);
+        $icon = preg_match("/\<a(.+?)\/\>/is", $matches[1], $mtches);
+        if ($icon) {
+            $attachmenticon = $mtches[0]."</a>";
+            return $attachmenticon;
+        } else {
+            return ' ';
+        }
+    }
+
 }
 
