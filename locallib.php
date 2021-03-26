@@ -251,9 +251,10 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
 function liveviewgrid_get_answers($quizid) {
     global $DB;
     $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-    // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
+    // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
+    $stlink = array();
     foreach ($quizattempts as $key => $quizattempt) {
         $usrid = $quizattempt->userid;
         $qubaid = $quizattempt->uniqueid;
@@ -270,8 +271,40 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
                     }
-                    if (count($myresponse) > 0) {
+                    $question = $DB->get_record('question', array('id' => $qattempt->questionid));
+                    if ($question->qtype == 'matrix') {// Check to see if attachments can be sent in matrix questions.
+                        $matrixresponse = array();
+                        $mgrade = 0;
+                        $mweight = 0.00001;
+                        $qmatrix = $DB->get_record('question_matrix', array('questionid' => $qattempt->questionid));
+                        $numrows = $DB->count_records('question_matrix_rows', array('matrixid' =>$qmatrix->id));
+                        foreach ($myresponse as $key => $respon) {
+                            // For matrix questions the key will be cell(\d)*.
+                            // This gives the row. The answer gives the column for the answer.
+                            if (preg_match('/cell(\d)*/', $key, $matches)) {
+                                $rowid = $matches[1];
+                                $colid = $respon;
+                                $weight = 0;
+                                if (($rowid > 0) && ($colid > 0)) {
+                                    if ($fract = $DB->get_record('question_matrix_weights', array('rowid' => $rowid, 'colid' => $colid))) {
+                                        $weight = $fract->weight;
+                                    }
+                                }
+                                $mrow = $DB->get_record('question_matrix_rows', array('id' => $rowid, 'matrixid' => $qmatrix->id));
+                                $qtext = $mrow->shorttext;
+                                $mcol = $DB->get_record('question_matrix_cols', array('id' => $colid, 'matrixid' => $qmatrix->id));
+                                $mans = $mcol->shorttext;
+                                $matrixresponse[] = $qtext."= ".$mans;
+                                if ($mwgt = $DB->get_record('question_matrix_weights', array('rowid' => $rowid, 'colid' => $colid))) {
+                                    $mweight = $mweight + $mwgt->weight;
+                                }
+                            }
+                        }
+                        $stanswers[$usrid][$qattempt->questionid] = join('; ', $matrixresponse);
+                        $stfraction[$usrid][$qattempt->questionid] = $mweight / $numrows;
+                    } else if (count($myresponse) > 0) {
                         $clozeresponse = array();// An array for the Close responses.
+                        $clozegrade = 0;
                         foreach ($myresponse as $key => $respon) {
                             // For cloze questions the key will be sub(\d*)_answer.
                             // I need to take the answer that follows part (\d):(*)?;.
@@ -282,6 +315,7 @@ function liveviewgrid_get_answers($quizid) {
                                 $myres = array();
                                 $myres[$key] = $respon;
                                 $newres = $mydm->get_fraction($qattempt->slot, $myres);
+                                $clozegrade = $clozegrade + $newres[1];
                                 $onemore = $numclozeparts + 1;
                                 $tempans = $newres[0]."; part $onemore";
                                 $index = $matches[1];
@@ -291,13 +325,27 @@ function liveviewgrid_get_answers($quizid) {
                                     $clozeresponse[$matches[1]] = $ansmatch[1];
                                 }
                             }
+                            // For matrix questions the key will be cell(\d+)
+
+                            
                         }
                         $response = array();
+                        if (isset($myresponse['attachments'])) {
+                            // Get the linked icon appropriate for this attempt.
+                            unset($myresponse['attachments']);
+                            if (!isset($stanswers[$usrid][$qattempt->questionid])) {
+                                $stanswers[$usrid][$qattempt->questionid] = '';// To make sure stanswers is set.
+                            }
+                            $stlink[$usrid][$qattempt->questionid] = $mydm->attachment_link(1);
+                        } else {
+                            $stlink[$usrid][$qattempt->questionid] = ' ';
+                        }
                         if (isset($myresponse['answer'])) {
                             $response = $mydm->get_fraction($qattempt->slot, $myresponse);
                         }
                         if (count($clozeresponse) > 0) {
                             $stanswers[$usrid][$qattempt->questionid] = $clozeresponse;
+                            $stfraction[$usrid][$qattempt->questionid] = $clozegrade;
                         } else {
                             if (isset($response[0])) {
                                 $stanswers[$usrid][$qattempt->questionid] = $response[0];
@@ -311,7 +359,7 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
-    $returnvalues = array($stanswers, $stfraction);
+    $returnvalues = array($stanswers, $stfraction, $stlink);
     return $returnvalues;
 
 }

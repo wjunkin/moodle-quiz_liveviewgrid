@@ -128,7 +128,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
         $stanswers = array();
         $stfraction = array();
-        list($stanswers, $stfraction) = liveviewgrid_get_answers($quizid);
+        list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
@@ -469,11 +469,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
                 if ($rag == 1) {// Colors from image from Moodle.
-                    if ($myfraction == 0) {
+                    if ($myfraction < 0.001) {
                         $redpart = 244;
                         $greenpart = 67;
                         $bluepart = 54;
-                    } else if ($myfraction == 1) {
+                    } else if ($myfraction > .999) {
                         $redpart = 139;
                         $greenpart = 195;
                         $bluepart = 74;
@@ -756,26 +756,32 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
             // Create the table.
             if (isset($users)) {
+                $now = time();
+                $firsttime = $now - 300;
                 echo "\n<tbody>";
                 foreach ($users as $user) {
-                    $ststatus[$user] = array();
                     // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
                     if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
                         echo "<tr>";
                         if ($shownames) {
-                            echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
+                            $bgcolor = '';
+                            if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
+                                $bgcolor = "style=\"background-color:#66ff66\"";
+                            }
+                            echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                         }
                         $myrow = '';
                         foreach ($slots as $questionid => $slotvalue) {
+                            $link = $stlink[$user][$questionid];
                             if (($questionid != "") and ($questionid != 0)) {
                                 if (isset($stanswers[$user][$questionid])) {
-                                    if (count($stanswers[$user][$questionid]) == 1) {
-                                        $answer = $stanswers[$user][$questionid];
-                                    } else {
+                                    if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
                                         $answer = '';
                                         foreach ($stanswers[$user][$questionid] as $key => $value) {
                                             $answer .= $key."=".$value."; ";
                                         }
+                                    } else {
+                                        $answer = $stanswers[$user][$questionid];
                                     }
                                     if ($status) {
                                         $ststatus[$user][$questionid] = 1;// Array to keep track of student progress.
@@ -789,11 +795,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                     $myfraction = $stfraction[$user][$questionid];
                                     if ($rag == 1) {// Colors from image from Moodle.
-                                        if ($myfraction < 0.01) {
+                                        if ($myfraction < 0.001) {
                                             $redpart = 244;
                                             $greenpart = 67;
                                             $bluepart = 54;
-                                        } else if ($myfraction == 1) {
+                                        } else if ($myfraction > .999) {
                                             $redpart = 139;
                                             $greenpart = 195;
                                             $bluepart = 74;
@@ -815,12 +821,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 }
                             }
                             if ((strlen($answer) < $trun) || ($singleqid > 0)) {
-                                    $myrow .= $style.">&nbsp;".htmlentities($answer)."</td>";
+                                    //$myrow .= $style.">&nbsp;".htmlentities($answer)."</td>";
+                                    $myrow .= $style.">&nbsp;".$answer.$link."</td>";
                             } else {
                                 // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
                                 $safeanswer = htmlentities($answer);
                                 $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
-                                $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
+                                $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
                                     $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
                                 // Making sure we pick up whole words.
                                 preg_match_all('/./u', $answer, $matches);
@@ -832,7 +839,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                     }
                                     $ntrun++;
                                 }
-                                $myrow .= $truncated;
+                                $myrow .= $truncated.$link;
                                 $myrow .= " $dotdot</div></td>";
                             }
                         }
