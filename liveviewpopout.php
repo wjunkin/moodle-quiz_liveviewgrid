@@ -211,11 +211,11 @@ if ($showkey && $showresponses) {
         $myfraction = number_format($i / 10, 1, '.', ',');
         $head .= "<td ";
         if ($rag == 1) {// Colors from image from Moodle.
-            if ($myfraction == 0) {
+            if ($myfraction < 0.499) {
                 $redpart = 244;
                 $greenpart = 67;
                 $bluepart = 54;
-            } else if ($myfraction == 1) {
+            } else if ($myfraction > .5499) {
                 $redpart = 139;
                 $greenpart = 195;
                 $bluepart = 74;
@@ -422,6 +422,8 @@ foreach ($slots as $key => $slotvalue) {
         $buttontext = trim($safequestionname);
         $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
         $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
+        // Get rid of any <script> tags that may mess things up.
+        $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
         $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
         $info = '';
         echo "<td>";
@@ -493,14 +495,18 @@ if ($showresponses) {
                 }
                 foreach ($slots as $questionid => $slotvalue) {
                     if (($questionid != "") and ($questionid != 0)) {
-                        if (isset($stanswers[$user][$questionid])) {
-                            if (count($stanswers[$user][$questionid]) == 1) {
-                                $answer = $stanswers[$user][$questionid];
-                            } else {
-                                $answer = '';
-                                foreach ($stanswers[$user][$questionid] as $key => $value) {
-                                    $answer .= $key."=".$value."; ";
+                    if (isset($stanswers[$user][$questionid])) {
+                            if (isset($stanswers[$user][$questionid])) {
+                                if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
+                                    $answer = '';
+                                    foreach ($stanswers[$user][$questionid] as $key => $value) {
+                                        $answer .= $key."=".$value."; ";
+                                    }
+                                } else {
+                                    $answer = $stanswers[$user][$questionid];
                                 }
+                            } else {
+                                $answer = ' ';
                             }
                         } else {
                             $answer = ' ';
@@ -511,11 +517,11 @@ if ($showresponses) {
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
                             if ($rag == 1) {// Colors from image from Moodle.
-                                if ($myfraction < 0.01) {
+                                if ($myfraction < 0.499) {
                                     $redpart = 244;
                                     $greenpart = 67;
                                     $bluepart = 54;
-                                } else if ($myfraction == 1) {
+                                } else if ($myfraction > .5499) {
                                     $redpart = 139;
                                     $greenpart = 195;
                                     $bluepart = 74;

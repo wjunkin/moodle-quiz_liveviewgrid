@@ -58,3 +58,5 @@ Changes for version 1.3.0  Added page for all responses (allresponse.php, single
 This version will refresh the individual iframes without refreshing the entire page. Changed the default for $refresht to 3.
 Changes for version 1.3.2 Corrected bug that carried values of the $response array from one user to the other. $response = array(); in locallib.php, line 295.
 Changes for version 1.3.3 Changed default values for rag, evaluate, showkey, and compact = 1
+Changes for version 1.3.4 Changed the code to take care of the bug if $stfraction[$user][$questionid] was set but
+was not an array.

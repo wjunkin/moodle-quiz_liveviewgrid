@@ -224,11 +224,11 @@ echo "\n</style>";
             $myfraction = number_format($i / 10, 1, '.', ',');
             $head .= "<td ";
             if ($rag == 1) {// Colors from image from Moodle.
-                if ($myfraction == 0) {
+                if ($myfraction < 0.499) {
                     $redpart = 244;
                     $greenpart = 67;
                     $bluepart = 54;
-                } else if ($myfraction == 1) {
+                } else if ($myfraction > .5499) {
                     $redpart = 139;
                     $greenpart = 195;
                     $bluepart = 74;

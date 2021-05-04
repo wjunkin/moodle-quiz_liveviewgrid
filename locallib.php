@@ -251,10 +251,9 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
 function liveviewgrid_get_answers($quizid) {
     global $DB;
     $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-    // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
+    // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
-    $stlink = array();
     foreach ($quizattempts as $key => $quizattempt) {
         $usrid = $quizattempt->userid;
         $qubaid = $quizattempt->uniqueid;
@@ -272,7 +271,7 @@ function liveviewgrid_get_answers($quizid) {
                         $myresponse[$answer->name] = $answer->value;
                     }
                     $question = $DB->get_record('question', array('id' => $qattempt->questionid));
-                    if ($question->qtype == 'matrix') {// Check to see if attachments can be sent in matrix questions.
+                    if ($question->qtype == 'matrix') {
                         $matrixresponse = array();
                         $mgrade = 0;
                         $mweight = 0.00001;
@@ -330,16 +329,6 @@ function liveviewgrid_get_answers($quizid) {
                             
                         }
                         $response = array();
-                        if (isset($myresponse['attachments'])) {
-                            // Get the linked icon appropriate for this attempt.
-                            unset($myresponse['attachments']);
-                            if (!isset($stanswers[$usrid][$qattempt->questionid])) {
-                                $stanswers[$usrid][$qattempt->questionid] = '';// To make sure stanswers is set.
-                            }
-                            $stlink[$usrid][$qattempt->questionid] = $mydm->attachment_link(1);
-                        } else {
-                            $stlink[$usrid][$qattempt->questionid] = ' ';
-                        }
                         if (isset($myresponse['answer'])) {
                             $response = $mydm->get_fraction($qattempt->slot, $myresponse);
                         }
@@ -359,7 +348,7 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
-    $returnvalues = array($stanswers, $stfraction, $stlink);
+    $returnvalues = array($stanswers, $stfraction);
     return $returnvalues;
 
 }
