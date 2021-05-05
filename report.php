@@ -469,11 +469,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
                 if ($rag == 1) {// Colors from image from Moodle.
-                    if ($myfraction < 0.499) {
+                    if ($myfraction < 0.09) {
                         $redpart = 244;
                         $greenpart = 67;
                         $bluepart = 54;
-                    } else if ($myfraction > .5499) {
+                    } else if ($myfraction > .9) {
                         $redpart = 139;
                         $greenpart = 195;
                         $bluepart = 74;
