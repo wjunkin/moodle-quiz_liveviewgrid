@@ -90,38 +90,6 @@ function liveview_find_student_gridview($userid) {
 }
 
 /**
- * Function to return the code for a button to select settings.
- *
- * @param string $buttontext The text for the button.
- * @param string $hidden The array of the current hidden values.
- * @param string $togglekey The key for the values that are to be toggled.
- * @param string $info The string that gives information in the button tooltip.
- * @return string. The html code for the button form.
- */
-function liveview_button($buttontext, $hidden, $togglekey, $info) {
-    global $CFG;
-    if (strlen($info) > 1) {
-        $title = " title=\"$info\"";
-    } else {
-        $title = '';
-    }
-    $mytext = "\n<td$title><form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
-    foreach ($hidden as $key => $value) {
-        // Toggle the value associated with the $togglekey.
-        if ($key == $togglekey) {
-            if ($value) {
-                $value = 0;
-            } else {
-                $value = 1;
-            }
-        }
-        $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
-    }
-    $mytext .= "<input type=\"submit\" value=\"$buttontext\"></form></td>";
-    return $mytext;
-}
-
-/**
  * Function to return the code for a single question button with tooltip.
  *
  * @param string $buttontext The text for the button.
@@ -131,7 +99,7 @@ function liveview_button($buttontext, $hidden, $togglekey, $info) {
  */
 function liveview_question_button($buttontext, $hidden, $linkid) {
     global $CFG;
-    $mytext = "\n<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+    $mytext = "\n<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\" target=\"_top\">";
     foreach ($hidden as $key => $value) {
         $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
     }
@@ -251,9 +219,10 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
 function liveviewgrid_get_answers($quizid) {
     global $DB;
     $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-    // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
+    // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
+    $stlink = array();
     foreach ($quizattempts as $key => $quizattempt) {
         $usrid = $quizattempt->userid;
         $qubaid = $quizattempt->uniqueid;
@@ -271,12 +240,12 @@ function liveviewgrid_get_answers($quizid) {
                         $myresponse[$answer->name] = $answer->value;
                     }
                     $question = $DB->get_record('question', array('id' => $qattempt->questionid));
-                    if ($question->qtype == 'matrix') {
+                    if ($question->qtype == 'matrix') {// Check to see if attachments can be sent in matrix questions.
                         $matrixresponse = array();
                         $mgrade = 0;
                         $mweight = 0.00001;
                         $qmatrix = $DB->get_record('question_matrix', array('questionid' => $qattempt->questionid));
-                        $numrows = $DB->count_records('question_matrix_rows', array('matrixid' =>$qmatrix->id));
+                        $numrows = $DB->count_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
                         foreach ($myresponse as $key => $respon) {
                             // For matrix questions the key will be cell(\d)*.
                             // This gives the row. The answer gives the column for the answer.
@@ -285,7 +254,8 @@ function liveviewgrid_get_answers($quizid) {
                                 $colid = $respon;
                                 $weight = 0;
                                 if (($rowid > 0) && ($colid > 0)) {
-                                    if ($fract = $DB->get_record('question_matrix_weights', array('rowid' => $rowid, 'colid' => $colid))) {
+                                    $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                    if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
                                         $weight = $fract->weight;
                                     }
                                 }
@@ -294,7 +264,8 @@ function liveviewgrid_get_answers($quizid) {
                                 $mcol = $DB->get_record('question_matrix_cols', array('id' => $colid, 'matrixid' => $qmatrix->id));
                                 $mans = $mcol->shorttext;
                                 $matrixresponse[] = $qtext."= ".$mans;
-                                if ($mwgt = $DB->get_record('question_matrix_weights', array('rowid' => $rowid, 'colid' => $colid))) {
+                                $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
                                     $mweight = $mweight + $mwgt->weight;
                                 }
                             }
@@ -324,11 +295,19 @@ function liveviewgrid_get_answers($quizid) {
                                     $clozeresponse[$matches[1]] = $ansmatch[1];
                                 }
                             }
-                            // For matrix questions the key will be cell(\d+)
-
-                            
+                            // For matrix questions the key will be cell(\d+).
                         }
                         $response = array();
+                        if (isset($myresponse['attachments'])) {
+                            // Get the linked icon appropriate for this attempt.
+                            unset($myresponse['attachments']);
+                            if (!isset($stanswers[$usrid][$qattempt->questionid])) {
+                                $stanswers[$usrid][$qattempt->questionid] = '';// To make sure stanswers is set.
+                            }
+                            $stlink[$usrid][$qattempt->questionid] = $mydm->attachment_link(1);
+                        } else {
+                            $stlink[$usrid][$qattempt->questionid] = ' ';
+                        }
                         if (isset($myresponse['answer'])) {
                             $response = $mydm->get_fraction($qattempt->slot, $myresponse);
                         }
@@ -338,17 +317,20 @@ function liveviewgrid_get_answers($quizid) {
                         } else {
                             if (isset($response[0])) {
                                 $stanswers[$usrid][$qattempt->questionid] = $response[0];
-                            } 
+                            }
                         }
                         if (isset($response[1])) {
                             $stfraction[$usrid][$qattempt->questionid] = $response[1];
+                            if ($response[1] == 'NA') {// Make code and tags ineffective.
+                                $stanswers[$usrid][$qattempt->questionid] = $myresponse['answer'];
+                            }
                         }
                     }
                 }
             }
         }
     }
-    $returnvalues = array($stanswers, $stfraction);
+    $returnvalues = array($stanswers, $stfraction, $stlink);
     return $returnvalues;
 
 }

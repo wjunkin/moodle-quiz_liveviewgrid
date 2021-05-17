@@ -495,7 +495,7 @@ if ($showresponses) {
                 }
                 foreach ($slots as $questionid => $slotvalue) {
                     if (($questionid != "") and ($questionid != 0)) {
-                    if (isset($stanswers[$user][$questionid])) {
+                        if (isset($stanswers[$user][$questionid])) {
                             if (isset($stanswers[$user][$questionid])) {
                                 if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
                                     $answer = '';
@@ -512,7 +512,7 @@ if ($showresponses) {
                             $answer = ' ';
                         }
                     }
-                        $style = '<td';
+                    $style = '<td';
                     if ($evaluate) {
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];

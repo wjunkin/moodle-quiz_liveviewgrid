@@ -28,7 +28,6 @@ require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewg
 
 // Include locallib.php to obtain the functions needed. This includes the following.
 // The function liveviewgrid_group_dropdownmenu($courseid, $GETurl, $canaccess, $hidden).
-// The function liveview_button($buttontext, $hidden, $togglekey, $info).
 // Thefunction liveview_find_student_gridview($userid).
 // The function liveview_who_sofar_gridview($quizid).
 // The function liveviewgrid_get_answers($quizid).
@@ -128,7 +127,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
         $stanswers = array();
         $stfraction = array();
-        list($stanswers, $stfraction) = liveviewgrid_get_answers($quizid);
+        list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
@@ -197,7 +196,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         if (isset($_SERVER['HTTP_REFERER'])) {
-            echo "\n<br /><a href='".$_SERVER['HTTP_REFERER']."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+            $backurl = $_SERVER['HTTP_REFERER'];
+            // The request may have come from the iframe.
+            $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
+            echo "\n<br /><a href='".$backurl."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
         }
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
@@ -222,6 +224,50 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
                 $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
+                if (preg_match('/\"\@\@PLUGINFILE\@\@\/(.+?)\"/', $qtext2, $matches)) {
+                    // This question has a file. Creating links for files and doing substitution.
+                    $filename = $matches[1];
+                    $sessionkey = "livereport1q$singleqid";
+                    if (isset($_SESSION[$sessionkey])) {
+                        $lrqquba = $_SESSION[$sessionkey];
+                    } else {
+                        $contextid = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $USER->id));
+                        $ctid = $contextid->id;
+                        $data = new stdClass();
+                        $data->contextid = $ctid;
+                        $data->component = 'core_question_preview';
+                        $data->preferredbehaviour = 'deferredfeedback';
+                        $insertedid = $DB->insert_record('question_usages', $data);
+                        $_SESSION[$sessionkey] = $insertedid;
+                        $lrqquba = $_SESSION[$sessionkey];
+                        $qa = new stdClass();
+                        $qa->questionusageid = $insertedid;
+                        $qa->slot = $slots[$singleqid];
+                        $qa->behaviour = 'deferredfeedback';
+                        if ($questiontext->qtype == 'essay') {
+                            $qa->behaviour = 'manualgraded';
+                        }
+                        $qa->questionid = $singleqid;
+                        $qa->variant = 1;
+                        $qa->maxmark = 1.0000000;
+                        $qa->minfraction = 0.0000000;
+                        $qa->maxfraction = 1.0000000;
+                        $qa->questionsummary = $qtext2;
+                        $qa->rightanswer = 'NA';
+                        $qa->responsesummary = 'NA';
+                        $qa->timemodified = time();
+                        $qainsertid = $DB->insert_record('question_attempts', $qa);
+                    }
+                    $coursecontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $quiz->course));
+                    $ccid = $coursecontext->id;
+                    $slotsobject = $DB->get_record('quiz_slots', array('quizid' => $quiz->id, 'questionid' => $singleqid));
+                    $myslot = $slotsobject->slot;
+                    $filelink = $CFG->wwwroot."/pluginfile.php/$ccid/question/questiontext/$lrqquba/";
+                    $basicfilelink = $filelink."$myslot/$singleqid";
+                    $filelink .= "1/$singleqid/$filename";
+                    $completeq = preg_replace("/\@\@PLUGINFILE\@\@/", $basicfilelink, $qtext2);
+                    $qtext2 = $completeq;
+                }
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($showanswer) {
                     if ($questiontext->qtype == 'essay') {
@@ -319,7 +365,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo " <input type='radio' name='refresht' value=6 ".$checked['refresht6'].">60 ";
             echo " <input type='radio' name='refresht' value=200 ".$checked['refresht200'].">".
                 get_string('nevert', 'quiz_liveviewgrid')."</td></tr>";
-
             if ($haslesson) {
                 echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
                 echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
@@ -348,119 +393,122 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($singleqid > 0) {
             liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
         }
-        // Display progress of lesson. This code is taken from mod/lesson/locallib.php.
-        // If the code there changes, this will have to be modified accordingly.
-        if (($lessonid) && (count($sofar))) {
-            require_once($CFG->dirroot.'/mod/lesson/locallib.php');
-            $lessonmoduleid = $DB->get_record('modules', array('name' => 'lesson'));
-            $lmid = $lessonmoduleid->id;
-            $cm = $DB->get_record('course_modules', array('instance' => $lessonid, 'course' => $course->id, 'module' => $lmid));
-            $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST), $cm, $course);
-            // I can't use any method from the lesson class that uses the $USER global variable.
-            $pages = $lesson->load_all_pages();
-            $lessonstatus = array();// The array that has the text for lesson status.
-            foreach ($sofar as $myuserid) {
-                foreach ($pages as $page) {
-                    if ($page->prevpageid == 0) {
-                        $pageid = $page->id;  // Find the first page id.
-                        break;
+        if ($singleqid > 0) {
+            // Display progress of lesson. This code is taken from mod/lesson/locallib.php.
+            // If the code there changes, this will have to be modified accordingly.
+            if (($lessonid) && (count($sofar))) {
+                require_once($CFG->dirroot.'/mod/lesson/locallib.php');
+                $lessonmoduleid = $DB->get_record('modules', array('name' => 'lesson'));
+                $lmid = $lessonmoduleid->id;
+                $cm = $DB->get_record('course_modules', array('instance' => $lessonid, 'course' => $course->id, 'module' => $lmid));
+                $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST), $cm, $course);
+                // I can't use any method from the lesson class that uses the $USER global variable.
+                $pages = $lesson->load_all_pages();
+                $lessonstatus = array();// The array that has the text for lesson status.
+                foreach ($sofar as $myuserid) {
+                    foreach ($pages as $page) {
+                        if ($page->prevpageid == 0) {
+                            $pageid = $page->id;  // Find the first page id.
+                            break;
+                        }
                     }
-                }
-                if (!$ntries = $DB->count_records("lesson_grades", array("lessonid" => $lessonid, "userid" => $myuserid))) {
-                    $ntries = 0;  // May not be necessary.
-                }
-                $viewedpageids = array();
-                $myparams = array("lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries);
-                if ($attempts = $DB->get_records('lesson_attempts', $myparams, 'timeseen ASC')) {
-                    foreach ($attempts as $attempt) {
-                        $viewedpageids[$attempt->pageid] = $attempt;
+                    if (!$ntries = $DB->count_records("lesson_grades", array("lessonid" => $lessonid, "userid" => $myuserid))) {
+                        $ntries = 0;  // May not be necessary.
                     }
-                }
-                $viewedbranches = array();
-                // Collect all of the branch tables viewed.
-                if ($branches = $lesson->get_content_pages_viewed($ntries, $myuserid, 'timeseen ASC', 'id, pageid')) {
-                    foreach ($branches as $branch) {
-                        $viewedbranches[$branch->pageid] = $branch;
+                    $viewedpageids = array();
+                    $myparams = array("lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries);
+                    if ($attempts = $DB->get_records('lesson_attempts', $myparams, 'timeseen ASC')) {
+                        foreach ($attempts as $attempt) {
+                            $viewedpageids[$attempt->pageid] = $attempt;
+                        }
                     }
-                    $viewedpageids = array_merge($viewedpageids, $viewedbranches);
-                }
-                // Filter out the following pages:
-                // - End of Cluster
-                // - End of Branch
-                // - Pages found inside of Clusters
-                // Do not filter out Cluster Page(s) because we count a cluster as one.
-                // By keeping the cluster page, we get our 1.
-                $validpages = array();
-                while ($pageid != 0) {
-                    $pageid = $pages[$pageid]->valid_page_and_view($validpages, $viewedpageids);
-                }
+                    $viewedbranches = array();
+                    // Collect all of the branch tables viewed.
+                    if ($branches = $lesson->get_content_pages_viewed($ntries, $myuserid, 'timeseen ASC', 'id, pageid')) {
+                        foreach ($branches as $branch) {
+                            $viewedbranches[$branch->pageid] = $branch;
+                        }
+                        $viewedpageids = array_merge($viewedpageids, $viewedbranches);
+                    }
+                    // Filter out the following pages:
+                    // - End of Cluster
+                    // - End of Branch
+                    // - Pages found inside of Clusters
+                    // Do not filter out Cluster Page(s) because we count a cluster as one.
+                    // By keeping the cluster page, we get our 1.
+                    $validpages = array();
+                    while ($pageid != 0) {
+                        $pageid = $pages[$pageid]->valid_page_and_view($validpages, $viewedpageids);
+                    }
 
-                // Progress calculation as a percent.
-                $progress = round(count($viewedpageids) / count($validpages), 2) * 100;
-                $lessonstatus[$myuserid] = '';
-                if ($ntries > 0) {
-                    $tr = '';
-                    if ($ntries == 1) {
-                        $ty = get_string('try', 'quiz_liveviewgrid');
-                    } else {
-                        $ty = get_string('tries', 'quiz_liveviewgrid');
-                    }
-                    $lessonstatus[$myuserid] = $ntries.$ty.get_string('completed', 'quiz_liveviewgrid');
+                    // Progress calculation as a percent.
+                    $progress = round(count($viewedpageids) / count($validpages), 2) * 100;
+                    $lessonstatus[$myuserid] = '';
+                    if ($ntries > 0) {
+                        $tr = '';
+                        if ($ntries == 1) {
+                            $ty = get_string('try', 'quiz_liveviewgrid');
+                        } else {
+                            $ty = get_string('tries', 'quiz_liveviewgrid');
+                        }
+                        $lessonstatus[$myuserid] = $ntries.$ty.get_string('completed', 'quiz_liveviewgrid');
 
-                }
-                if ($progress > 0) {
-                    $lessonstatus[$myuserid] .= ' '.get_string('current', 'quiz_liveviewgrid').
-                        get_string('try', 'quiz_liveviewgrid').$progress.'% '.get_string('completed', 'quiz_liveviewgrid');
-                }
-                if ($lessonstatus[$myuserid] == '') {
-                    $lessonstatus[$myuserid] = get_string('lessonnotstarted', 'quiz_liveviewgrid');
+                    }
+                    if ($progress > 0) {
+                        $lessonstatus[$myuserid] .= ' '.get_string('current', 'quiz_liveviewgrid').
+                            get_string('try', 'quiz_liveviewgrid').$progress.'% '.get_string('completed', 'quiz_liveviewgrid');
+                    }
+                    if ($lessonstatus[$myuserid] == '') {
+                        $lessonstatus[$myuserid] = get_string('lessonnotstarted', 'quiz_liveviewgrid');
+                    }
                 }
             }
-        }
-        // CSS style for blinking 'Refresh Page!' notice and making the first column fixed..
-        echo "\n<style>";
-        echo "\n .blinking{";
-        echo "\n    animation:blinkingText 0.8s infinite;";
-        echo "\n}";
-        echo "\n @keyframes blinkingText{";
-        echo "\n    0%{     color: red;    }";
-        echo "\n    50%{    color: transparent; }";
-        echo "\n    100%{   color: red;    }";
-        echo "\n}";
-        echo "\n .blinkhidden{";
-        echo "\n    color: transparent;";
-        echo "\n}";
 
-        echo "\n.first-col {";
-        echo "\n  position: absolute;";
-        echo "\n	width: 10em;";
-        echo "\n	margin-left: -10.1em; background:#ffffff;";
-        echo "\n}";
+            // CSS style for blinking 'Refresh Page!' notice and making the first column fixed..
+            echo "\n<style>";
+            echo "\n .blinking{";
+            echo "\n    animation:blinkingText 0.8s infinite;";
+            echo "\n}";
+            echo "\n @keyframes blinkingText{";
+            echo "\n    0%{     color: red;    }";
+            echo "\n    50%{    color: transparent; }";
+            echo "\n    100%{   color: red;    }";
+            echo "\n}";
+            echo "\n .blinkhidden{";
+            echo "\n    color: transparent;";
+            echo "\n}";
 
-        echo "\n.table-wrapper {";
-        echo "\n    overflow-x: scroll;";
-        if ($shownames) {
-            echo "\n	margin: 0 0 0 10em;";
-        } else {
-            echo "\n     margin: 0 0 0 0;";
-        }
-        echo "\n}";
-        echo "\n</style>";
+            echo "\n.first-col {";
+            echo "\n  position: absolute;";
+            echo "\n	width: 10em;";
+            echo "\n	margin-left: -10.1em; background:#ffffff;";
+            echo "\n}";
 
-        // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
-        echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
-        echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php?mode=liveviewgrid\">";
-        foreach ($hidden as $key => $value) {
-            echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+            echo "\n.table-wrapper {";
+            echo "\n    overflow-x: scroll;";
+            if ($shownames) {
+                echo "\n	margin: 0 0 0 10em;";
+            } else {
+                echo "\n     margin: 0 0 0 0;";
+            }
+            echo "\n}";
+            echo "\n</style>";
+
+            // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
+            echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
+            echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php?mode=liveviewgrid\">";
+            foreach ($hidden as $key => $value) {
+                echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
+            }
+            echo "<input type='submit' value='".get_string('refreshpage', 'quiz_liveviewgrid')."' class=\"blinking\"></form></div>";
+            echo "\n<script>";
+            echo "\n  function myFunction() {";
+            echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
+            echo "\n    var bl = document.getElementById('blink1');";
+            echo "\n    bl.style.display = \"block\";";
+            echo "\n }";
+            echo "\n</script>";
         }
-        echo "<input type='submit' value='".get_string('refreshpage', 'quiz_liveviewgrid')."' class=\"blinking\"></form></div>";
-        echo "\n<script>";
-        echo "\n  function myFunction() {";
-        echo "\n    document.getElementById('blink1').setAttribute(\"class\", \"blinking\");";
-        echo "\n    var bl = document.getElementById('blink1');";
-        echo "\n    bl.style.display = \"block\";";
-        echo "\n }";
-        echo "\n</script>";
         if ($showkey && $showresponses) {
             echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
             echo "<table border=\"1\" width=\"100%\">\n";
@@ -469,11 +517,11 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
                 if ($rag == 1) {// Colors from image from Moodle.
-                    if ($myfraction < 0.09) {
+                    if ($myfraction < 0.001) {
                         $redpart = 244;
                         $greenpart = 67;
                         $bluepart = 54;
-                    } else if ($myfraction > .9) {
+                    } else if ($myfraction > .999) {
                         $redpart = 139;
                         $greenpart = 195;
                         $bluepart = 74;
@@ -507,45 +555,38 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $popoutpageurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/liveviewpopout.php";
         $info = get_string('popoutinfo', 'quiz_liveviewgrid');
         $buttontext = get_string('newpage', 'quiz_liveviewgrid');
-        $togglekey = '';
         echo "</td>";
         echo "\n<td title=\"$info\" style=\"padding: 20px;\">
             <form target='_blank' action=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/liveviewpopout.php\">";
         foreach ($hidden as $key => $value) {
-            // Toggle the value associated with the $togglekey.
-            if ($key == $togglekey) {
-                if ($value) {
-                    $value = 0;
-                } else {
-                    $value = 1;
-                }
-            }
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
         }
         echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
-        // Find any student who has not sbmitted an answer if names are hidden.
+        if ($singleqid > 0) {
+            // Find any student who has not submitted an answer if names are hidden.
 
-        // Getting and preparing to sorting users.
-        // The first and last name are in the initials array.
-        $initials = array();
-        if (count($sofar) > 0) {
-            foreach ($sofar as $unuser) {
-                // If only a group is desired, make sure this student is in the group.
-                if ($group) {
-                    if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+            // Getting and preparing to sorting users.
+            // The first and last name are in the initials array.
+            $initials = array();
+            if (count($sofar) > 0) {
+                foreach ($sofar as $unuser) {
+                    // If only a group is desired, make sure this student is in the group.
+                    if ($group) {
+                        if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                            $getresponse = true;
+                        } else {
+                            $getresponse = false;
+                        }
+                    } else {
                         $getresponse = true;
-                    } else {
-                        $getresponse = false;
                     }
-                } else {
-                    $getresponse = true;
-                }
-                if ($getresponse) {
-                    $usr = $DB->get_record('user', array('id' => $unuser));
-                    if ($order) {
-                        $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
-                    } else {
-                        $initials[$unuser] = $usr->lastname.',&nbsp;'.$usr->firstname;
+                    if ($getresponse) {
+                        $usr = $DB->get_record('user', array('id' => $unuser));
+                        if ($order) {
+                            $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
+                        } else {
+                            $initials[$unuser] = $usr->lastname.',&nbsp;'.$usr->firstname;
+                        }
                     }
                 }
             }
@@ -657,259 +698,293 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "</td>";
         }
         echo "</tr></table>";
-        if ($compact) {
-            $trun = 1;
-            $dotdot = '';
-            // Truncate responses to 4 if compact is desired, else 40 or 200.
-        } else {
-            $trun = 40;
-            $dotdot = '....';
-        }
-        // Put in a histogram if the question has a histogram and a single question is displayed.
-        if ($singleqid > 0) {
-            $trun = 200;
-            $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
-            if (in_array($questiontext->qtype, $multitype)) {
-                $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
-                $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
-                echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-                    frameBorder=0 height='520' width='800'>";
-                echo "</iframe>";
-            }
-        }
-        // This is needed to get the column lined up correctly.
-        echo "\n<div class=\"table-wrapper\">";
-        echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
-        echo "<thead><tr>";
-
         if ($shownames) {
-            echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
+            $activestyle = "style='background-size: 20% 100%;
+                background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
+                background-repeat: repeat; text-align:right'";
+            echo "\n<table order=0><tr><td>".get_string('howbackground', 'quiz_liveviewgrid')."</td>";
+            echo "<td $activestyle>".get_string('name', 'quiz_liveviewgrid')."</td>";
+            echo "<td>".get_string('appearifactive', 'quiz_liveviewgrid')."</td></tr></table>";
         }
-        if ($showlesson) {
-            if ($lessonid) {
-                echo "<td>".$lesson->name."</td>";
-            } else {
-                echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
-            }
-        }
-        if ($status) {
-            echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
-        }
-        // The array for storing the all the texts for tootips.
-        $tooltiptext = array();
 
-        $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
-        $togglekey = '';
-        foreach ($slots as $key => $slotvalue) {
-            if (isset($question['name'][$key])) {
-                $hidden['singleqid'] = $key;
-                $safequestionname = trim(strip_tags($question['name'][$key]));
-                $buttontext = trim($safequestionname);
-                $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
-                $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
-                // Get rid of any <script> tags that may mess things up.
-                $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
-                $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
-                $info = '';
-                echo "<td>";
-                $linkid = "linkqtext_$key";
-                if (strlen($buttontext) > $trun) {
-                    preg_match_all('/./u', $buttontext, $matches);
-                    $ntrun = 0;
-                    $truncated = '';
-                    foreach ($matches[0] as $m) {
-                        if ($ntrun < $trun) {
-                            $truncated .= $m;
+        if ($singleqid > 0) {
+            if ($compact) {
+                $trun = 1;
+                $dotdot = '';
+                // Truncate responses to 4 if compact is desired, else 40 or 200.
+            } else {
+                $trun = 40;
+                $dotdot = '....';
+            }
+            // Put in a histogram if the question has a histogram and a single question is displayed.
+            if ($singleqid > 0) {
+                $trun = 200;
+                $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+                if (in_array($questiontext->qtype, $multitype)) {
+                    $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
+                    $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
+                    echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+                        frameBorder=0 height='520' width='800'>";
+                    echo "</iframe>";
+                }
+            }
+
+            // This is needed to get the column lined up correctly.
+            echo "\n<div class=\"table-wrapper\">";
+            echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
+            echo "<thead><tr>";
+
+            if ($shownames) {
+                echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
+            }
+            if ($showlesson) {
+                if ($lessonid) {
+                    echo "<td>".$lesson->name."</td>";
+                } else {
+                    echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+                }
+            }
+            if ($status) {
+                echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
+            }
+            // The array for storing the all the texts for tootips.
+            $tooltiptext = array();
+
+            $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
+            foreach ($slots as $key => $slotvalue) {
+                if (isset($question['name'][$key])) {
+                    $hidden['singleqid'] = $key;
+                    $safequestionname = trim(strip_tags($question['name'][$key]));
+                    $buttontext = trim($safequestionname);
+                    $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
+                    $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
+                    // Get rid of any <script> tags that may mess things up.
+                    $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
+                    $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
+                    $info = '';
+                    echo "<td>";
+                    $linkid = "linkqtext_$key";
+                    if (strlen($buttontext) > $trun) {
+                        preg_match_all('/./u', $buttontext, $matches);
+                        $ntrun = 0;
+                        $truncated = '';
+                        foreach ($matches[0] as $m) {
+                            if ($ntrun < $trun) {
+                                $truncated .= $m;
+                            }
+                            $ntrun++;
                         }
-                        $ntrun++;
+                        $buttontext = $truncated;
                     }
-                    $buttontext = $truncated;
-                }
-                echo liveview_question_button($buttontext, $hidden, $linkid);
-                echo "</td>";
-            } else {
-                echo "<td></td>";
-            }
-        }
-        echo "</tr>\n</thead>\n";
-        $hidden['singleqid'] = $singleqid;
-
-        if ($showresponses) {
-            // Javascript and css for tooltips.
-                echo "\n<script type=\"text/javascript\">";
-                require_once("dw_tooltip_c.php");
-                echo "\n</script>";
-
-                echo "\n<style type=\"text/css\">";
-                echo "\ndiv#tipDiv {";
-                    echo "\nfont-size:16px; line-height:1.2;";
-                    echo "\ncolor:#000; background-color:#E1E5F1;";
-                    echo "\nborder:1px solid #667295; padding:4px;";
-                    echo "\nwidth:320px;";
-                echo "\n}";
-                echo "\n</style>";
-            if (count($initials)) {
-                asort($initials);
-                foreach ($initials as $newkey => $initial) {
-                    $users[] = $newkey;
+                    echo liveview_question_button($buttontext, $hidden, $linkid);
+                    echo "</td>";
+                } else {
+                    echo "<td></td>";
                 }
             }
-            // Create the table.
-            if (isset($users)) {
-                echo "\n<tbody>";
-                foreach ($users as $user) {
-                    // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
-                    if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
-                        echo "<tr>";
-                        if ($shownames) {
-                            echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
-                        }
-                        $myrow = '';
-                        foreach ($slots as $questionid => $slotvalue) {
-                            if (($questionid != "") and ($questionid != 0)) {
-                                if (isset($stanswers[$user][$questionid])) {
-                                    if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
-                                        $answer = '';
-                                        foreach ($stanswers[$user][$questionid] as $key => $value) {
-                                            $answer .= $key."=".$value."; ";
-                                        }
-                                    } else {
-                                        $answer = $stanswers[$user][$questionid];
-                                    }
-                                    if ($status) {
-                                        $ststatus[$user][$questionid] = 1;// Array to keep track of student progress.
-                                    }
+            echo "</tr>\n</thead>\n";
+            $hidden['singleqid'] = $singleqid;
+            if ($showresponses) {
+                // Javascript and css for tooltips.
+                    echo "\n<script type=\"text/javascript\">";
+                    require_once("dw_tooltip_c.php");
+                    echo "\n</script>";
+
+                    echo "\n<style type=\"text/css\">";
+                    echo "\ndiv#tipDiv {";
+                        echo "\nfont-size:16px; line-height:1.2;";
+                        echo "\ncolor:#000; background-color:#E1E5F1;";
+                        echo "\nborder:1px solid #667295; padding:4px;";
+                        echo "\nwidth:320px;";
+                    echo "\n}";
+                    echo "\n</style>";
+                if (count($initials)) {
+                    asort($initials);
+                    foreach ($initials as $newkey => $initial) {
+                        $users[] = $newkey;
+                    }
+                }
+                // Create the table.
+                if (isset($users)) {
+                    // Style for users that are currently active in Moodle.
+                    $activestyle = "style='background-size: 20% 100%;
+            background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
+            background-repeat: repeat; text-align:right'";
+                    $now = time();
+                    $firsttime = $now - 300;
+                    echo "\n<tbody>";
+                    foreach ($users as $user) {
+                        // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
+                        if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
+                            echo "<tr>";
+                            if ($shownames) {
+                                $bgcolor = '';
+                                if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
+                                    $bgcolor = $activestyle;
+                                }
+                                echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
+                            }
+                            $myrow = '';
+                            foreach ($slots as $questionid => $slotvalue) {
+                                if (isset($stlink[$user][$questionid])) {
+                                    $link = $stlink[$user][$questionid];
                                 } else {
-                                    $answer = ' ';
+                                    $link = '';
                                 }
-                            }
-                                $style = '<td';
-                            if ($evaluate) {
-                                if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
-                                    $myfraction = $stfraction[$user][$questionid];
-                                    if ($rag == 1) {// Colors from image from Moodle.
-                                        if ($myfraction < 0.499) {
-                                            $redpart = 244;
-                                            $greenpart = 67;
-                                            $bluepart = 54;
-                                        } else if ($myfraction > .5499) {
-                                            $redpart = 139;
-                                            $greenpart = 195;
-                                            $bluepart = 74;
+                                if (($questionid != "") and ($questionid != 0)) {
+                                    if (isset($stanswers[$user][$questionid])) {
+                                        if (is_array($stanswers[$user][$questionid])
+                                                && (count($stanswers[$user][$questionid] > 1))) {
+                                            $answer = '';
+                                            foreach ($stanswers[$user][$questionid] as $key => $value) {
+                                                $answer .= $key."=".$value."; ";
+                                            }
                                         } else {
-                                            $redpart = 255;
-                                            $greenpart = 152;
-                                            $bluepart = 0;
+                                            $answer = $stanswers[$user][$questionid];
+                                        }
+                                        if ($status) {
+                                            $ststatus[$user][$questionid] = 1;// Array to keep track of student progress.
                                         }
                                     } else {
-                                        // Make .5 match up to Moodle amber even when making them different with gradation.
-                                        $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
-                                        $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
-                                        if ($redpart > 255) {
-                                            $redpart = 255;
+                                        $answer = ' ';
+                                    }
+                                }
+                                    $style = '<td';
+                                if ($evaluate) {
+                                    if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                                        $myfraction = $stfraction[$user][$questionid];
+                                        if ($rag == 1) {// Colors from image from Moodle.
+                                            if ($myfraction < 0.001) {
+                                                $redpart = 244;
+                                                $greenpart = 67;
+                                                $bluepart = 54;
+                                            } else if ($myfraction > .999) {
+                                                $redpart = 139;
+                                                $greenpart = 195;
+                                                $bluepart = 74;
+                                            } else {
+                                                $redpart = 255;
+                                                $greenpart = 152;
+                                                $bluepart = 0;
+                                            }
+                                        } else {
+                                            // Make .5 match up to Moodle amber even when making them different with gradation.
+                                            $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+                                            $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+                                            if ($redpart > 255) {
+                                                $redpart = 255;
+                                            }
+                                            $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
                                         }
-                                        $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+                                        $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                                     }
-                                    $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                                }
+                                if ((strlen($answer) < $trun) || ($singleqid > 0)) {
+                                        $myrow .= $style.">&nbsp;".$answer.$link."</td>";
+                                } else {
+                                    // Making a tooltip out of a long answer.
+                                    // The htmlentities function leaves single quotes unchanged.
+                                    $safeanswer = htmlentities($answer);
+                                    $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
+                                    $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
+                                        $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                                    // Making sure we pick up whole words.
+                                    preg_match_all('/./u', $answer, $matches);
+                                    $ntrun = 0;
+                                    $truncated = '';
+                                    foreach ($matches[0] as $m) {
+                                        if ($ntrun < $trun) {
+                                            $truncated .= $m;
+                                        }
+                                        $ntrun++;
+                                    }
+                                    $myrow .= $truncated.$link;
+                                    $myrow .= " $dotdot</div></td>";
                                 }
                             }
-                            if ((strlen($answer) < $trun) || ($singleqid > 0)) {
-                                    $myrow .= $style.">&nbsp;".htmlentities($answer)."</td>";
-                            } else {
-                                // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
-                                $safeanswer = htmlentities($answer);
-                                $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
-                                $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1)."'";
-                                    $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
-                                // Making sure we pick up whole words.
-                                preg_match_all('/./u', $answer, $matches);
-                                $ntrun = 0;
-                                $truncated = '';
-                                foreach ($matches[0] as $m) {
-                                    if ($ntrun < $trun) {
-                                        $truncated .= $m;
-                                    }
-                                    $ntrun++;
+                            if ($showlesson) {
+                                if ($lessonid > 0) {
+                                    echo "<td>".$lessonstatus[$user]."</td>";
+                                } else {
+                                    echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
                                 }
-                                $myrow .= $truncated;
-                                $myrow .= " $dotdot</div></td>";
                             }
-                        }
-                        if ($showlesson) {
-                            if ($lessonid > 0) {
-                                echo "<td>".$lessonstatus[$user]."</td>";
-                            } else {
-                                echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+                            if ($status) {
+                                $percentdone = 100 * count($ststatus[$user]) / count($slots);
+                                echo "<td>".number_format($percentdone, 1).'%</td>';
                             }
+                            echo $myrow;
+                            echo "</tr>\n";
                         }
-                        if ($status) {
-                            $percentdone = 100 * count($ststatus[$user]) / count($slots);
-                            echo "<td>".number_format($percentdone, 1).'%</td>';
-                        }
-                        echo $myrow;
-                        echo "</tr>\n";
                     }
+                    echo "</tbody>";
                 }
-                echo "</tbody>";
-            }
-            echo "\n</table>";
-            echo "\n</div>";
+                echo "\n</table>";
+                echo "\n</div>";
 
-            if (count($tooltiptext) > 0) {
-                $tooltiptexts = implode(",", $tooltiptext);
-                echo "\n<script>";
-                echo 'dw_Tooltip.defaultProps = {';
-                    echo 'supportTouch: true'; // False by default.
-                echo '}';
+                if (count($tooltiptext) > 0) {
+                    $tooltiptexts = implode(",", $tooltiptext);
+                    echo "\n<script>";
+                    echo 'dw_Tooltip.defaultProps = {';
+                        echo 'supportTouch: true'; // False by default.
+                    echo '}';
 
-                echo "\ndw_Tooltip.content_vars = {";
-                    echo $tooltiptexts;
-                echo "\n}";
-                echo "\n</script>";
+                    echo "\ndw_Tooltip.content_vars = {";
+                        echo $tooltiptexts;
+                    echo "\n}";
+                    echo "\n</script>";
+                }
+            } else {
+                echo "\n</table>";
+                echo "\n</div>";
             }
+
+            // Javascript to refresh the page if the contents of the table change.
+            $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
+            // The number of seconds before checking to see if the answers have changed is the $refreshtime.
+            $refreshtime = 10 * $refresht;
+            $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
+            $sessiontimeout = $sessionconfig->value;
+            $maxrepeat = intval($sessiontimeout / $refreshtime);
+            // The number of refreshes without a new answer is $numrefresh.
+            $numrefresh = 0;
+            $replacetime = $refreshtime * 1000;
+            echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
+                    \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
+                    {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
+            echo "\n var numrefresh = $numrefresh;";
+            echo "\n var maxrepeat = $maxrepeat;";
+            echo "\n\nfunction replace() { ";
+            echo "\n    numrefresh ++;";
+            echo "\n    x=document.getElementById('timemodified');";
+            echo "\n    myname = x.getAttribute('name');";
+            echo "\n    if(numrefresh < $maxrepeat) {";
+            echo "\n       var t=setTimeout(\"replace()\",$replacetime);";
+            echo "\n    } else {";
+            echo "\n       myFunction();";
+            echo "\n    }";
+            echo "\n    http.open(\"GET\", \"".$graphicshashurl."\", true);";
+            echo "\n    http.onreadystatechange=function() {";
+            echo "\n       if(http.readyState == 4) {";
+            echo "\n          var newresponse = parseInt(http.responseText);";
+            echo "\n          var priormyname = parseInt(myname);";
+            echo "\n          if(newresponse == priormyname){";// Don't do anything.
+            echo "\n             } else {";
+            echo "\n                location.reload(true);";
+            echo "\n             }";
+            echo "\n        }";
+            echo "\n     }";
+            echo "\n  http.send(null);";
+            echo "\n}\nreplace();";
+            echo "\n</script>";
         } else {
-            echo "\n</table>";
+            $getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact&group=$group";
+            $getvalues .= "&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson&showlesson=$showlesson";
+            $getvalues .= "&lessonid=$lessonid&refresht=$refresht";
+            $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
+            echo "<iframe src=\"$tableiframeurl\" frameBorder=0 height='520' width='100%'>";
+            echo "</iframe>";
         }
-
-        // Javascript to refresh the page if the contents of the table change.
-        $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
-        // The number of seconds before checking to see if the answers have changed is the $refreshtime.
-        $refreshtime = 10 * $refresht;
-        $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
-        $sessiontimeout = $sessionconfig->value;
-        $maxrepeat = intval($sessiontimeout / $refreshtime);
-        // The number of refreshes without a new answer is $numrefresh.
-        $numrefresh = 0;
-        $replacetime = $refreshtime * 1000;
-        echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
-                \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
-                {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
-        echo "\n var numrefresh = $numrefresh;";
-        echo "\n var maxrepeat = $maxrepeat;";
-        echo "\n\nfunction replace() { ";
-        echo "\n    numrefresh ++;";
-        echo "\n    x=document.getElementById('timemodified');";
-        echo "\n    myname = x.getAttribute('name');";
-        echo "\n    if(numrefresh < $maxrepeat) {";
-        echo "\n       var t=setTimeout(\"replace()\",$replacetime);";
-        echo "\n    } else {";
-        echo "\n       myFunction();";
-        echo "\n    }";
-        echo "\n    http.open(\"GET\", \"".$graphicshashurl."\", true);";
-        echo "\n    http.onreadystatechange=function() {";
-        echo "\n       if(http.readyState == 4) {";
-        echo "\n          var newresponse = parseInt(http.responseText);";
-        echo "\n          var priormyname = parseInt(myname);";
-        echo "\n          if(newresponse == priormyname){";// Don't do anything.
-        echo "\n             } else {";
-        echo "\n                location.reload(true);";
-        echo "\n             }";
-        echo "\n        }";
-        echo "\n     }";
-        echo "\n  http.send(null);";
-        echo "\n}\nreplace();";
-        echo "\n</script>";
-
         return true;
     }
     /**
