@@ -244,9 +244,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                         $qa->questionusageid = $insertedid;
                         $qa->slot = $slots[$singleqid];
                         $qa->behaviour = 'deferredfeedback';
-                        if ($questiontext->qtype == 'essay') {
-                            $qa->behaviour = 'manualgraded';
-                        }
+                        // This is sloppy, but maybe it will work with all question types.
+                        $qa->behaviour = 'manualgraded';
                         $qa->questionid = $singleqid;
                         $qa->variant = 1;
                         $qa->maxmark = 1.0000000;
