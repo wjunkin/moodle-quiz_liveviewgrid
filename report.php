@@ -222,6 +222,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n</script>  ";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
+/**
                 $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
                 $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
                 if (preg_match('/\"\@\@PLUGINFILE\@\@\/(.+?)\"/', $qtext2, $matches)) {
@@ -267,6 +268,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $completeq = preg_replace("/\@\@PLUGINFILE\@\@/", $basicfilelink, $qtext2);
                     $qtext2 = $completeq;
                 }
+*/
+                $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($showanswer) {
                     if ($questiontext->qtype == 'essay') {

@@ -334,3 +334,42 @@ function liveviewgrid_get_answers($quizid) {
     return $returnvalues;
 
 }
+
+function liveviewgrid_display_question($cmid, $id) {
+    global $DB, $CFG, $USER;
+    $question = "There is some error in obtaining the question.";
+    // Most of this code comes from /question/preview.php.
+    require_once($CFG->libdir . '/questionlib.php');
+    require_once($CFG->dirroot. '/question/previewlib.php');
+
+    // Get and validate question id.
+    $question = question_bank::load_question($id);
+    $cm = get_coursemodule_from_id(false, $cmid);
+    $context = context_module::instance($cmid);
+    question_require_capability_on($question, 'use');
+    $quba = question_engine::make_questions_usage_by_activity(
+            'core_question_preview', context_user::instance($USER->id));
+    $options = new question_preview_options($question);
+    $options->load_user_defaults();
+    $options->set_from_request();
+    //$PAGE->set_url(question_preview_url($id, $options->behaviour, $options->maxmark, $options, $options->variant, $context));
+
+    $quba->set_preferred_behaviour($options->behaviour);
+    $slot = $quba->add_question($question, $options->maxmark);
+    $quba->start_question($slot, $options->variant);
+
+    $transaction = $DB->start_delegated_transaction();
+    question_engine::save_questions_usage_by_activity($quba);
+    $transaction->allow_commit();
+
+    if ($question->length) {
+        $displaynumber = '1';
+    } else {
+        $displaynumber = 'i';
+    }
+    $myquestion = $quba->render_question($slot, $options, $displaynumber);
+    if (preg_match("/\<div class\=\"qtext\"\>(.+?)\<\/div\>/m", $myquestion, $matches)) {
+        $question = $matches[1];
+    }
+    return $question;
+}
