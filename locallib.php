@@ -46,7 +46,8 @@ function liveview_who_sofar_gridview($quizid) {
     if (isset($userid)) {
         return(array_unique($userid));
     } else {
-        return(null);
+        $userid = array();
+        return $userid;
     }
 }
 
@@ -337,7 +338,7 @@ function liveviewgrid_get_answers($quizid) {
 
 function liveviewgrid_display_question($cmid, $id) {
     global $DB, $CFG, $USER;
-    $question = "There is some error in obtaining the question.";
+    $questiontext = "There is some error in obtaining the question.";
     // Most of this code comes from /question/preview.php.
     require_once($CFG->libdir . '/questionlib.php');
     require_once($CFG->dirroot. '/question/previewlib.php');
@@ -369,7 +370,16 @@ function liveviewgrid_display_question($cmid, $id) {
     }
     $myquestion = $quba->render_question($slot, $options, $displaynumber);
     if (preg_match("/\<div class\=\"qtext\"\>(.+?)\<\/div\>/m", $myquestion, $matches)) {
-        $question = $matches[1];
+        if (!(is_object($matches[1]))) {
+            $questiontext = $matches[1];
+        }
+    } else {
+        // Get question text the old way.
+        $questionobj = $DB->get_record('question', array('id' => $id));
+        $qtext1 = preg_replace('/^<p>/', '', $questionobj->questiontext);
+        $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
+        $questiontext = $qtext2;
     }
-    return $question;
+
+    return $questiontext;
 }
