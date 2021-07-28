@@ -230,6 +230,13 @@ function liveviewgrid_get_answers($quizid) {
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
         $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
         foreach ($qattempts as $qattempt) {
+            $question = $DB->get_record('question', array('id' => $qattempt->questionid));
+            if ($question->qtype == 'multichoice') {
+                $multioptions = $DB->get_record('qtype_multichoice_options', array('questionid' => $question->id));
+                $multisingle = $multioptions->single;
+            } else {
+                $multisingle = 1;
+            }
             $myresponse = array();
             $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
             foreach ($qattemptsteps as $qattemptstep) {
@@ -240,7 +247,6 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
                     }
-                    $question = $DB->get_record('question', array('id' => $qattempt->questionid));
                     if ($question->qtype == 'matrix') {// Check to see if attachments can be sent in matrix questions.
                         $matrixresponse = array();
                         $mgrade = 0;
@@ -273,9 +279,11 @@ function liveviewgrid_get_answers($quizid) {
                         }
                         $stanswers[$usrid][$qattempt->questionid] = join('; ', $matrixresponse);
                         $stfraction[$usrid][$qattempt->questionid] = $mweight / $numrows;
-                    } else if (count($myresponse) > 0) {
+                    } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
                         $clozeresponse = array();// An array for the Close responses.
                         $clozegrade = 0;
+                        $multimresponse = array();
+                        $multimgrade = 0;
                         foreach ($myresponse as $key => $respon) {
                             // For cloze questions the key will be sub(\d*)_answer.
                             // I need to take the answer that follows part (\d):(*)?;.
@@ -326,6 +334,11 @@ function liveviewgrid_get_answers($quizid) {
                                 $stanswers[$usrid][$qattempt->questionid] = $myresponse['answer'];
                             }
                         }
+                    } else if ($multisingle == 0) {
+                        // At this point this is only to handle multichoice with multiple answers, mm type.
+                        list($mmanswer, $mmfraction) = mmultichoice($qattempts, $usrid);
+                        $stanswers[$usrid][$qattempt->questionid] = $mmanswer;
+                        $stfraction[$usrid][$qattempt->questionid] = $mmfraction;
                     }
                 }
             }
@@ -335,7 +348,60 @@ function liveviewgrid_get_answers($quizid) {
     return $returnvalues;
 
 }
-
+/**
+ * Return the student answers and fractions for multichoice questions with more than one choice.
+ *
+ * @param Obj $qattempts The question attempts object for this questionusageid.
+ * @param int $usrid The user id for the student doing the question attempt.
+ * @return string The HTML string to display the question, including images.
+ */
+function mmultichoice($qattempts, $usrid) {
+    global $DB;
+    $multichoiceresponse = '';
+    $mgrade = 0;
+    $multiorder = '';
+    // Possibly multichoice with multiple answers.
+    foreach ($qattempts as $qattempt) {
+        $myresponse = array();
+        $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
+        foreach ($qattemptsteps as $qattemptstep) {
+            if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
+                || ($qattemptstep->state == 'todo')) {
+                $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
+                $mchoice = array();
+                foreach ($answers as $key => $answer) {
+                    $myresponse[$answer->name] = $answer->value;
+                    if ($answer->name == '_order') {
+                        $multiorder = $answer->value;
+                    } else if (($answer->value > 0) && preg_match('/^choice(\d)+/', $answer->name, $matches)) {
+                        $mchoice[] = $matches[1];
+                    }
+                }
+                $myorder = explode(",", $multiorder);
+                foreach ($mchoice as $mchosen) {
+                    $mychoice = $myorder[$mchosen];// One of the chosen question answers.
+                    $myanswer = $DB->get_record('question_answers', array('id' => $mychoice));
+                    $multichoiceresponse .= $myanswer->answer;
+                    $mgrade = $mgrade + $myanswer->fraction;
+                }
+                $multresponse = preg_replace('/\<\/p\>\<p\>/', "; ", $multichoiceresponse);
+                $multresponse = preg_replace('/^\<p\>/', "", $multresponse);
+                $multresponse = preg_replace('/\<\/p\>$/', "", $multresponse);
+                $stanswers[$usrid][$qattempt->questionid] = $multresponse;
+                $stfraction[$usrid][$qattempt->questionid] = $mgrade;
+            }
+        }
+    }
+    $result = array($stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]);
+    return $result;
+}
+/**
+ * Return the text (with images) for one of the questions for a quiz.
+ *
+ * @param int $cmid The course module id for the quiz.
+ * @param int $id The question id.
+ * @return array The answers submitted, indexed by userid and questionid, and the corresponding fraction.
+ */
 function liveviewgrid_display_question($cmid, $id) {
     global $DB, $CFG, $USER;
     $questiontext = "There is some error in obtaining the question.";
@@ -353,8 +419,6 @@ function liveviewgrid_display_question($cmid, $id) {
     $options = new question_preview_options($question);
     $options->load_user_defaults();
     $options->set_from_request();
-    //$PAGE->set_url(question_preview_url($id, $options->behaviour, $options->maxmark, $options, $options->variant, $context));
-
     $quba->set_preferred_behaviour($options->behaviour);
     $slot = $quba->add_question($question, $options->maxmark);
     $quba->start_question($slot, $options->variant);

@@ -295,7 +295,8 @@ for ($i = 0; $i < $numofbars; $i++) {
         $percent = round($val, 1);
         $namesstring = $percent."%\n<br />";
         if ($shownames) {
-            $namesstring .= implode(" ", $namesarray);
+            array_shift($namesarray);
+            $namesstring .= implode("; ", $namesarray);
         }
     }
     $barleft = $baroffset + ($i * $xwidth);

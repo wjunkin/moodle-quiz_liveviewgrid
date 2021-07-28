@@ -465,7 +465,7 @@ if ($showresponses) {
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
                             if ($rag == 1) {// Colors from image from Moodle.
-                                if ($myfraction < 0.001) {
+                                if ($myfraction < 0.0015) {
                                     $redpart = 244;
                                     $greenpart = 67;
                                     $bluepart = 54;

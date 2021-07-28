@@ -313,6 +313,7 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
 
     echo "\n</image>";
 } else {
+    $row = array();// An array for the rows in the table.
     $stans = array();// The string of answers for each student to this question, indexed by the $userid.
     $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
     foreach ($quizattempts as $quizattempt) {
@@ -352,7 +353,9 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
         $row[$rown] .= "<td style=\"white-space: nowrap;\">".$myanswer."</td></tr>";
         $rown++;
     }
-    asort($row);
+    if (count($row) > 0) {
+        asort($row);
+    }
 
     echo "<table border=\"1\" width=\"100%\">\n";
     echo "<thead><tr>";
@@ -364,8 +367,10 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
     $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $questiontext->name);
     echo "<td>$myquestiontext";
     echo "</tr>\n</thead>\n";
-    foreach ($row as $rw) {
-        echo $rw;
+    if (count($row) > 0) {
+        foreach ($row as $rw) {
+            echo $rw;
+        }
     }
     echo "\n</table>";
     // Adjust the iframe height so everything fits in just right.

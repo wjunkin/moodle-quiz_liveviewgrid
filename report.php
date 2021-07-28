@@ -222,53 +222,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n</script>  ";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
-/**
-                $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
-                $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
-                if (preg_match('/\"\@\@PLUGINFILE\@\@\/(.+?)\"/', $qtext2, $matches)) {
-                    // This question has a file. Creating links for files and doing substitution.
-                    $filename = $matches[1];
-                    $sessionkey = "livereport1q$singleqid";
-                    if (isset($_SESSION[$sessionkey])) {
-                        $lrqquba = $_SESSION[$sessionkey];
-                    } else {
-                        $contextid = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $USER->id));
-                        $ctid = $contextid->id;
-                        $data = new stdClass();
-                        $data->contextid = $ctid;
-                        $data->component = 'core_question_preview';
-                        $data->preferredbehaviour = 'deferredfeedback';
-                        $insertedid = $DB->insert_record('question_usages', $data);
-                        $_SESSION[$sessionkey] = $insertedid;
-                        $lrqquba = $_SESSION[$sessionkey];
-                        $qa = new stdClass();
-                        $qa->questionusageid = $insertedid;
-                        $qa->slot = $slots[$singleqid];
-                        $qa->behaviour = 'deferredfeedback';
-                        // This is sloppy, but maybe it will work with all question types.
-                        $qa->behaviour = 'manualgraded';
-                        $qa->questionid = $singleqid;
-                        $qa->variant = 1;
-                        $qa->maxmark = 1.0000000;
-                        $qa->minfraction = 0.0000000;
-                        $qa->maxfraction = 1.0000000;
-                        $qa->questionsummary = $qtext2;
-                        $qa->rightanswer = 'NA';
-                        $qa->responsesummary = 'NA';
-                        $qa->timemodified = time();
-                        $qainsertid = $DB->insert_record('question_attempts', $qa);
-                    }
-                    $coursecontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $quiz->course));
-                    $ccid = $coursecontext->id;
-                    $slotsobject = $DB->get_record('quiz_slots', array('quizid' => $quiz->id, 'questionid' => $singleqid));
-                    $myslot = $slotsobject->slot;
-                    $filelink = $CFG->wwwroot."/pluginfile.php/$ccid/question/questiontext/$lrqquba/";
-                    $basicfilelink = $filelink."$myslot/$singleqid";
-                    $filelink .= "1/$singleqid/$filename";
-                    $completeq = preg_replace("/\@\@PLUGINFILE\@\@/", $basicfilelink, $qtext2);
-                    $qtext2 = $completeq;
-                }
-*/
                 $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($showanswer) {
@@ -519,7 +472,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $myfraction = number_format($i / 10, 1, '.', ',');
                 $head .= "<td ";
                 if ($rag == 1) {// Colors from image from Moodle.
-                    if ($myfraction < 0.001) {
+                    if ($myfraction < 0.0015) {
                         $redpart = 244;
                         $greenpart = 67;
                         $bluepart = 54;
@@ -856,7 +809,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                     if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                                         $myfraction = $stfraction[$user][$questionid];
                                         if ($rag == 1) {// Colors from image from Moodle.
-                                            if ($myfraction < 0.001) {
+                                            if ($myfraction < 0.0015) {
                                                 $redpart = 244;
                                                 $greenpart = 67;
                                                 $bluepart = 54;

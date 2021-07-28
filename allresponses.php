@@ -145,124 +145,121 @@ echo "\n.lvdropdown a:hover {background-color: #ddd;}";
 
 echo "\n.show {display: block;}";
 echo "\n</style>";
-        echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
-        echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
-        echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
-        echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php\">";
-        echo "<input type='hidden' name='changeoption' value=1>";
-        echo "<input type='hidden' name='id' value=$id>";
-        echo "<input type='hidden' name='mode' value=$mode>";
-        //echo "<input type='hidden' name='singleqid' value=$singleqid>";
-        echo "<input type='hidden' name='group' value=$group>";
-        $checked = array();
-        $notchecked = array();
-        foreach ($hidden as $hiddenkey => $hiddenvalue) {
-            if ($hiddenvalue) {
-                $checked[$hiddenkey] = 'checked';
-                $notchecked[$hiddenkey] = '';
-            } else {
-                $checked[$hiddenkey] = '';
-                $notchecked[$hiddenkey] = 'checked';
-            }
-        }
-        $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
-        echo "\n<table>";
-        echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='showkey' value=1 ".$checked['showkey']."> ";
-        echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='showkey' value=0 ".$notchecked['showkey']."> ";
-        echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
-        echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
-        echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
-        echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='shownames' value=0 ".$notchecked['shownames']."> ";
-        echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
-        echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='order' value=0 ".$notchecked['order']."> ";
-        echo get_string('lastname', 'quiz_liveviewgrid')."</td></tr>";
-        echo "\n<tr>".$td.get_string('makecompact', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='compact' value=1 ".$checked['compact']."> ";
-        echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='compact' value=0 ".$notchecked['compact']."> ";
-        echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        //if ($singleqid > 0) {
-            echo "\n<tr>".$td.get_string('correctanswer', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='showanswer' value=1 ".$checked['showanswer']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        //}
-        echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
-        echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-        echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
-        echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-        echo "\n</table>";
-        $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
-        echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
-        echo "</div>";
-    // Find out if there may be groups. If so, allow the teacher to choose a group.
-    $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
-    $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/allresponses.php';
-    if ($groupmode) {
-        $courseid = $course->id;
-        liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
+echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
+echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
+echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php\">";
+echo "<input type='hidden' name='changeoption' value=1>";
+echo "<input type='hidden' name='id' value=$id>";
+echo "<input type='hidden' name='mode' value=$mode>";
+echo "<input type='hidden' name='group' value=$group>";
+$checked = array();
+$notchecked = array();
+foreach ($hidden as $hiddenkey => $hiddenvalue) {
+    if ($hiddenvalue) {
+        $checked[$hiddenkey] = 'checked';
+        $notchecked[$hiddenkey] = '';
+    } else {
+        $checked[$hiddenkey] = '';
+        $notchecked[$hiddenkey] = 'checked';
     }
+}
+$td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
+echo "\n<table>";
+echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showkey' value=1 ".$checked['showkey']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showkey' value=0 ".$notchecked['showkey']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='shownames' value=0 ".$notchecked['shownames']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
+echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='order' value=0 ".$notchecked['order']."> ";
+echo get_string('lastname', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('makecompact', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='compact' value=1 ".$checked['compact']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='compact' value=0 ".$notchecked['compact']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('correctanswer', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showanswer' value=1 ".$checked['showanswer']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n</table>";
+$buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
+echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
+echo "</div>";
+// Find out if there may be groups. If so, allow the teacher to choose a group.
+$canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
+$geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/allresponses.php';
+if ($groupmode) {
+    $courseid = $course->id;
+    liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
+}
 
-    if ($showkey && $showresponses) {
-        echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
-        echo "<table border=\"1\" width=\"100%\">\n";
-        $head = "<tr>";
-        for ($i = 0; $i < 11; $i++) {
-            $myfraction = number_format($i / 10, 1, '.', ',');
-            $head .= "<td ";
-            if ($rag == 1) {// Colors from image from Moodle.
-                if ($myfraction < 0.001) {
-                    $redpart = 244;
-                    $greenpart = 67;
-                    $bluepart = 54;
-                } else if ($myfraction > .999) {
-                    $redpart = 139;
-                    $greenpart = 195;
-                    $bluepart = 74;
-                } else {
-                    $redpart = 255;
-                    $greenpart = 152;
-                    $bluepart = 0;
-                }
+if ($showkey && $showresponses) {
+    echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
+    echo "<table border=\"1\" width=\"100%\">\n";
+    $head = "<tr>";
+    for ($i = 0; $i < 11; $i++) {
+        $myfraction = number_format($i / 10, 1, '.', ',');
+        $head .= "<td ";
+        if ($rag == 1) {// Colors from image from Moodle.
+            if ($myfraction < 0.0015) {
+                $redpart = 244;
+                $greenpart = 67;
+                $bluepart = 54;
+            } else if ($myfraction > .999) {
+                $redpart = 139;
+                $greenpart = 195;
+                $bluepart = 74;
             } else {
-                // Make .5 match up to Moodle amber even when making them different with gradation.
-                $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
-                $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
-                if ($redpart > 255) {
-                    $redpart = 255;
-                }
-                $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+                $redpart = 255;
+                $greenpart = 152;
+                $bluepart = 0;
             }
-            $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
-            $head .= ">$myfraction</td>";
+        } else {
+            // Make .5 match up to Moodle amber even when making them different with gradation.
+            $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+            $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+            if ($redpart > 255) {
+                $redpart = 255;
+            }
+            $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
         }
-        echo $head."\n</tr></table>";
+        $head .= "style='background-color: rgb($redpart,$greenpart,$bluepart)'";
+        $head .= ">$myfraction</td>";
     }
-    echo get_string('responses', 'quiz_liveviewgrid');
-    if ($group) {
-        $grpname = $DB->get_record('groups', array('id' => $group));
-        echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
-    } else if ($canaccess) {
-        echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
-    }
+    echo $head."\n</tr></table>";
+}
+echo get_string('responses', 'quiz_liveviewgrid');
+if ($group) {
+    $grpname = $DB->get_record('groups', array('id' => $group));
+    echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
+} else if ($canaccess) {
+    echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
+}
 $sofar = liveview_who_sofar_gridview($quizid);
 $slots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
 foreach ($slots as $slot) {
-$answer = '';
-$graphicshashurl = '';
+    $answer = '';
+    $graphicshashurl = '';
     $singleqid = $slot->questionid;
     if ($showresponses) {
         if ($singleqid > 0) {
@@ -317,44 +314,6 @@ $graphicshashurl = '';
         echo "\n}";
         echo "\n</script>  ";
     }
-/**        // Javascript and css for tooltips.
-            echo "\n<script type=\"text/javascript\">";
-            require_once("dw_tooltip_c.php");
-            echo "\n</script>";
-
-            echo "\n<style type=\"text/css\">";
-            echo "\ndiv#tipDiv {";
-                echo "\nfont-size:16px; line-height:1.2;";
-                echo "\ncolor:#000; background-color:#E1E5F1;";
-                echo "\nborder:1px solid #667295; padding:4px;";
-                echo "\nwidth:320px;";
-            echo "\n}";
-            echo "\n</style>";
-
-        if (count($initials)) {
-            asort($initials);
-            foreach ($initials as $newkey => $initial) {
-                $users[] = $newkey;
-            }
-        }
-
-        if (count($tooltiptext) > 0) {
-            $tooltiptexts = implode(",", $tooltiptext);
-            echo "\n<script>";
-            echo 'dw_Tooltip.defaultProps = {';
-                echo 'supportTouch: true'; // False by default.
-            echo '}';
-
-            echo "\ndw_Tooltip.content_vars = {";
-                echo $tooltiptexts;
-            echo "\n}";
-            echo "\n</script>";
-        }
-
-    } else {
-        echo "\n</table>";
-    }
-*/
 }
 /**
  * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
