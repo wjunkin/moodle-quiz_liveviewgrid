@@ -54,9 +54,19 @@ Changes for version 1.2.41. Added in the "Back to all qustions" button.
 Changes for version 1.2.42. Added in the option for teachers to select the refresh time and to see progress in lessons.
 Changes for version 1.2.43. Changed code so that the group is not carried as a session value.
 Versions in-between here: Added back button, added checks to be sure answer exists.
-Changes for version 1.3.0  Added page for all responses (allresponse.php, singleq_histogram.php, qidhash.php, javascript_teach_refreshG3.js.
+Changes for version 1.3.0  Added page for all responses
+    (allresponse.php, singleq_histogram.php, qidhash.php, javascript_teach_refreshG3.js).
 This version will refresh the individual iframes without refreshing the entire page. Changed the default for $refresht to 3.
-Changes for version 1.3.2 Corrected bug that carried values of the $response array from one user to the other. $response = array(); in locallib.php, line 295.
+Changes for version 1.3.2 Corrected bug that carried values of the $response array from one user to the other. $response = array();
+    in locallib.php, line 295.
 Changes for version 1.3.3 Changed default values for rag, evaluate, showkey, and compact = 1
 Changes for version 1.3.4 Changed the code to take care of the bug if $stfraction[$user][$questionid] was set but
 was not an array.
+Changes for version 1.3.5-1.3.6 
+    In locallib.php, added target='_top' for question buttons so that the button in an iframe would go to parent page.
+    In report.php, use an iframe to display the table. Move the table and the autorefresh to the iframe.
+    New file, table_iframe3.php, prints out the table and includes the autorefresh.
+    In lang/en/quiz_liveviewgrid.php, added in the $string['iframe'] = 'Iframe for '; for the title for the iframe page.
+    Added in the js and css directories to enable scrollling.
+Changes for version 2.0.0-2.1.0
+    Moved response tables into iframes; changed the code so that wrong was really red; for multichoice with multiple answers displays the choices and gives the correct fraction and color; display student text answers to include student formatting; display question text better, including handling images; added semicolons between names on histogram. (2021072800)

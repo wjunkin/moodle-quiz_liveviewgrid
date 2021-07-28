@@ -1,0 +1,18 @@
+html {
+    font-size:1rem;
+    margin:0;
+    padding:0;
+
+}
+body{
+    background:white;
+    margin:0;
+    padding:0;
+
+}
+.hgs_rotate{
+    transform: rotate(-90deg);
+    white-space: nowrap;
+    float:left;
+    width:auto;
+}
