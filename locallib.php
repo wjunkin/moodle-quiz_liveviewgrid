@@ -413,7 +413,6 @@ function liveviewgrid_display_question($cmid, $id) {
     $question = question_bank::load_question($id);
     $cm = get_coursemodule_from_id(false, $cmid);
     $context = context_module::instance($cmid);
-    question_require_capability_on($question, 'use');
     $quba = question_engine::make_questions_usage_by_activity(
             'core_question_preview', context_user::instance($USER->id));
     $options = new question_preview_options($question);
