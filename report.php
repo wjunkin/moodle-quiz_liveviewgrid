@@ -165,12 +165,22 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         }
         $showresponses = false;
-
+        $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
+        $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
+        $courseid = $course->id;
         if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmodule)) {
             if ($group == 0) {
                 // Teacher cannot see all groups and no group has been selected.
                 $showresponses = false;
                 echo get_string('pickgroup', 'quiz_liveviewgrid');
+                liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden);
+                if (isset($_SERVER['HTTP_REFERER'])) {
+                    $backurl = $_SERVER['HTTP_REFERER'];
+                    // The request may have come from the iframe.
+                    $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
+                    echo "\n<br /><a href='".$backurl."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+                }
+                return true;// Don't show anything if teacher has to select a group and hasn't done this.
             } else if ($currentgroup > 0) {
                 if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
                     // The teacher is a member of this group.
@@ -332,9 +342,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
             echo "</div>";
         }
-        $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
-        $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
-        $courseid = $course->id;
         // Button to select lesson.
         if ($showlesson) {
             $this->liveviewlessonmenu($courseid, $geturl, $canaccess, $hidden);

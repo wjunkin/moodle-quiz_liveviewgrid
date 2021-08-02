@@ -100,7 +100,7 @@ function liveview_find_student_gridview($userid) {
  */
 function liveview_question_button($buttontext, $hidden, $linkid) {
     global $CFG;
-    $mytext = "\n<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\" target=\"_top\">";
+    $mytext = "\n<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\" target=\"_parent\">";
     foreach ($hidden as $key => $value) {
         $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
     }

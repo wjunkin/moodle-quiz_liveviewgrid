@@ -70,3 +70,5 @@ Changes for version 1.3.5-1.3.6
     Added in the js and css directories to enable scrollling.
 Changes for version 2.0.0-2.1.0
     Moved response tables into iframes; changed the code so that wrong was really red; for multichoice with multiple answers displays the choices and gives the correct fraction and color; display student text answers to include student formatting; display question text better, including handling images; added semicolons between names on histogram. (2021072800)
+Changes for version 2.1.1 (2021080200)
+    Removed the word Moodle from strings, don't allow teacher to see anything if no group is chosen and teacher can't see all groups, and changed _top to _parent in question button links to singleq view.
