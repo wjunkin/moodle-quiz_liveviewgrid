@@ -72,3 +72,6 @@ Changes for version 2.0.0-2.1.0
     Moved response tables into iframes; changed the code so that wrong was really red; for multichoice with multiple answers displays the choices and gives the correct fraction and color; display student text answers to include student formatting; display question text better, including handling images; added semicolons between names on histogram. (2021072800)
 Changes for version 2.1.1 (2021080200)
     Removed the word Moodle from strings, don't allow teacher to see anything if no group is chosen and teacher can't see all groups, and changed _top to _parent in question button links to singleq view.
+Changes for version 2.1.2 (2021090100)
+    Changed the preg_match to (\d+) so that the program would work correctly for cases where the integer was more than one digit.
+    Changed the single question display so that, if names are to be shown, it will display a "bar" indicating the names of student who have not answered the question and the percentage (out of the students who have attempted the quiz). If names are not shown, there is a message indicating how many students have not answered this question yet.

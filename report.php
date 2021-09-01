@@ -601,7 +601,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $noa = 0;
                 $answertext = get_string('answeredqno', 'quiz_liveviewgrid');
                 foreach ($initials as $key => $initial) {
-                    if (isset($stanswers[$key][$singleqid])) {
+                    if ((isset($stanswers[$key][$singleqid])) && (strlen($stanswers[$key][$singleqid]) > 0)) {
                         $answertext = get_string('answeredall', 'quiz_liveviewgrid');
                     } else {
                         $noanswer[$noa] = $initial;

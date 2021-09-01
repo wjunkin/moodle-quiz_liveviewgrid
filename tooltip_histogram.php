@@ -60,11 +60,13 @@ if ($answers = $DB->get_records('question_answers', array('question' => $questio
     }
 }
 $stans = array();// The string of answers for each student to this question, indexed by the $userid.
+$startedquiz = array();// An array, one for each person who has started the quiz.
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 foreach ($quizattempts as $quizattempt) {
     $userid = $quizattempt->userid;
     // Check that groups are not being used or that the student is a member of the group.
     if (($group == 0) || ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $userid)))) {
+        $startedquiz[$userid] = $userid;
         $uniqueid = $quizattempt->uniqueid;
         $questionattempts = $DB->get_records('question_attempts'
             , array('questionusageid' => $uniqueid, 'questionid' => $questionid));
@@ -92,12 +94,12 @@ foreach ($quizattempts as $quizattempt) {
                                 $stans[$userid] = $questionanswerids[$value];
                             }
                         }
-                        if (preg_match('/choice(\d)/', $name, $matches)) {
+                        if (preg_match('/choice(\d+)/', $name, $matches)) {
                             if ($value > 0) {
                                 $stanswer[] = $questionanswerids[$matches[1]];
                             }
                         }
-                        if (preg_match('/p(\d)/', $name, $matches)) {
+                        if (preg_match('/p(\d+)/', $name, $matches)) {
                             if ($value > 0) {
                                 $stanswer[] = $qanswertext[$value];
                             }
@@ -111,6 +113,7 @@ foreach ($quizattempts as $quizattempt) {
         }
     }
 }
+$noansweryet = $startedquiz;// As each student submits an answer, their element in the $noanswer array is removed.
 $myx = array();
 foreach ($qanswerids as $qanswerid) {
     $myx[$qanswerid] = 0;
@@ -118,6 +121,7 @@ foreach ($qanswerids as $qanswerid) {
 }
 foreach ($stans as $key => $value) {
     if (strlen($value) > 0) {
+        unset($noansweryet[$key]);
         $values = explode(',', $value);
         foreach ($values as $qansid) {
             if (isset($myx[$qansid])) {
@@ -134,10 +138,8 @@ foreach ($stans as $key => $value) {
         }
     }
 }
-$graphinfo = "?data=".implode(",", $myx).$labels.$fraction."&total=10";
-$mygraphinfo = "data=".implode(",", $myx).$labels.$fraction."&total=10&cmid=$cmid";
+// If the count of $noansweryet > 0 and show names, a new bar will be created with these noanswer names and its %.
 $qanswers = $DB->get_records('question_answers', array('question' => $questionid));
-$numofbars = count($qanswers);
 $i = 0;
 foreach ($qanswers as $qanswer) {
     $mynames[$i] = $barnames[$qanswer->id];
@@ -145,6 +147,26 @@ foreach ($qanswers as $qanswer) {
     $fr[$i] = $qanswer->fraction;
     $i++;
 }
+$numofbars = count($qanswers);
+$lastcolumn = $i;
+if ((count($noansweryet) > 0) && $shownames) {
+    $addedbar = $i++;
+    $barnames[$addedbar] = '';
+    foreach ($noansweryet as $key => $value) {
+        $name = $DB->get_record('user', array('id' => $key));
+        if ($order == 1) {// Order by first name.
+            $barnames[$addedbar] .= $name->firstname.'&nbsp;'.$name->lastname.';;';
+        } else {
+            $barnames[$addedbar] .= $name->lastname.',&nbsp;'.$name->firstname.';;';
+        }
+    }
+    $mynames[$addedbar] = $barnames[$addedbar];
+    $myx[] = count($noansweryet);// The myx is indexed by answer number, all others start with 0.
+    // No need to add in a fraction, since the default color will be blue.
+    $labels = $labels."&x[$addedbar]=".get_string('NA', 'quiz_liveviewgrid');// NA stands for No Answer.
+    $numofbars ++;
+}
+$mygraphinfo = "data=".implode(",", $myx).$labels.$fraction."&total=10&cmid=$cmid";
 if ($numofbars == 0) {
     echo "Something is wrong for question $questionid.";
     exit;
@@ -259,39 +281,18 @@ for ($i = 0; $i < $numofbars; $i++) {
     echo "\n</div>";
 }
 
-/**
- * Function to find the number of students in a course or a group.
- *
- * @param int $courseid The id for the course.
- * @param int $group The id number for the group. (0 is no group selected.)
- * @return int The number of student in the course or group.
- */
-function count_members($courseid, $group) {
-    global $DB;
-    $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-    $context = context_course::instance($courseid);
-    $roster = $DB->get_records('role_assignments', array('contextid' => $context->id, 'roleid' => $studentrole->id));
-    if ($group > 0) {
-        $n = 0;
-        foreach ($roster as $members) {
-            if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $members->userid))) {
-                $n++;
-            }
-        }
-        $count = $n;
-    } else {
-        $count = count($roster);
-    }
-    return $count;
-}
 for ($i = 0; $i < $numofbars; $i++) {
     // Create an array of the names so they can be ordered.
     $namesstring = '';
     $namesarray = explode(';;', $mynames[$i]);
     sort($namesarray);
     if (count($namesarray) > 1) {
-        $members = count_members($courseid, $group);
-        $val = ((count($namesarray) - 1) / $members) * 100;
+        $members = count($startedquiz);
+        if ($members > 0) {
+            $val = ((count($namesarray) - 1) / $members) * 100;
+        } else {
+            $val = 0;
+        }
         $percent = round($val, 1);
         $namesstring = $percent."%\n<br />";
         if ($shownames) {

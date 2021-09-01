@@ -60,6 +60,7 @@ $string['lessonnotstarted'] = 'Lesson not started.';
 $string['liveviewgrid:componentname'] = 'Live Report';
 $string['liveviewgrid:view'] = 'View Live Report';
 $string['makecompact'] = 'Make the table Compact ';
+$string['NA'] = 'NA';// NA stands for No Answer.
 $string['nevert'] = ' never seconds';
 $string['newpage'] = "New page, static & printable";
 $string['no'] = 'No';

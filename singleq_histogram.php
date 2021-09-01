@@ -127,12 +127,12 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
                                     $stans[$userid] = $questionanswerids[$value];
                                 }
                             }
-                            if (preg_match('/choice(\d)/', $name, $matches)) {
+                            if (preg_match('/choice(\d+)/', $name, $matches)) {
                                 if ($value > 0) {
                                     $stanswer[] = $questionanswerids[$matches[1]];
                                 }
                             }
-                            if (preg_match('/p(\d)/', $name, $matches)) {
+                            if (preg_match('/p(\d+)/', $name, $matches)) {
                                 if ($value > 0) {
                                     $stanswer[] = $qanswertext[$value];
                                 }

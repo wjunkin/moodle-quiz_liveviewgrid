@@ -254,9 +254,9 @@ function liveviewgrid_get_answers($quizid) {
                         $qmatrix = $DB->get_record('question_matrix', array('questionid' => $qattempt->questionid));
                         $numrows = $DB->count_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
                         foreach ($myresponse as $key => $respon) {
-                            // For matrix questions the key will be cell(\d)*.
+                            // For matrix questions the key will be cell(\d+).
                             // This gives the row. The answer gives the column for the answer.
-                            if (preg_match('/cell(\d)*/', $key, $matches)) {
+                            if (preg_match('/cell(\d+)/', $key, $matches)) {
                                 $rowid = $matches[1];
                                 $colid = $respon;
                                 $weight = 0;
@@ -285,9 +285,9 @@ function liveviewgrid_get_answers($quizid) {
                         $multimresponse = array();
                         $multimgrade = 0;
                         foreach ($myresponse as $key => $respon) {
-                            // For cloze questions the key will be sub(\d*)_answer.
-                            // I need to take the answer that follows part (\d):(*)?;.
-                            if (preg_match('/sub(\d)*\_answer/', $key, $matches)) {
+                            // For cloze questions the key will be sub(\d+)_answer.
+                            // I need to take the answer that follows part (\d+):(*)?;.
+                            if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {
                                 $clozequestionid = $qattempt->questionid;
                                 // Finding the number of parts.
                                 $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
@@ -373,7 +373,7 @@ function mmultichoice($qattempts, $usrid) {
                     $myresponse[$answer->name] = $answer->value;
                     if ($answer->name == '_order') {
                         $multiorder = $answer->value;
-                    } else if (($answer->value > 0) && preg_match('/^choice(\d)+/', $answer->name, $matches)) {
+                    } else if (($answer->value > 0) && preg_match('/^choice(\d+)/', $answer->name, $matches)) {
                         $mchoice[] = $matches[1];
                     }
                 }

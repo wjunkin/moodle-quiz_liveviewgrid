@@ -18,15 +18,15 @@
  * Quiz liveviewgrid report version information.
  *
  * @package   quiz_liveviewgrid
- * @copyright 2008 Jamie Pratt
+ * @copyright 2021 William Junkin
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2021080200;
+$plugin->version   = 2021090100;
 $plugin->requires  = 2016120500;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_liveviewgrid';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release   = 'v2.1.1 (2021080200) for Moodle 3.2+';
+$plugin->release   = 'v2.1.2 (2021090100) for Moodle 3.2+';
