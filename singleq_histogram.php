@@ -45,7 +45,7 @@ echo "\n<body style=\"text-align:center;\">";
 if (!($norefresh)) {
     // Put in the warning to refresh the page after 2 hours of checking refresh.
     echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
-    $iframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewpoll/poll_tooltip_graph.php";
+    $iframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/multi_tooltip_graph.php";
     echo "\n<form action='$iframeurl' method='get'><input type='submit' value='Click to Refresh Data' class=\"blinking\">";
     echo "\n<input type='hidden' name='quizid' value='$quizid'>";
     echo "\n<input type='hidden' name='courseid' value='$courseid'>";
