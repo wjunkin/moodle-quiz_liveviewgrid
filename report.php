@@ -234,9 +234,25 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
+                if ($questiontext->qtype == 'matrix') {
+                    list($rowtext, $collabel, $goodans, $grademethod) = goodans($singleqid);
+                }
                 if ($showanswer) {
                     if ($questiontext->qtype == 'essay') {
                         $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
+                    } else if ($questiontext->qtype == 'matrix') {
+                        if ($matrixquestion = $DB->get_record('question_matrix', array
+                            ('questionid' => $singleqid, 'multiple' => 1))) {// Matrix question with checkboxes.
+                            $rightanswer = implode(';&nbsp;', $goodans);
+                            // Get correct answers. Get text for rows and labels for answers.
+                            $matrixquestionid = $matrixquestion->id;
+                            $matrixrows = $DB->get_records('question_matrix_rows', array('matrixid' => $matrixquestionid));
+                        } else {
+                            $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                            foreach ($attempts as $attempt) {
+                                $rightanswer = $attempt->rightanswer;
+                            }
+                        }
                     } else {
                         $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
                         foreach ($attempts as $attempt) {
@@ -688,6 +704,66 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
                         frameBorder=0 height='520' width='800'>";
                     echo "</iframe>";
+                } else if ($questiontext->qtype == 'matrix') {
+                    $mdata = array();// An array for the number of times a row is answered correctly.
+                    $mdatax = array();// An array for the number of times a row is answered incorrectly.
+                    $rowcount = count($rowtext);
+                    foreach ($rowtext as $key => $value) {
+                        $mdata[$key] = 0;
+                        $mdatax[$key] = 0;
+                        $correct = 0;// This is changed to 1 as soon as some row is answered correctly.
+                    }
+                    foreach ($initials as $key => $value) {
+                        $grade = 0;
+                        if (strlen($stanswers[$key][$singleqid]) > 0) {
+                            $myansws = explode(';&nbsp;', $stanswers[$key][$singleqid]);
+                            $mwrong = 0;// Keeping track of how many wrong answers there are.
+                            foreach ($myansws as $myansw) {
+                                if ($myanskey = array_search($myansw, $goodans)) {
+                                    $mdata[$myanskey] ++;
+                                    $correct = 1;
+                                    $grade ++;
+                                } else {
+                                    // Find the row for the incorrect answer.
+                                    $myanskey = 0;
+                                    $anssplit = explode(':&nbsp;', $myansw);
+                                    $myanskey = array_search($anssplit[0], $rowtext);
+                                    $mdatax[$myanskey] ++;
+                                    $mwrong ++;
+                                }
+                            }
+                            $matrixfr = 1;// The fraction for matrix questions, based on grademethod.
+                            if ($grademethod == 'kprime') {
+                                if ($mwrong > 0) {
+                                    $matrixfr = 0.001;
+                                }
+                            } else if ($grademethod == 'kany') {
+                                if ($mwrong > 1) {
+                                    $matrixfr = 0.001;
+                                } else if ($mwrong > 0) {
+                                    $matrixfr = 0.5;
+                                }
+                            } else {
+                                $matrixfr = $grade / $rowcount + .001;
+                            }
+                        } else {
+                            $matrixfr = 0;
+                        }
+                        $stfraction[$key][$singleqid] = $matrixfr;
+                    }
+
+                    // Put in matrix histogram.
+                    $getvalues = "correct=$correct&data=".implode(',', $mdata);
+                    $getvalues .= '&datax='.implode(',', $mdatax).'&total=10&cmid='.$cm->id;
+                    $rown = 0;
+                    foreach ($rowtext as $key => $value) {
+                        $getvalues .= "&x[$rown]=$value";
+                        $rown ++;
+                    }
+                    $iframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/matrixgraph.php?$getvalues";
+                    echo "<iframe src=\"$iframeurl\" frameBorder=0 height='520' width='800'>";
+                    echo "</iframe>";
+                    // End of matrix histogram.
                 }
             }
 
@@ -848,6 +924,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                     // The htmlentities function leaves single quotes unchanged.
                                     $safeanswer = htmlentities($answer);
                                     $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
+                                    $safeanswer1 = preg_replace("/\&nbsp\;/", ' ', $safeanswer1);// Changing &nbsp; back to a space.
                                     $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
                                         $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
                                     // Making sure we pick up whole words.

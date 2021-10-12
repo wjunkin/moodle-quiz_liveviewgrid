@@ -224,11 +224,16 @@ function liveviewgrid_get_answers($quizid) {
     $stanswers = array();
     $stfraction = array();
     $stlink = array();
+    $singleqid = optional_param('singleqid', 0, PARAM_INT);
     foreach ($quizattempts as $key => $quizattempt) {
         $usrid = $quizattempt->userid;
         $qubaid = $quizattempt->uniqueid;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
-        $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
+        if ($singleqid > 0) {
+            $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid, 'questionid' => $singleqid));
+        } else {
+            $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
+        }
         foreach ($qattempts as $qattempt) {
             $question = $DB->get_record('question', array('id' => $qattempt->questionid));
             if ($question->qtype == 'multichoice') {
@@ -237,9 +242,9 @@ function liveviewgrid_get_answers($quizid) {
             } else {
                 $multisingle = 1;
             }
-            $myresponse = array();
             $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
             foreach ($qattemptsteps as $qattemptstep) {
+                $myresponse = array();
                 if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
                     || ($qattemptstep->state == 'todo')) {
                     // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
@@ -247,37 +252,82 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
                     }
-                    if ($question->qtype == 'matrix') {// Check to see if attachments can be sent in matrix questions.
+                    if (($question->qtype == 'matrix') && ($qattemptstep->state <> 'todo')) {
                         $matrixresponse = array();
                         $mgrade = 0;
                         $mweight = 0.00001;
                         $qmatrix = $DB->get_record('question_matrix', array('questionid' => $qattempt->questionid));
-                        $numrows = $DB->count_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
+                        if ($qmatrix->multiple == 1) {
+                            $mans[$qattemptstep->id] = array();// An array for the checkbox answers, indexed by row and answer.
+                            $myrow = array();// An array to keep track of the rowids.
+                            $qtext = array();// An array for the text for each row.
+                        }
+                        // I need to find the column labels, row texts, and correct answer for each row of this matrix question.
+                        $rowslabels = $DB->get_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
+                        $numrows = count($rowlabels);
+                        // Get text for each row, subscripted by the row id.
+                        $rowtext = array();
+                        foreach ($rowlabels as $key => $rowlabel) {
+                            $rowtext[$rowlabel->id] = $rowlabel->shorttext;
+                        }
                         foreach ($myresponse as $key => $respon) {
-                            // For matrix questions the key will be cell(\d+).
-                            // This gives the row. The answer gives the column for the answer.
-                            if (preg_match('/cell(\d+)/', $key, $matches)) {
-                                $rowid = $matches[1];
-                                $colid = $respon;
-                                $weight = 0;
-                                if (($rowid > 0) && ($colid > 0)) {
+                            if ($qmatrix->multiple == 1) {
+                                // Checkboxes in this matrix question.
+                                if (preg_match('/cell(\d+)_(\d+)/', $key, $matches)) {
+                                    $rowid = $matches[1];
+                                    $myrow[$rowid] = 1;
+                                    $colid = $matches[2];
+                                    $weight = 0;
+                                    if (($rowid > 0) && ($colid > 0)) {
+                                        $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                        if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
+                                            $weight = $fract->weight;
+                                        }
+                                    }
+                                    $mrow = $DB->get_record('question_matrix_rows',
+                                        array('id' => $rowid, 'matrixid' => $qmatrix->id));
+                                    $qtext[$rowid] = $mrow->shorttext;
+                                    $mcol = $DB->get_record('question_matrix_cols',
+                                        array('id' => $colid, 'matrixid' => $qmatrix->id));
+                                    $mans[$qattemptstep->id][$rowid][$colid] = $mcol->shorttext;
                                     $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                    if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
-                                        $weight = $fract->weight;
+                                    if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
+                                        $mweight = $mweight + $mwgt->weight;
                                     }
                                 }
-                                $mrow = $DB->get_record('question_matrix_rows', array('id' => $rowid, 'matrixid' => $qmatrix->id));
-                                $qtext = $mrow->shorttext;
-                                $mcol = $DB->get_record('question_matrix_cols', array('id' => $colid, 'matrixid' => $qmatrix->id));
-                                $mans = $mcol->shorttext;
-                                $matrixresponse[] = $qtext."= ".$mans;
-                                $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
-                                    $mweight = $mweight + $mwgt->weight;
+                            } else {
+                                // For matrix questions with radio buttons, the key will be cell(\d+).
+                                // This gives the row. The answer gives the column for the answer.
+                                if (preg_match('/cell(\d+)/', $key, $matches)) {
+                                    $rowid = $matches[1];
+                                    $colid = $respon;
+                                    $weight = 0;
+                                    if (($rowid > 0) && ($colid > 0)) {
+                                        $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                        if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
+                                            $weight = $fract->weight;
+                                        }
+                                    }
+                                    $mrow = $DB->get_record('question_matrix_rows',
+                                        array('id' => $rowid, 'matrixid' => $qmatrix->id));
+                                    $qtext = $mrow->shorttext;
+                                    $mcol = $DB->get_record('question_matrix_cols',
+                                        array('id' => $colid, 'matrixid' => $qmatrix->id));
+                                    $mans[$qattemptstep->id] = $mcol->shorttext;
+                                    $matrixresponse[] = $qtext.':&nbsp;'.$mans[$qattemptstep->id];
+                                    $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                    if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
+                                        $mweight = $mweight + $mwgt->weight;
+                                    }
                                 }
                             }
                         }
-                        $stanswers[$usrid][$qattempt->questionid] = join('; ', $matrixresponse);
+                        if ($qmatrix->multiple == 1) {
+                            foreach ($myrow as $rowkey => $value) {
+                                $matrixresponse[$rowkey] = $qtext[$rowkey].":&nbsp;".join(' & ', $mans[$qattemptstep->id][$rowkey]);
+                            }
+                        }
+                        $stanswers[$usrid][$qattempt->questionid] = join(';&nbsp;', $matrixresponse);
                         $stfraction[$usrid][$qattempt->questionid] = $mweight / $numrows;
                     } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
                         $clozeresponse = array();// An array for the Close responses.
@@ -445,4 +495,40 @@ function liveviewgrid_display_question($cmid, $id) {
     }
 
     return $questiontext;
+}
+
+/**
+ * Return the row text, column labels, grademethod, and correct answers for matrix questions.
+ *
+ * @param int $questionid The id for the question.
+ * @return array of rowtext, collabel, grademethod, and goodans for the matriz question.
+ */
+function goodans($questionid) {
+    global $DB;
+    // Get the column labels, row text, and correct answers.
+    $matrixquestion = $DB->get_record('question_matrix', array('questionid' => $questionid));
+    $matrixid = $matrixquestion->id;
+    $grademethod = $matrixquestion->grademethod;
+    $rowtext = array();// An array with the text for each row, indexed by row id.
+    $collabel = array();// An array with the label for each column, indexed by column id.
+    $rtexts = $DB->get_records('question_matrix_rows', array('matrixid' => $matrixid));
+    foreach ($rtexts as $textkey => $rtext) {
+        $rowtext[$rtext->id] = $rtext->shorttext;
+    }
+    $clabels = $DB->get_records('question_matrix_cols', array('matrixid' => $matrixid));
+    foreach ($clabels as $labelkey => $clabel) {
+        $collabel[$clabel->id] = $clabel->shorttext;
+    }
+    $goodans = array();// An array of correct choices for a given row, indexed by rodid.
+    foreach ($rowtext as $rkey => $rvalue) {
+        $rans = array();// An array of good answers from this row.
+        foreach ($collabel as $ckey => $cvalue) {
+            if ($DB->record_exists('question_matrix_weights', array('rowid' => $rkey, 'colid' => $ckey))) {
+                $rans[$ckey] = $cvalue;
+            }
+        }
+        $goodans[$rkey] = $rvalue.':&nbsp;'.implode(' & ', $rans);
+    }
+    $return = array($rowtext, $collabel, $goodans, $grademethod);
+    return $return;
 }

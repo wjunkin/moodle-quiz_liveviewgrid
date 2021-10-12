@@ -160,24 +160,6 @@ if ($showresponses) {
     echo "\n  }";
     echo "\n}";
     echo "\n</script>  ";
-    if ($singleqid > 0) {
-        $questiontext = $DB->get_record('question', array('id' => $singleqid));
-        $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
-        $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
-        echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
-        if ($showanswer) {
-            if ($questiontext->qtype == 'essay') {
-                $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
-            } else {
-                $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
-                foreach ($attempts as $attempt) {
-                    $rightanswer = $attempt->rightanswer;
-                }
-            }
-            echo get_string('rightanswer', 'quiz_liveviewgrid').$rightanswer;
-        }
-        echo "\n<br />";
-    }
 }
 $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
 $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
@@ -328,18 +310,6 @@ if ($compact) {
     $trun = 40;
     $dotdot = '....';
 }
-// Put in a histogram if the question has a histogram and a single question is displayed.
-if ($singleqid > 0) {
-    $trun = 200;
-    $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
-    if (in_array($questiontext->qtype, $multitype)) {
-        $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
-        $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
-        echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-            frameBorder=0 height='520' width='800'>";
-        echo "</iframe>";
-    }
-}
 // This is needed to get the column lined up correctly.
 echo "\n<div class=\"table-wrapper\">";
 echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
@@ -395,6 +365,11 @@ foreach ($slots as $key => $slotvalue) {
         echo "</td>";
     } else {
         echo "<td></td>";
+    }
+    if ($question['qtype'][$key] == 'matrix') {
+        // Put in correct row answers for each matrix question.
+        $goodans[$key] = array();// The good answer for each row, indexed by row. There each question has unique rowids.
+        list($rowtext[$key], $collabel[$key], $goodans[$key], $grademethod[$key]) = goodans($key);
     }
 }
 echo "</tr>\n</thead>\n";
@@ -462,6 +437,44 @@ if ($showresponses) {
                     }
                         $style = '<td';
                     if ($evaluate) {
+                        if ($question['qtype'][$questionid] == 'matrix') {
+                            $grade = 0;
+                            if (strlen($stanswers[$user][$questionid]) > 0) {
+                                $myansws = explode(';&nbsp;', $stanswers[$user][$questionid]);
+                                $mwrong = 0;// Keeping track of how many wrong answers there are.
+                                foreach ($myansws as $myansw) {
+                                    if ($myanskey = array_search($myansw, $goodans[$questionid])) {
+                                        $mdata[$myanskey] ++;
+                                        $correct = 1;
+                                        $grade ++;
+                                    } else {
+                                        // Find the row for the incorrect answer.
+                                        $myanskey = 0;
+                                        $anssplit = explode(':&nbsp;', $myansw);
+                                        $myanskey = array_search($anssplit[0], $rowtext[$questionid]);
+                                        $mdatax[$myanskey] ++;
+                                        $mwrong ++;
+                                    }
+                                }
+                                $matrixfr = 1;// The fraction for matrix questions, based on grademethod.
+                                if ($grademethod[$questionid] == 'kprime') {
+                                    if ($mwrong > 0) {
+                                        $matrixfr = 0.001;
+                                    }
+                                } else if ($grademethod[$questionid] == 'kany') {
+                                    if ($mwrong > 1) {
+                                        $matrixfr = 0.001;
+                                    } else if ($mwrong > 0) {
+                                        $matrixfr = 0.5;
+                                    }
+                                } else {
+                                    $matrixfr = $grade / count($rowtext[$questionid]) + .001;
+                                }
+                            } else {
+                                $matrixfr = 0;
+                            }
+                            $stfraction[$user][$questionid] = $matrixfr;
+                        }
                         if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
                             if ($rag == 1) {// Colors from image from Moodle.
@@ -494,6 +507,7 @@ if ($showresponses) {
                             $myrow .= $style.">&nbsp;".$answer.$link."</td>";
                     } else {
                         // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
+                        $answer = preg_replace("/&nbsp;/", ' ', $answer);// Changing &nbsp; back to a space.
                         $safeanswer = htmlentities($answer);
                         $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                         $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
