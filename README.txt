@@ -77,3 +77,5 @@ Changes for version 2.1.2 (2021090100)
     Changed the single question display so that, if names are to be shown, it will display a "bar" indicating the names of student who have not answered the question and the percentage (out of the students who have attempted the quiz). If names are not shown, there is a message indicating how many students have not answered this question yet.
 Changes for version 2.1.3 (2021091100)
     Changed the code singleq_histogram.php (the code that was used for allresponses.php) so that it called on files only in report/liveviewgrid. Created a new file to show the histograms called multi_tooltip_graph.php. Previously only worked if liveviewpoll was installed.
+Changes for version 2.1.4 (2021101200)
+    The program now handles matrix questions correctly. This included adding new files to create a histogram for matrix questions, matrixgraph.php and classes/quiz_liveviewgrid_matrixgraphlib.php to draw the histogram for matrix questions as well as changing the code in locallib.php, report.php, and table_iframe27.php to handle the display and grading/color for studeent responses.
