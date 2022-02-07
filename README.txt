@@ -79,3 +79,4 @@ Changes for version 2.1.3 (2021091100)
     Changed the code singleq_histogram.php (the code that was used for allresponses.php) so that it called on files only in report/liveviewgrid. Created a new file to show the histograms called multi_tooltip_graph.php. Previously only worked if liveviewpoll was installed.
 Changes for version 2.1.4 (2021101200)
     The program now handles matrix questions correctly. This included adding new files to create a histogram for matrix questions, matrixgraph.php and classes/quiz_liveviewgrid_matrixgraphlib.php to draw the histogram for matrix questions as well as changing the code in locallib.php, report.php, and table_iframe27.php to handle the display and grading/color for studeent responses.
+Changes for version 2.1.5 (2022020700) Added a page loading feature to the report.php code.
