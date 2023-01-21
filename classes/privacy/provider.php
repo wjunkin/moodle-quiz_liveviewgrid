@@ -24,6 +24,8 @@
 
 namespace quiz_liveviewgrid\privacy;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Privacy Subsystem for quiz_liveviewgrid implementing null_provider.
  *

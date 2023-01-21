@@ -47,6 +47,7 @@ $showanswer = optional_param('showanswer', 0, PARAM_INT);
 $shownames = optional_param('shownames', 1, PARAM_INT);
 $status = optional_param('status', 0, PARAM_INT);
 $refresht = optional_param('refresht', 3, PARAM_INT);
+$activetime = optional_param('activetime', 10, PARAM_INT);
 $cm = $DB->get_record('course_modules', array('id' => $id));
 $course = $DB->get_record('course', array('id' => $cm->course));
 $quiz = $DB->get_record('quiz', array('id' => $cm->instance));
@@ -75,7 +76,7 @@ $context = context_module::instance($cm->id);
 require_capability('mod/quiz:viewreports', $context);
 require_login($course, true, $cm);
 $quizcontextid = $context->id;
-$slots = liveviewslots($quizid);
+$slots = liveviewslots($quizid, $quizcontextid);
 $question = liveviewquestion($slots);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
@@ -262,7 +263,12 @@ if ($shownames) {
 }
 echo "\n}";
 echo "\n</style>";
-
+// CSS style for the table.
+echo "\n<style>";
+echo "\n .lrtable {";
+echo "\n 	text-align: center;";
+echo "\n 	}";
+echo "\n</style>";
 // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
 echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
 echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php?mode=liveviewgrid\">";
@@ -307,18 +313,18 @@ if ($compact) {
     $dotdot = '';
     // Truncate responses to 4 if compact is desired, else 40 or 200.
 } else {
-    $trun = 40000000;
+    $trun = 50;
     $dotdot = '....';
 }
 // This is needed to get the column lined up correctly.
 echo "\n<div class=\"table-wrapper\">";
-echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
+echo "\n<table border=\"1\" width=\"100%\" id='timemodified' class='lrtable' name=$qmaxtime>\n";
 echo "<thead><tr>";
 
 if ($shownames) {
     $activestyle = "style='background-size: 20% 100%;
         background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
-        background-repeat: repeat; text-align:right'";
+        background-repeat: repeat;'";
     echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
 }
 if ($showlesson) {
@@ -398,7 +404,7 @@ if ($showresponses) {
     // Create the table.
     if (isset($users)) {
         $now = time();
-        $firsttime = $now - 300;
+        $firsttime = $now - $activetime * 60;
         echo "\n<tbody>";
         foreach ($users as $user) {
             // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
@@ -655,18 +661,28 @@ function liveviewquizmaxtime($quizcontextid) {
  * @param int $quizid The id for this quiz.
  * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
  */
-function liveviewslots($quizid) {
-    global $DB;
-    $slots = array();
-    $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-    $singleqid = optional_param('singleqid', 0, PARAM_INT);
-    foreach ($myslots as $key => $value) {
-        if (($singleqid == 0) || ($value->questionid == $singleqid)) {
-            $slots[$value->questionid] = $value->slot;
-        }
-    }
-    return $slots;
+function liveviewslots($quizid, $quizcontextid) {
+	global $DB;
+	$slots = array();
+	$slotsvalue = array();
+	$myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+	$singleqid = optional_param('singleqid', 0, PARAM_INT);
+	foreach ($myslots as $key => $value) {
+		$slotsvalue[$key] = $value->slot;
+	}
+	$qreferences = $DB->get_records('question_references', array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+	foreach ($qreferences as $qreference) {
+		$slotid = $qreference -> itemid;
+		$questionbankentryid = $qreference-> questionbankentryid;
+		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
+		foreach ($questionversions as $questionversion) {
+			$questionid = $questionversion->questionid;
+		}
+		$slots[$questionid] = $slotsvalue[$slotid];
+	}
+	return $slots;
 }
+
 /**
  * Function to get the qtype, name, questiontext for each question.
  * @param array $slots and array of slot ids indexed by question ids.
