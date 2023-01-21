@@ -98,6 +98,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $shownames = optional_param('shownames', 1, PARAM_INT);
         $status = optional_param('status', 0, PARAM_INT);
         $refresht = optional_param('refresht', 3, PARAM_INT);
+		$activetime = optional_param('activetime', 10, PARAM_INT);
         if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
             $haslesson = 1;
             $lessonid = optional_param('lessonid', 0, PARAM_INT);
@@ -150,6 +151,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['showlesson'] = $showlesson;
         $hidden['lessonid'] = $lessonid;
         $hidden['refresht'] = $refresht;
+		$hidden['activetime'] = $activetime;
         foreach ($hidden as $hiddenkey => $hiddenvalue) {
             if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
                 && (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
@@ -230,6 +232,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n  }";
             echo "\n}";
             echo "\n</script>  ";
+			// CSS style for the table.
+			echo "\n<style>";
+			echo "\n .lrtable {";
+			echo "\n 	text-align: center;";
+			echo "\n 	}";
+			echo "\n</style>";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
@@ -295,6 +303,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $checked[$tindex] = '';
                 }
             }
+			$tactive = array(5, 10, 30, 60, 600);
+            foreach ($tactive as $mat) {
+                $aindex = 'activet'.$mat;
+                if ($activetime == $mat) {
+                    $checked[$aindex] = 'checked';
+                } else {
+                    $checked[$aindex] = '';
+                }
+            }
+
             $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
             echo "\n<table>";
             echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
@@ -345,8 +363,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo " <input type='radio' name='refresht' value=3 ".$checked['refresht3'].">30 ";
             echo " <input type='radio' name='refresht' value=6 ".$checked['refresht6'].">60 ";
             echo " <input type='radio' name='refresht' value=200 ".$checked['refresht200'].">".
-                get_string('nevert', 'quiz_liveviewgrid')."</td></tr>";
-            if ($haslesson) {
+                get_string('nevert', 'quiz_liveviewgrid')."</td>";
+            echo "\n<tr>".$td.get_string('tobeactive', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='activetime' value=5 ".$checked['activet5'].">5";
+            echo " <input type='radio' name='activetime' value=10 ".$checked['activet10'].">10";
+            echo " <input type='radio' name='activetime' value=30 ".$checked['activet30'].">30";
+            echo " <input type='radio' name='activetime' value=60 ".$checked['activet60'].">60";
+            echo " <input type='radio' name='activetime' value=600 ".$checked['activet600'].">600";
+			echo get_string('minutes', 'quiz_liveviewgrid');
+            echo "</td></tr>";
+			if ($haslesson) {
                 echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
                 echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
                 echo get_string('yes', 'quiz_liveviewgrid')."</td>";
@@ -489,7 +515,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         if ($showkey && $showresponses) {
             echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
-            echo "<table border=\"1\" width=\"100%\">\n";
+            echo "<table border=\"1\" width=\"100%\" class='lrtable'>\n";
             $head = "<tr>";
             for ($i = 0; $i < 11; $i++) {
                 $myfraction = number_format($i / 10, 1, '.', ',');
@@ -701,6 +727,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 if (in_array($questiontext->qtype, $multitype)) {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
+					$getvalues .= "&activetime=$activetime";echo "\n<br />debug729 in report and getvalues are $getvalues";
                     echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
                         frameBorder=0 height='520' width='800'>";
                     echo "</iframe>";
@@ -769,7 +796,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
             // This is needed to get the column lined up correctly.
             echo "\n<div class=\"table-wrapper\">";
-            echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
+            echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime class='lrtable'>\n";
             echo "<thead><tr>";
 
             if ($shownames) {
@@ -1019,7 +1046,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         } else {
             $getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact&group=$group";
             $getvalues .= "&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson&showlesson=$showlesson";
-            $getvalues .= "&lessonid=$lessonid&refresht=$refresht";
+            $getvalues .= "&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
             $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
             echo "<iframe src=\"$tableiframeurl\" frameBorder=0 height='520' width='100%'>";
             echo "</iframe>";

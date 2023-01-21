@@ -73,6 +73,12 @@ if (!($norefresh)) {
     echo "\n<script src=\"javascript_teach_refreshG3.js\">";
     echo "\n</script>";
 }
+// CSS style for the table.
+echo "\n<style>";
+echo "\n .lrtable {";
+echo "\n 	text-align: center;";
+echo "\n 	}";
+echo "\n</style>";
 $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
 if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice type of questions.
     $barnames = array(); // An array of the names associated with each choice. Index = choice and value = studentid.
@@ -357,7 +363,7 @@ if (in_array($questiontext->qtype, $multitype)) {// Hisotgram for multichoice ty
         asort($row);
     }
 
-    echo "<table border=\"1\" width=\"100%\">\n";
+    echo "<table border=\"1\" width=\"100%\" class='lrtable'>\n";
     echo "<thead><tr>";
 
     if ($shownames) {
