@@ -319,6 +319,11 @@ foreach ($slots as $key => $slotvalue) {
         $safequestionname = trim(strip_tags($question['name'][$key]));
         $buttontext = trim($safequestionname);
         $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
+        if (preg_match('/src=\"@@PLUGINFILE@@/', $myquestiontext, $matches)) {
+            $quiz = $DB->get_record('quiz', array('id' => $quizid));
+            $qslot = $slots[$key];
+            $myquestiontext = changepic_url($myquestiontext, $key, $quiz->course, $qslot, $USER->id);
+        }
         $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
         // Get rid of any <script> tags that may mess things up.
         $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);

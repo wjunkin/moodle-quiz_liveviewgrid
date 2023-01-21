@@ -703,7 +703,7 @@ function liveviewslots($quizid, $quizcontextid) {
  * @param int $quizcontextid The id for the context for this quiz.
  */
 function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid) {
-    global $DB;
+    global $DB, $USER;
     // Getting and preparing to sorting users.
     // The first and last name are in the initials array.
     $hidden = liveviewgrid_update_hidden($course);
@@ -777,6 +777,11 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
             $safequestionname = trim(strip_tags($question['name'][$key]));
             $buttontext = trim($safequestionname);
             $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
+            if (preg_match('/src=\"@@PLUGINFILE@@/', $myquestiontext, $matches)) {
+                $quiz = $DB->get_record('quiz', array('id' => $quizid));
+                $qslot = $slots[$key];
+                $myquestiontext = changepic_url($myquestiontext, $key, $quiz->course, $qslot, $USER->id);
+            }
             $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
             // Get rid of any <script> tags that may mess things up.
             $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
@@ -1269,7 +1274,7 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
     global $CFG, $DB;
     $pics = array();
     $pics = explode('@@PLUGINFILE@@/', $qtext2);
-    $id = 14;
+    $id = 14;$debug = optional_param('debug', 0, PARAM_INT);if($debug) {$mynum = count($pics) - 1;echo "\n<br />There are $mynum images in this question text.";} else {echo "\n<br />debug is $debug";}
     $time = time();
     $ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
     $coursecontextid = $ccontext->id;
@@ -1282,7 +1287,7 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
         'flagged' => 0, 'questionsummary' => 'Hi, world', 'rightanswer' => 'Helloworld', 'timemodified' => $time));
     $astep = $DB->insert_record('question_attempt_steps', array('questionattemptid' => $attempt, 'sequencenumber' => 0,
         'state' => 'todo', 'timecreated' => $time, 'userid' => $userid));
-    $replacetext = "http://localhost/moodle402b/pluginfile.php/$coursecontextid/question/questiontext/$quba/$slot/$questionid/";
+    $replacetext = $CFG->wwwroot."/pluginfile.php/$coursecontextid/question/questiontext/$quba/$slot/$questionid/";
     $qtextgood = implode($replacetext, $pics);
     return $qtextgood;
 }
