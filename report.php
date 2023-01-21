@@ -98,7 +98,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $shownames = optional_param('shownames', 1, PARAM_INT);
         $status = optional_param('status', 0, PARAM_INT);
         $refresht = optional_param('refresht', 3, PARAM_INT);
-		$activetime = optional_param('activetime', 10, PARAM_INT);
+        $activetime = optional_param('activetime', 10, PARAM_INT);
         if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
             $haslesson = 1;
             $lessonid = optional_param('lessonid', 0, PARAM_INT);
@@ -151,7 +151,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden['showlesson'] = $showlesson;
         $hidden['lessonid'] = $lessonid;
         $hidden['refresht'] = $refresht;
-		$hidden['activetime'] = $activetime;
+        $hidden['activetime'] = $activetime;
         foreach ($hidden as $hiddenkey => $hiddenvalue) {
             if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
                 && (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
@@ -232,12 +232,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n  }";
             echo "\n}";
             echo "\n</script>  ";
-			// CSS style for the table.
-			echo "\n<style>";
-			echo "\n .lrtable {";
-			echo "\n 	text-align: center;";
-			echo "\n 	}";
-			echo "\n</style>";
+            // CSS style for the table.
+            echo "\n<style>";
+            echo "\n .lrtable {";
+            echo "\n     text-align: center;";
+            echo "\n     }";
+            echo "\n</style>";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
@@ -303,7 +303,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $checked[$tindex] = '';
                 }
             }
-			$tactive = array(5, 10, 30, 60, 600);
+            $tactive = array(5, 10, 30, 60, 600);
             foreach ($tactive as $mat) {
                 $aindex = 'activet'.$mat;
                 if ($activetime == $mat) {
@@ -370,9 +370,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo " <input type='radio' name='activetime' value=30 ".$checked['activet30'].">30";
             echo " <input type='radio' name='activetime' value=60 ".$checked['activet60'].">60";
             echo " <input type='radio' name='activetime' value=600 ".$checked['activet600'].">600";
-			echo get_string('minutes', 'quiz_liveviewgrid');
+            echo get_string('minutes', 'quiz_liveviewgrid');
             echo "</td></tr>";
-			if ($haslesson) {
+            if ($haslesson) {
                 echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
                 echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
                 echo get_string('yes', 'quiz_liveviewgrid')."</td>";
@@ -484,14 +484,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
             echo "\n.first-col {";
             echo "\n  position: absolute;";
-            echo "\n	width: 10em;";
-            echo "\n	margin-left: -10.1em; background:#ffffff;";
+            echo "\n    width: 10em;";
+            echo "\n    margin-left: -10.1em; background:#ffffff;";
             echo "\n}";
 
             echo "\n.table-wrapper {";
             echo "\n    overflow-x: scroll;";
             if ($shownames) {
-                echo "\n	margin: 0 0 0 10em;";
+                echo "\n    margin: 0 0 0 10em;";
             } else {
                 echo "\n     margin: 0 0 0 0;";
             }
@@ -727,7 +727,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 if (in_array($questiontext->qtype, $multitype)) {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
-					$getvalues .= "&activetime=$activetime";echo "\n<br />debug729 in report and getvalues are $getvalues";
+                    $getvalues .= "&activetime=$activetime";
                     echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
                         frameBorder=0 height='520' width='800'>";
                     echo "</iframe>";

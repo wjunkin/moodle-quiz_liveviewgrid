@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Return the number of users who have submitted answers to this quiz instance.
  *
@@ -235,22 +233,65 @@ function liveviewgrid_get_answers($quizid) {
             $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
         }
         foreach ($qattempts as $qattempt) {
+            $myresponse = array();
             $question = $DB->get_record('question', array('id' => $qattempt->questionid));
             if ($question->qtype == 'multichoice') {
                 $multioptions = $DB->get_record('qtype_multichoice_options', array('questionid' => $question->id));
                 $multisingle = $multioptions->single;
             } else {
                 $multisingle = 1;
-            }
-            $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
+            }$qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
             foreach ($qattemptsteps as $qattemptstep) {
-                $myresponse = array();
                 if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
                     || ($qattemptstep->state == 'todo')) {
                     // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
                     $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
+                    }
+                    if ($question->qtype == 'match') {
+                        // If a person answers a question more than once, the question_attempt_step->id changes.
+                        if (!(isset($qtempt[$qattemptstep->id]))) {
+                            $qtempt[$qattemptstep->id] = 1;
+                            $matchgrade[$qattemptstep->id] = 0;
+                            $matchanswer[$qattemptstep->id] = '';
+                        }
+                        $mymatch = array();
+                        $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $question->id));
+                        $myquestions = array();
+                        foreach ($subquestions as $subid => $subquestion) {
+                            $questiontext = preg_replace('/<p.+?>/', '', $subquestion->questiontext);
+                            $mymatch[$subid]['qtext'] = preg_replace("/<\/p>/", '', $questiontext);
+                            $mymatch[$subid]['atext'] = $subquestion->answertext;
+                        }
+                        if (isset($myresponse['_stemorder'])) {
+                            $stems[$qattempt->questionid] = explode(',', $myresponse['_stemorder']);
+                            $stemcount[$qattempt->questionid] = count($stems[$qattempt->questionid]);
+                        }
+                        if (isset($myresponse['_choiceorder'])) {
+                            $mchoices[$qattempt->questionid] = explode(',', $myresponse['_choiceorder']);
+                        }
+                        if (count($stems[$qattempt->questionid]) > 0) {
+                            foreach ($stems[$qattempt->questionid] as $stkey => $stvalue) {
+                                $choicekey = 'sub'.$stkey;
+                                if (isset($myresponse[$choicekey])) {
+                                    $mymchoice = $myresponse[$choicekey];
+                                    $stchoice = $mymchoice - 1;
+                                    // The choice array starts at 0 but values in question_attempt_step_data table starts at 1.
+                                    // The value of $stkey gives the place on the screen where the stem is displayed.
+                                    // Using this index in the stems array gives the id for the qtype_match_subquestions table.
+                                    // The choice selected from the mchoices comes from the index value of mymatch in this table.
+                                    $xchoice = $mchoices[$qattempt->questionid][$stchoice];
+                                    $matchanswer[$qattemptstep->id] .= $mymatch[$stems[$qattempt->questionid][$stkey]]['qtext'].
+                                        "->".$mymatch[$xchoice]['atext']."; ";
+                                    if ($stems[$qattempt->questionid][$stkey] == $xchoice) {
+                                        $matchgrade[$qattemptstep->id] ++;
+                                    }
+                                }
+                            }
+                        }
+                        $questionsummary = $qattempt->questionsummary;
+                        preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
                     }
                     if (($question->qtype == 'matrix') && ($qattemptstep->state <> 'todo')) {
                         $matrixresponse = array();
@@ -386,10 +427,16 @@ function liveviewgrid_get_answers($quizid) {
                         }
                     } else if ($multisingle == 0) {
                         // At this point this is only to handle multichoice with multiple answers, mm type.
-                        list($mmanswer, $mmfraction) = mmultichoice($qattempts, $usrid);
+                        list($mmanswer, $mmfraction) = mmultichoice($qattempt, $usrid);
                         $stanswers[$usrid][$qattempt->questionid] = $mmanswer;
                         $stfraction[$usrid][$qattempt->questionid] = $mmfraction;
                     }
+                }
+            }
+            if ($question->qtype == 'match') {
+                foreach ($matchanswer as $qtemptid => $matanswer) {
+                    $stanswers[$usrid][$qattempt->questionid] = $matanswer;
+                    $stfraction[$usrid][$qattempt->questionid] = $matchgrade[$qtemptid] / $stemcount[$qattempt->questionid];
                 }
             }
         }
@@ -405,41 +452,40 @@ function liveviewgrid_get_answers($quizid) {
  * @param int $usrid The user id for the student doing the question attempt.
  * @return string The HTML string to display the question, including images.
  */
-function mmultichoice($qattempts, $usrid) {
+function mmultichoice($qattempt, $usrid) {
     global $DB;
     $multichoiceresponse = '';
     $mgrade = 0;
     $multiorder = '';
     // Possibly multichoice with multiple answers.
-    foreach ($qattempts as $qattempt) {
-        $myresponse = array();
-        $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
-        foreach ($qattemptsteps as $qattemptstep) {
-            if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
-                || ($qattemptstep->state == 'todo')) {
-                $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
-                $mchoice = array();
-                foreach ($answers as $key => $answer) {
-                    $myresponse[$answer->name] = $answer->value;
-                    if ($answer->name == '_order') {
-                        $multiorder = $answer->value;
-                    } else if (($answer->value > 0) && preg_match('/^choice(\d+)/', $answer->name, $matches)) {
-                        $mchoice[] = $matches[1];
-                    }
+    $myresponse = array();
+    $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
+    foreach ($qattemptsteps as $qattemptstep) {
+        if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
+            || ($qattemptstep->state == 'todo')) {
+            $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
+            $mchoice = array();
+            foreach ($answers as $key => $answer) {
+                $myresponse[$answer->name] = $answer->value;
+                if ($answer->name == '_order') {
+                    $multiorder = $answer->value;
+                } else if (($answer->value > 0) && preg_match('/^choice(\d+)/', $answer->name, $matches)) {
+                    $mchoice[] = $matches[1];
                 }
-                $myorder = explode(",", $multiorder);
-                foreach ($mchoice as $mchosen) {
-                    $mychoice = $myorder[$mchosen];// One of the chosen question answers.
-                    $myanswer = $DB->get_record('question_answers', array('id' => $mychoice));
-                    $multichoiceresponse .= $myanswer->answer;
-                    $mgrade = $mgrade + $myanswer->fraction;
-                }
-                $multresponse = preg_replace('/\<\/p\>\<p\>/', "; ", $multichoiceresponse);
-                $multresponse = preg_replace('/^\<p\>/', "", $multresponse);
-                $multresponse = preg_replace('/\<\/p\>$/', "", $multresponse);
-                $stanswers[$usrid][$qattempt->questionid] = $multresponse;
-                $stfraction[$usrid][$qattempt->questionid] = $mgrade;
             }
+            $myorder = explode(",", $multiorder);
+            foreach ($mchoice as $mchosen) {
+                $mychoice = $myorder[$mchosen];// One of the chosen question answers.
+                $myanswer = $DB->get_record('question_answers', array('id' => $mychoice));
+                $multichoiceresponse .= $myanswer->answer;
+                $mgrade = $mgrade + $myanswer->fraction;
+            }
+            // Getting rid of the <p> tag.
+            $multiresponse1 = preg_replace('/<p.*?>/', '', $multichoiceresponse);
+            // SGetting rid of the </p> tag.
+            $multiresponse = preg_replace('/<\/p>/', '; ', $multiresponse1);
+            $stanswers[$usrid][$qattempt->questionid] = $multiresponse;
+            $stfraction[$usrid][$qattempt->questionid] = $mgrade;
         }
     }
     $result = array($stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]);

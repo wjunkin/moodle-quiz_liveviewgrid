@@ -23,8 +23,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * This class returns the histogram image for student responses to a single question.
  *
@@ -108,12 +106,12 @@ class quiz_liveviewgrid_graphlib {
 
 
         'axisfont'          => 'default.ttf', // Axis text font. don't forget to set 'path_to_fonts' above.
-        'axissize'          => 8,            // Axis text font size in points
+        'axissize'          => 8,            // Axis text font size in points.
         'axiscolour'        => 'gray33',      // Colour of axis text.
         'y_axisangle'       => 0,            // Rotation of axis text.
         'x_axisangle'       => 0,            // Rotation of axis text.
 
-        'y_axis_text_left'   => 1,            // Whether to print left hand y axis text. if 0 no text, if 1 all ticks have text,
+        'y_axis_text_left'   => 1,            // Whether to print left hand y axis text. If 0 no text, if 1 all ticks have text.
         'x_axis_text'        => 1,            // If 4 then print every 4th tick and text, etc...
         'y_axis_text_right'  => 0,            // Behaviour same as above for right hand y axis.
 

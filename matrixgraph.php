@@ -28,7 +28,6 @@ require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php'
 require_once($CFG->dirroot.'/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_matrixgraphlib.php');
 defined('MOODLE_INTERNAL') || die();
 $labels = optional_param_array('x', '', PARAM_TEXT);
-//$fr = optional_param_array('fr', '', PARAM_FLOAT);
 $data = optional_param('data', '', PARAM_TAGLIST);
 $datax = optional_param('datax', '', PARAM_TAGLIST);
 $total = optional_param('total', '', PARAM_INT);
@@ -44,7 +43,6 @@ foreach ($labels as $key => $value) {
 }
 
 $line->x_data = $labels;
-//$line->fractions = $fr;
 $line->y_data['responses'] = explode(",", $data);
 $line->y_datax['responses'] = explode(",", $datax);
 $line->y_format['responses'] = array('colour' => 'blue', 'bar' => 'fill', 'shadow_offset' => 3);

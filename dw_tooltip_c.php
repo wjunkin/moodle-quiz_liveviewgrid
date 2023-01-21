@@ -743,3 +743,4 @@ dw_Tooltip.setTipWidth = function(w) {
 /////////////////////////////////////////////////////////////////////
 // Initialization: init tooltip and set up event delegation
 dw_Event.add( window, 'load', dw_Tooltip.init );
+<?php

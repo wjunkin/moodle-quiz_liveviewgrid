@@ -47,7 +47,6 @@ $showanswer = optional_param('showanswer', 0, PARAM_INT);
 $shownames = optional_param('shownames', 1, PARAM_INT);
 $status = optional_param('status', 0, PARAM_INT);
 $refresht = optional_param('refresht', 3, PARAM_INT);
-$activetime = optional_param('activetime', 10, PARAM_INT);echo "\n<br />debug50 in table_ifrmae and activetime is $activetime";
 $cm = $DB->get_record('course_modules', array('id' => $id));
 $course = $DB->get_record('course', array('id' => $cm->course));
 $quiz = $DB->get_record('quiz', array('id' => $cm->instance));
@@ -263,12 +262,7 @@ if ($shownames) {
 }
 echo "\n}";
 echo "\n</style>";
-// CSS style for the table.
-echo "\n<style>";
-echo "\n .lrtable {";
-echo "\n 	text-align: center;";
-echo "\n 	}";
-echo "\n</style>";
+
 // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
 echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
 echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php?mode=liveviewgrid\">";
@@ -313,18 +307,18 @@ if ($compact) {
     $dotdot = '';
     // Truncate responses to 4 if compact is desired, else 40 or 200.
 } else {
-    $trun = 50;
+    $trun = 40000000;
     $dotdot = '....';
 }
 // This is needed to get the column lined up correctly.
 echo "\n<div class=\"table-wrapper\">";
-echo "\n<table border=\"1\" width=\"100%\" id='timemodified' class='lrtable' name=$qmaxtime>\n";
+echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime>\n";
 echo "<thead><tr>";
 
 if ($shownames) {
     $activestyle = "style='background-size: 20% 100%;
         background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
-        background-repeat: repeat;'";
+        background-repeat: repeat; text-align:right'";
     echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
 }
 if ($showlesson) {
@@ -404,7 +398,7 @@ if ($showresponses) {
     // Create the table.
     if (isset($users)) {
         $now = time();
-        $firsttime = $now - $activetime * 60;echo "\n<br />debug407 and activetime is $activetime";
+        $firsttime = $now - 300;
         echo "\n<tbody>";
         foreach ($users as $user) {
             // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
