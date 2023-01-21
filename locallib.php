@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $quizid The ID for the quiz instance.
  * @return array The userids for all the students submitting answers.
  */
+/**
 function liveview_who_sofar_gridview($quizid) {
     global $DB;
 
@@ -49,6 +50,31 @@ function liveview_who_sofar_gridview($quizid) {
         $userid = array();
         return $userid;
     }
+}
+*/
+function liveview_who_gridview($quizid, $groupid, $courseid) {
+	global $DB;
+	if ($groupid > 0) {
+		// Make sure the student is in the group.
+		$sql = "SELECT u.id, u.firstname, u.lastname, u.lastaccess, gm.userid, gm.groupid, gm.timeadded FROM {user} u
+			JOIN {groups_members} gm ON gm.userid = u.id 
+			JOIN {role_assignments} ra ON ra.userid = u.id
+			JOIN {role} r ON r.id = ra.roleid
+			JOIN {context} c ON c.id = ra.contextid
+			WHERE r.shortname = 'student' AND c.contextlevel = 50 AND c.instanceid = $courseid AND gm.groupid = $groupid";
+
+	} else {
+		// Make sure the student is in the group.
+		$sql = "SELECT u.id, u.firstname, u.lastname, u.lastaccess FROM {user} u
+			JOIN {role_assignments} ra ON ra.userid = u.id
+			JOIN {role} r ON r.id = ra.roleid
+
+			JOIN {context} c ON c.id = ra.contextid
+			WHERE r.shortname = 'student' AND c.contextlevel = 50 AND c.instanceid = $courseid";
+	}
+	$params = array();
+	$students = $DB->get_records_sql($sql, $params);
+	return $students;
 }
 
 /**
@@ -217,7 +243,31 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
  * @param int $quizid The id for the quiz.
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
  **/
-function liveviewgrid_get_answers($quizid) {
+//function liveviewgrid_get_answers($quizid) {
+function liveviewgrid_getanswers_fast($quizid, $qtype) {
+    global $DB;
+    $stanswers = array();
+    $stfraction = array();
+    $stlink = array();
+    $singleqid = optional_param('singleqid', 0, PARAM_INT);
+	if ($singleqid > 0) {
+		$sqldata = "SELECT qasd.*, qa.questionid FROM {question_attempt_step_data} qasd 
+		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
+		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
+		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
+		WHERE qza.quiz = $quizid AND qa.questionid = $singleqid";
+	} else {
+		$sqldata = "SELECT qasd.*, qa.questionid, qza.uniqueid, qza.userid FROM {question_attempt_step_data} qasd 
+		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
+		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
+		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
+		WHERE qza.quiz = $quizid";
+	}
+	$params = array();
+	$attemptstepdata = $DB->get_records_sql($sqldata, $params);
+
+}
+function liveviewgrid_get_answers($quizid, $qtype) {
     global $DB;
     $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
@@ -235,9 +285,10 @@ function liveviewgrid_get_answers($quizid) {
             $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
         }
         foreach ($qattempts as $qattempt) {
-            $question = $DB->get_record('question', array('id' => $qattempt->questionid));
-            if ($question->qtype == 'multichoice') {
-                $multioptions = $DB->get_record('qtype_multichoice_options', array('questionid' => $question->id));
+            //$question = $DB->get_record('question', array('id' => $qattempt->questionid));
+            //if ($question->qtype == 'multichoice') {
+            if ($qtype[$qattempt->questionid] == 'multichoice') {
+                $multioptions = $DB->get_record('qtype_multichoice_options', array('questionid' => $qattempt->questionid));
                 $multisingle = $multioptions->single;
             } else {
                 $multisingle = 1;
@@ -252,7 +303,7 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
                     }
-                    if ($question->qtype == 'match') {
+                    if ($qtype[$qattempt->questionid] == 'match') {
                         // If a person answers a question more than once, the question_attempt_step->id changes.
                         if (!(isset($qtempt[$qattemptstep->id]))) {
                             $qtempt[$qattemptstep->id] = 1;
@@ -260,7 +311,7 @@ function liveviewgrid_get_answers($quizid) {
                             $matchanswer[$qattemptstep->id] = '';
                         }
                         $mymatch = array();
-                        $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $question->id));
+                        $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $qattempt->questionid));
                         $myquestions = array();
                         foreach ($subquestions as $subid => $subquestion) {
                             $questiontext = preg_replace('/<p.+?>/', '', $subquestion->questiontext);
@@ -296,7 +347,7 @@ function liveviewgrid_get_answers($quizid) {
                         $questionsummary = $qattempt->questionsummary;
                         preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
                     }
-                    if (($question->qtype == 'matrix') && ($qattemptstep->state <> 'todo')) {
+                    if (($qtype[$qattempt->questionid] == 'matrix') && ($qattemptstep->state <> 'todo')) {
                         $matrixresponse = array();
                         $mgrade = 0;
                         $mweight = 0.00001;
@@ -436,7 +487,7 @@ function liveviewgrid_get_answers($quizid) {
                     }
                 }
             }
-            if ($question->qtype == 'match') {
+            if ($qtype[$qattempt->questionid] == 'match') {
                 foreach ($matchanswer as $qtemptid => $matanswer) {
                     $stanswers[$usrid][$qattempt->questionid] = $matanswer;
                     $stfraction[$usrid][$qattempt->questionid] = $matchgrade[$qtemptid] / $stemcount[$qattempt->questionid];
