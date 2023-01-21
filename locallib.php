@@ -219,21 +219,33 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden,$quizconte
  **/
 function liveviewgrid_get_answers($quizid) {
     global $DB;
+	$role = $DB->get_record('role', array('shortname' => 'student'));
+	$studentroleid = $role->id;
+	$quiz = $DB->get_record('quiz', array('id' => $quizid));
+	$courseid = $quiz->course;
+	$coursecontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+	$coursecontextid = $coursecontext->id;
+    $singleqid = optional_param('singleqid', 0, PARAM_INT);
+	$group = optional_param('group', 0, PARAM_INT);
+	$whereqid = '';
 	if ($singleqid > 0) {
-		$sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
-		FROM {question_attempt_step_data} qasd 
-		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
-		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
-		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
-		WHERE qza.quiz = $quizid AND qa.questionid = $singleqid";
-	} else {
-		$sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
-		FROM {question_attempt_step_data} qasd 
-		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
-		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
-		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
-		WHERE qza.quiz = $quizid";
+		$whereqid = "AND qa.questionid = $singleqid";
 	}
+	if ($group > 0) {
+		$groupjoin = " JOIN {groups_members} gm ON qza.userid = gm.userid ";
+		$wheregroup = "AND gm.groupid = $group";
+	} else {
+		$groupjoin = '';
+		$wheregroup = '';
+	}
+		$sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
+		FROM {question_attempt_step_data} qasd 
+		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
+		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
+		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
+		JOIN {role_assignments} ra ON qza.userid = ra.userid
+		$groupjoin
+		WHERE qza.quiz = $quizid AND ra.roleid = $studentroleid AND ra.contextid = $coursecontextid $whereqid $wheregroup";
 	$params = array();
 	$data = $DB->get_records_sql($sqldata, $params);
 
@@ -241,7 +253,6 @@ function liveviewgrid_get_answers($quizid) {
     $stanswers = array();
     $stfraction = array();
     $stlink = array();
-    $singleqid = optional_param('singleqid', 0, PARAM_INT);
 	// The array for $data to multichoice questions with more than one answer (checkboxes).
 	$datumm = array();
     foreach ($data as $key => $datum) {
@@ -674,7 +685,7 @@ function liveviewslots($quizid, $quizcontextid) {
 	foreach ($qreferences as $qreference) {
 		$slotid = $qreference -> itemid;
 		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
+		$questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
 		foreach ($questionversions as $questionversion) {
 			$questionid = $questionversion->questionid;
 		}
@@ -682,4 +693,3 @@ function liveviewslots($quizid, $quizcontextid) {
 	}
 	return $slots;
 }
-

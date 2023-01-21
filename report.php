@@ -203,7 +203,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 			// These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 			$stanswers = array();
 			$stfraction = array();
-			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);		
+			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
 			// End of new location for the above code.
 			$qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
 			$sofar = liveview_who_sofar_gridview($quizid);
@@ -225,7 +225,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
         $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
-        echo "\n<a href='$allresponsesurl'><button>".get_string('viewresponses', 'quiz_liveviewgrid')."</button></a>";
+        //echo "\n<a href='$allresponsesurl'><button>".get_string('viewresponses', 'quiz_liveviewgrid')."</button></a>";
         if ($showresponses) {
             // Script to hide or display the option form.
             echo "\n<script>";
@@ -892,7 +892,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     foreach ($users as $user) {
                         // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
                         if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
-                            echo "<tr>";
+							echo "<tr>";
                             if ($shownames) {
                                 $bgcolor = '';
                                 if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
@@ -1130,7 +1130,7 @@ private function liveviewslots($quizid, $quizcontextid) {
 	foreach ($qreferences as $qreference) {
 		$slotid = $qreference -> itemid;
 		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
+		$questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
 		foreach ($questionversions as $questionversion) {
 			$questionid = $questionversion->questionid;
 		}

@@ -18,7 +18,7 @@ thead th {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    background: #bbb;
+    background: #bb6;
     border: 1px solid;
 }
 
@@ -35,7 +35,7 @@ tbody td:first-child {
     position: -webkit-sticky;
     position: sticky;
     left: 0;
-    background:#eee;
+    background:#ee9;
 }
 
 th, td {
@@ -44,4 +44,9 @@ th, td {
     padding: 2px 5px;
     vertical-align: middle;
     min-width: 200px;
+}
+
+iframe {
+    max-height: 80vh;
+    height: 520px;
 }
