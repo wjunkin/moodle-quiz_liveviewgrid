@@ -24,9 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2022063000;
+$plugin->version   = 2022072700;
 $plugin->requires  = 2022041900;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_liveviewgrid';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release   = 'v3.5.1 (2022063000) for Moodle 4.0+';
+$plugin->release   = 'v4.0.0 (2022072700) for Moodle 4.0+';

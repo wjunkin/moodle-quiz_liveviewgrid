@@ -30,7 +30,6 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $quizid The ID for the quiz instance.
  * @return array The userids for all the students submitting answers.
  */
-/**
 function liveview_who_sofar_gridview($quizid) {
     global $DB;
 
@@ -50,31 +49,6 @@ function liveview_who_sofar_gridview($quizid) {
         $userid = array();
         return $userid;
     }
-}
-*/
-function liveview_who_gridview($quizid, $groupid, $courseid) {
-	global $DB;
-	if ($groupid > 0) {
-		// Make sure the student is in the group.
-		$sql = "SELECT u.id, u.firstname, u.lastname, u.lastaccess, gm.userid, gm.groupid, gm.timeadded FROM {user} u
-			JOIN {groups_members} gm ON gm.userid = u.id 
-			JOIN {role_assignments} ra ON ra.userid = u.id
-			JOIN {role} r ON r.id = ra.roleid
-			JOIN {context} c ON c.id = ra.contextid
-			WHERE r.shortname = 'student' AND c.contextlevel = 50 AND c.instanceid = $courseid AND gm.groupid = $groupid";
-
-	} else {
-		// Make sure the student is in the group.
-		$sql = "SELECT u.id, u.firstname, u.lastname, u.lastaccess FROM {user} u
-			JOIN {role_assignments} ra ON ra.userid = u.id
-			JOIN {role} r ON r.id = ra.roleid
-
-			JOIN {context} c ON c.id = ra.contextid
-			WHERE r.shortname = 'student' AND c.contextlevel = 50 AND c.instanceid = $courseid";
-	}
-	$params = array();
-	$students = $DB->get_records_sql($sql, $params);
-	return $students;
 }
 
 /**
@@ -243,261 +217,310 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
  * @param int $quizid The id for the quiz.
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
  **/
-//function liveviewgrid_get_answers($quizid) {
-function liveviewgrid_getanswers_fast($quizid, $qtype) {
+function liveviewgrid_get_answers($quizid) {
     global $DB;
-    $stanswers = array();
-    $stfraction = array();
-    $stlink = array();
-    $singleqid = optional_param('singleqid', 0, PARAM_INT);
 	if ($singleqid > 0) {
-		$sqldata = "SELECT qasd.*, qa.questionid FROM {question_attempt_step_data} qasd 
+		$sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
+		FROM {question_attempt_step_data} qasd 
 		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
 		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
 		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
 		WHERE qza.quiz = $quizid AND qa.questionid = $singleqid";
 	} else {
-		$sqldata = "SELECT qasd.*, qa.questionid, qza.uniqueid, qza.userid FROM {question_attempt_step_data} qasd 
+		$sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
+		FROM {question_attempt_step_data} qasd 
 		JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
 		JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
 		JOIN {quiz_attempts} qza ON qa.questionusageid = qza.uniqueid
 		WHERE qza.quiz = $quizid";
 	}
 	$params = array();
-	$attemptstepdata = $DB->get_records_sql($sqldata, $params);
+	$data = $DB->get_records_sql($sqldata, $params);
 
-}
-function liveviewgrid_get_answers($quizid, $qtype) {
-    global $DB;
-    $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
     $stlink = array();
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
-    foreach ($quizattempts as $key => $quizattempt) {
-        $usrid = $quizattempt->userid;
-        $qubaid = $quizattempt->uniqueid;
+	// The array for $data to multichoice questions with more than one answer (checkboxes).
+	$datumm = array();
+    foreach ($data as $key => $datum) {
+        $usrid = $datum->userid;
+        $qubaid = $datum->uniqueid;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
-        if ($singleqid > 0) {
-            $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid, 'questionid' => $singleqid));
-        } else {
-            $qattempts = $DB->get_records('question_attempts', array('questionusageid' => $qubaid));
-        }
-        foreach ($qattempts as $qattempt) {
-            //$question = $DB->get_record('question', array('id' => $qattempt->questionid));
-            //if ($question->qtype == 'multichoice') {
-            if ($qtype[$qattempt->questionid] == 'multichoice') {
-                $multioptions = $DB->get_record('qtype_multichoice_options', array('questionid' => $qattempt->questionid));
-                $multisingle = $multioptions->single;
-            } else {
-                $multisingle = 1;
-            }
-            $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
-            foreach ($qattemptsteps as $qattemptstep) {
-                $myresponse = array();
-                if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
-                    || ($qattemptstep->state == 'todo')) {
-                    // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
-                    $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
-                    foreach ($answers as $answer) {
-                        $myresponse[$answer->name] = $answer->value;
-                    }
-                    if ($qtype[$qattempt->questionid] == 'match') {
-                        // If a person answers a question more than once, the question_attempt_step->id changes.
-                        if (!(isset($qtempt[$qattemptstep->id]))) {
-                            $qtempt[$qattemptstep->id] = 1;
-                            $matchgrade[$qattemptstep->id] = 0;
-                            $matchanswer[$qattemptstep->id] = '';
-                        }
-                        $mymatch = array();
-                        $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $qattempt->questionid));
-                        $myquestions = array();
-                        foreach ($subquestions as $subid => $subquestion) {
-                            $questiontext = preg_replace('/<p.+?>/', '', $subquestion->questiontext);
-                            $mymatch[$subid]['qtext'] = preg_replace("/<\/p>/", '', $questiontext);
-                            $mymatch[$subid]['atext'] = $subquestion->answertext;
-                        }
-                        if (isset($myresponse['_stemorder'])) {
-                            $stems[$qattempt->questionid] = explode(',', $myresponse['_stemorder']);
-                            $stemcount[$qattempt->questionid] = count($stems[$qattempt->questionid]);
-                        }
-                        if (isset($myresponse['_choiceorder'])) {
-                            $mchoices[$qattempt->questionid] = explode(',', $myresponse['_choiceorder']);
-                        }
-                        if (count($stems[$qattempt->questionid]) > 0) {
-                            foreach ($stems[$qattempt->questionid] as $stkey => $stvalue) {
-                                $choicekey = 'sub'.$stkey;
-                                if (isset($myresponse[$choicekey])) {
-                                    $mymchoice = $myresponse[$choicekey];
-                                    $stchoice = $mymchoice - 1;
-                                    // The choice array starts at 0 but values in question_attempt_step_data table starts at 1.
-                                    // The value of $stkey gives the place on the screen where the stem is displayed.
-                                    // Using this index in the stems array gives the id for the qtype_match_subquestions table.
-                                    // The choice selected from the mchoices comes from the index value of mymatch in this table.
-                                    $xchoice = $mchoices[$qattempt->questionid][$stchoice];
-                                    $matchanswer[$qattemptstep->id] .= $mymatch[$stems[$qattempt->questionid][$stkey]]['qtext'].
-                                        "->".$mymatch[$xchoice]['atext']."; ";
-                                    if ($stems[$qattempt->questionid][$stkey] == $xchoice) {
-                                        $matchgrade[$qattemptstep->id] ++;
-                                    }
-                                }
-                            }
-                        }
-                        $questionsummary = $qattempt->questionsummary;
-                        preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
-                    }
-                    if (($qtype[$qattempt->questionid] == 'matrix') && ($qattemptstep->state <> 'todo')) {
-                        $matrixresponse = array();
-                        $mgrade = 0;
-                        $mweight = 0.00001;
-                        $qmatrix = $DB->get_record('question_matrix', array('questionid' => $qattempt->questionid));
-                        if ($qmatrix->multiple == 1) {
-                            $mans[$qattemptstep->id] = array();// An array for the checkbox answers, indexed by row and answer.
-                            $myrow = array();// An array to keep track of the rowids.
-                            $qtext = array();// An array for the text for each row.
-                        }
-                        // I need to find the column labels, row texts, and correct answer for each row of this matrix question.
-                        $rowslabels = $DB->get_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
-                        $numrows = count($rowlabels);
-                        // Get text for each row, subscripted by the row id.
-                        $rowtext = array();
-                        foreach ($rowlabels as $key => $rowlabel) {
-                            $rowtext[$rowlabel->id] = $rowlabel->shorttext;
-                        }
-                        foreach ($myresponse as $key => $respon) {
-                            if ($qmatrix->multiple == 1) {
-                                // Checkboxes in this matrix question.
-                                if (preg_match('/cell(\d+)_(\d+)/', $key, $matches)) {
-                                    $rowid = $matches[1];
-                                    $myrow[$rowid] = 1;
-                                    $colid = $matches[2];
-                                    $weight = 0;
-                                    if (($rowid > 0) && ($colid > 0)) {
-                                        $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                        if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
-                                            $weight = $fract->weight;
-                                        }
-                                    }
-                                    $mrow = $DB->get_record('question_matrix_rows',
-                                        array('id' => $rowid, 'matrixid' => $qmatrix->id));
-                                    $qtext[$rowid] = $mrow->shorttext;
-                                    $mcol = $DB->get_record('question_matrix_cols',
-                                        array('id' => $colid, 'matrixid' => $qmatrix->id));
-                                    $mans[$qattemptstep->id][$rowid][$colid] = $mcol->shorttext;
-                                    $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                    if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
-                                        $mweight = $mweight + $mwgt->weight;
-                                    }
-                                }
-                            } else {
-                                // For matrix questions with radio buttons, the key will be cell(\d+).
-                                // This gives the row. The answer gives the column for the answer.
-                                if (preg_match('/cell(\d+)/', $key, $matches)) {
-                                    $rowid = $matches[1];
-                                    $colid = $respon;
-                                    $weight = 0;
-                                    if (($rowid > 0) && ($colid > 0)) {
-                                        $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                        if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
-                                            $weight = $fract->weight;
-                                        }
-                                    }
-                                    $mrow = $DB->get_record('question_matrix_rows',
-                                        array('id' => $rowid, 'matrixid' => $qmatrix->id));
-                                    $qtext = $mrow->shorttext;
-                                    $mcol = $DB->get_record('question_matrix_cols',
-                                        array('id' => $colid, 'matrixid' => $qmatrix->id));
-                                    $mans[$qattemptstep->id] = $mcol->shorttext;
-                                    $matrixresponse[] = $qtext.':&nbsp;'.$mans[$qattemptstep->id];
-                                    $parms = array('rowid' => $rowid, 'colid' => $colid);
-                                    if ($mwgt = $DB->get_record('question_matrix_weights', $parms)) {
-                                        $mweight = $mweight + $mwgt->weight;
-                                    }
-                                }
-                            }
-                        }
-                        if ($qmatrix->multiple == 1) {
-                            foreach ($myrow as $rowkey => $value) {
-                                $matrixresponse[$rowkey] = $qtext[$rowkey].":&nbsp;".join(' & ', $mans[$qattemptstep->id][$rowkey]);
-                            }
-                        }
-                        $stanswers[$usrid][$qattempt->questionid] = join(';&nbsp;', $matrixresponse);
-                        $stfraction[$usrid][$qattempt->questionid] = $mweight / $numrows;
-                    } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
-                        $clozeresponse = array();// An array for the Close responses.
-                        $clozegrade = 0;
-                        $multimresponse = array();
-                        $multimgrade = 0;
-                        foreach ($myresponse as $key => $respon) {
-                            // For cloze questions the key will be sub(\d+)_answer.
-                            // I need to take the answer that follows part (\d+):(*)?;.
-                            if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {
-                                $clozequestionid = $qattempt->questionid;
-                                // Finding the number of parts.
-                                $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
-                                $myres = array();
-                                $myres[$key] = $respon;
-                                $newres = $mydm->get_fraction($qattempt->slot, $myres);
-                                $clozegrade = $clozegrade + $newres[1];
-                                $onemore = $numclozeparts + 1;
-                                $tempans = $newres[0]."; part $onemore";
-                                $index = $matches[1];
-                                $nextindex = $index + 1;
-                                $tempcorrect = 'part '.$matches[1].': ';
-                                if (preg_match("/$tempcorrect(.*); part $nextindex/", $tempans, $ansmatch)) {
-                                    $clozeresponse[$matches[1]] = $ansmatch[1];
-                                }
-                            }
-                            // For matrix questions the key will be cell(\d+).
-                        }
-                        $response = array();
-                        if (isset($myresponse['attachments'])) {
-                            // Get the linked icon appropriate for this attempt.
-                            unset($myresponse['attachments']);
-                            if (!isset($stanswers[$usrid][$qattempt->questionid])) {
-                                $stanswers[$usrid][$qattempt->questionid] = '';// To make sure stanswers is set.
-                            }
-                            $stlink[$usrid][$qattempt->questionid] = $mydm->attachment_link(1);
-                        } else {
-                            $stlink[$usrid][$qattempt->questionid] = ' ';
-                        }
-                        if (isset($myresponse['answer'])) {
-                            $response = $mydm->get_fraction($qattempt->slot, $myresponse);
-                        }
-                        if (count($clozeresponse) > 0) {
-                            $stanswers[$usrid][$qattempt->questionid] = $clozeresponse;
-                            $stfraction[$usrid][$qattempt->questionid] = $clozegrade;
-                        } else {
-                            if (isset($response[0])) {
-                                $stanswers[$usrid][$qattempt->questionid] = $response[0];
-                            }
-                        }
-                        if (isset($response[1])) {
-                            $stfraction[$usrid][$qattempt->questionid] = $response[1];
-                            if ($response[1] == 'NA') {// Make code and tags ineffective.
-                                $stanswers[$usrid][$qattempt->questionid] = $myresponse['answer'];
-                            }
-                        }
-                    } else if ($multisingle == 0) {
-                        // At this point this is only to handle multichoice with multiple answers, mm type.
-                        list($mmanswer, $mmfraction) = mmultichoice($qattempts, $usrid);
-                        $stanswers[$usrid][$qattempt->questionid] = $mmanswer;
-                        $stfraction[$usrid][$qattempt->questionid] = $mmfraction;
-                    }
-                }
-            }
-            if ($qtype[$qattempt->questionid] == 'match') {
-                foreach ($matchanswer as $qtemptid => $matanswer) {
-                    $stanswers[$usrid][$qattempt->questionid] = $matanswer;
-                    $stfraction[$usrid][$qattempt->questionid] = $matchgrade[$qtemptid] / $stemcount[$qattempt->questionid];
-                }
-            }
-        }
-    }
-    $returnvalues = array($stanswers, $stfraction, $stlink);
-    return $returnvalues;
+		$question = $DB->get_record('question', array('id' => $datum->questionid));
+		if ($question->qtype == 'multichoice') {
+			$multidata[$datum->id] = $datum;
+			// I will deal with multichoice later.
+		} elseif (($question->qtype == 'essay') || ($question->qtype == 'shortanswer')){
+			if ($datum->name == 'answer') {
+				$stanswers[$usrid][$datum->questionid] = $datum->value;
+			}
+		} elseif ($question->qtype == 'truefalse') {
+			if ($datum->name == 'answer') {
+				$tfres = $DB->get_record('question_truefalse', array('question' => $datum->questionid));
+				if ($datum->value == 1) {
+					$tfans = $tfres->trueanswer;
+				} else {
+					$tfans = $tfres->falseanswer;
+				}
+				$tfresponse = $DB->get_record('question_answers', array('id' => $tfans));
+				$stanswers[$usrid][$datum->questionid] = $tfresponse->answer;
+				$stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
+			}
+		} else {
+			$myresponse = array();
+			if (($datum->state == 'complete') || ($datum->state == 'invalid')
+				|| ($datum->state == 'todo')) {
+				// Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
+				$myresponse[$datum->name] = $datum->value;
+				if ($question->qtype == 'match') {
+					// If a person answers a question more than once, the question_attempt_step->id changes.
+					if (!(isset($qtempt[$datum->attemptstepid]))) {
+						$qtempt[$datum->attemptstepid] = 1;
+						$matchgrade[$datum->attemptstepid] = 0;
+						$matchanswer[$datum->attemptstepid] = '';
+					}
+					$mymatch = array();
+					$subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $question->id));
+					$myquestions = array();
+					foreach ($subquestions as $subid => $subquestion) {
+						$questiontext = preg_replace('/<p.+?>/', '', $subquestion->questiontext);
+						$mymatch[$subid]['qtext'] = preg_replace("/<\/p>/", '', $questiontext);
+						$mymatch[$subid]['atext'] = $subquestion->answertext;
+					}
+					if (isset($myresponse['_stemorder'])) {
+						$stems[$datum->questionid] = explode(',', $myresponse['_stemorder']);
+						$stemcount[$datum->questionid] = count($stems[$datum->questionid]);
+					}
+					if (isset($myresponse['_choiceorder'])) {
+						$mchoices[$datum->questionid] = explode(',', $myresponse['_choiceorder']);
+					}
+					if (count($stems[$datum->questionid]) > 0) {
+						foreach ($stems[$datum->questionid] as $stkey => $stvalue) {
+							$choicekey = 'sub'.$stkey;
+							if (isset($myresponse[$choicekey])) {
+								$mymchoice = $myresponse[$choicekey];
+								$stchoice = $mymchoice - 1;
+								// The choice array starts at 0 but values in question_attempt_step_data table starts at 1.
+								// The value of $stkey gives the place on the screen where the stem is displayed.
+								// Using this index in the stems array gives the id for the qtype_match_subquestions table.
+								// The choice selected from the mchoices comes from the index value of mymatch in this table.
+								$xchoice = $mchoices[$datum->questionid][$stchoice];
+								$matchanswer[$datum->attemptstepid] .= $mymatch[$stems[$datum->questionid][$stkey]]['qtext'].
+									"->".$mymatch[$xchoice]['atext']."; ";
+								if ($stems[$datum->questionid][$stkey] == $xchoice) {
+									$matchgrade[$datum->attemptstepid] ++;
+								}
+							}
+						}
+					}
+					$questionsummary = $datum->questionsummary;
+					preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
+				}
+				if (($question->qtype == 'matrix') && ($datum->state <> 'todo')) {
+					if (!(isset($matrixresponse[$datum->attemptstepid]))) {
+						$matrixresponse[$datum->attemptstepid] = array();
+					}
+					$qmatrix = $DB->get_record('question_matrix', array('questionid' => $datum->questionid));
+					$rowlabels = $DB->get_records('question_matrix_rows', array('matrixid' => $qmatrix->id));
+					$numrows = count($rowlabels);
+					if (!(isset($matrixrowanswers[$qmatrix->id]))) {//This is the first time for this matrix.
+						// Get the correct columns for each row in the array matrixanswers[matrixid][rowid].
+						foreach ($rowlabels as $key => $rowlabel) {
+							$matrixanswers[$qmatrix->id][$key] = array();
+							$rowvalues = $DB->get_records('question_matrix_weights', array('rowid' => $key));
+							foreach ($rowvalues as $rkey => $rowvalue) {
+								if ($rowvalue->weight > 0.9) {
+									array_push($matrixanswers[$qmatrix->id][$key], $rowvalue->colid);
+								}
+							} 
+						}
+						$matrixrowanswers[$qmatrix->id] = 1;
+					}	
+					if (($qmatrix->multiple == 1) && (!(isset($mans[$datum->attemptstepid])))) {
+						$mans[$datum->attemptstepid] = array();// An array for the checkbox answers, indexed by row and answer.
+						$myrow[$datum->attemptstepid] = array();// An array to keep track of the rowids.
+						$qtext[$datum->attemptstepid] = array();// An array for the text for each row.
+						$myweight[$datum->attemptstepid] = array();
+					}
+					// I need to find the column labels, row texts, and correct answer for each row of this matrix question.
+					// Get text for each row, subscripted by the row id.
+					$rowtext = array();
+					foreach ($rowlabels as $key => $rowlabel) {
+						$rowtext[$rowlabel->id] = $rowlabel->shorttext;
+						if (!(isset($myweight[$datum->attemptstepid][$key]))) {
+							$myweight[$datum->attemptstepid][$key] = array();
+						}
+					}
+					foreach ($myresponse as $key => $respon) {
+						if ($qmatrix->multiple == 1) {
+							// Checkboxes in this matrix question.
+							if (preg_match('/cell(\d+)_(\d+)/', $key, $matches)) {
+								$rowid = $matches[1];
+								$myrow[$rowid] = 1;
+								$colid = $matches[2];
+								$weight = 0;
+								if (($rowid > 0) && ($colid > 0)) {
+									$parms = array('rowid' => $rowid, 'colid' => $colid);
+									if ($fract = $DB->get_record('question_matrix_weights', $parms)) {
+										$weight = $fract->weight;
+										if ($weight > 0.9) {
+											array_push($myweight[$datum->attemptstepid][$rowid], $colid);
+										}
+									}
+								}
+								$mrow[$datum->attemptstepid] = $DB->get_record('question_matrix_rows',
+									array('id' => $rowid, 'matrixid' => $qmatrix->id));
+								$qtext[$datum->attemptstepid][$rowid] = $mrow[$datum->attemptstepid]->shorttext;
+								$mcol = $DB->get_record('question_matrix_cols',
+									array('id' => $colid, 'matrixid' => $qmatrix->id));
+								$mans[$datum->attemptstepid][$rowid][$colid] = $mcol->shorttext;
+								$parms = array('rowid' => $rowid, 'colid' => $colid);
+							}
+						} else {
+							// For matrix questions with radio buttons, the key will be cell(\d+).
+							// This gives the row. The answer gives the column for the answer.
+							if (preg_match('/cell(\d+)/', $key, $matches)) {
+								$rowid = $matches[1];
+								$colid = $respon;
+								$mrow = $DB->get_record('question_matrix_rows',
+									array('id' => $rowid, 'matrixid' => $qmatrix->id));
+								$qtext = $mrow->shorttext;
+								$mcol = $DB->get_record('question_matrix_cols',
+									array('id' => $colid, 'matrixid' => $qmatrix->id));
+								$mans[$datum->attemptstepid] = $mcol->shorttext;
+								$matrixresponse[$datum->attemptstepid][] = $qtext.':&nbsp;'.$mans[$datum->attemptstepid];
+							}
+						}
+					}
+					if ($qmatrix->multiple == 1) {
+						foreach ($myrow as $rowkey => $value) {
+							if (strlen($qtext[$datum->attemptstepid][$rowkey]) > 0) {
+								$matrixresponse[$datum->attemptstepid][$rowkey] = $qtext[$datum->attemptstepid][$rowkey].":&nbsp;".join(' & ', $mans[$datum->attemptstepid][$rowkey]);
+							}
+						}
+					}
+					$stanswers[$usrid][$datum->questionid] = join(';&nbsp;', $matrixresponse[$datum->attemptstepid]);
+					$stfraction[$usrid][$datum->questionid] = 0.0001;
+				} else if ((count($myresponse) > 0) && ($multisingle == 1)) {
+					$clozeresponse = array();// An array for the Close responses.
+					$clozegrade = 0;
+					$multimresponse = array();
+					$multimgrade = 0;
+					foreach ($myresponse as $key => $respon) {
+						// For cloze questions the key will be sub(\d+)_answer.
+						// I need to take the answer that follows part (\d+):(*)?;.
+						if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {
+							$clozequestionid = $datum->questionid;
+							// Finding the number of parts.
+							$numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
+							$myres = array();
+							$myres[$key] = $respon;
+							$newres = $mydm->get_fraction($datum->slot, $myres);
+							$clozegrade = $clozegrade + $newres[1];
+							$onemore = $numclozeparts + 1;
+							$tempans = $newres[0]."; part $onemore";
+							$index = $matches[1];
+							$nextindex = $index + 1;
+							$tempcorrect = 'part '.$matches[1].': ';
+							if (preg_match("/$tempcorrect(.*); part $nextindex/", $tempans, $ansmatch)) {
+								$clozeresponse[$matches[1]] = $ansmatch[1];
+							}
+						}
+						// For matrix questions the key will be cell(\d+).
+					}
+					$response = array();
+					if (isset($myresponse['attachments'])) {
+						// Get the linked icon appropriate for this attempt.
+						unset($myresponse['attachments']);
+						if (!isset($stanswers[$usrid][$datum->questionid])) {
+							$stanswers[$usrid][$datum->questionid] = '';// To make sure stanswers is set.
+						}
+						$stlink[$usrid][$datum->questionid] = $mydm->attachment_link(1);
+					} else {
+						$stlink[$usrid][$datum->questionid] = ' ';
+					}
+					if (isset($myresponse['answer'])) {
+						$response = $mydm->get_fraction($datum->slot, $myresponse);
+					}
+					if (count($clozeresponse) > 0) {
+						$stanswers[$usrid][$datum->questionid] = $clozeresponse;
+						$stfraction[$usrid][$datum->questionid] = $clozegrade;
+					} else {
+						if (isset($response[0])) {
+							$stanswers[$usrid][$datum->questionid] = $response[0];
+						}
+					}
+					if (isset($response[1])) {
+						$stfraction[$usrid][$datum->questionid] = $response[1];
+						if ($response[1] == 'NA') {// Make code and tags ineffective.
+							$stanswers[$usrid][$datum->questionid] = $myresponse['answer'];
+						}
+					}
+				}
+			}
+		}
 
+		if ($question->qtype == 'match') {
+			foreach ($matchanswer as $qtemptid => $matanswer) {
+				$stanswers[$usrid][$datum->questionid] = $matanswer;
+				$stfraction[$usrid][$datum->questionid] = $matchgrade[$qtemptid] / $stemcount[$datum->questionid];
+			}
+		}
+    }
+	$order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
+	if (count($multidata) > 0) {// Here all questions are qtype = multichoice.
+		foreach ($multidata as $mdkey => $multidatum) {
+			$questionid = $multidatum->questionid;
+			$usrid = $multidatum->userid;
+			if (!(isset($stfraction[$usrid][$questionid]))) {
+				$stanswers[$usrid][$questionid] = ' ';
+				$stfraction[$usrid][$questionid] = .001;
+			}
+
+			if ($multidatum->name == '_order') { 
+				$order[$usrid][$questionid] = $multidatum->value;
+			}
+			$myorder = explode(',', $order[$usrid][$questionid]);
+			if ($multidatum->name == 'answer') {// Multichice with only one answer.
+				$chosen = $myorder[$multidatum->value];
+				$ans = $DB->get_record('question_answers', array('id' => $chosen));
+				$anstext = preg_replace('/<p.+?>/', '', $ans->answer);
+				$anstext = preg_replace("/<\/p>/", '', $anstext);
+				$stanswers[$usrid][$questionid] = $anstext;
+				$stfraction[$usrid][$questionid] = $ans->fraction;
+			}
+			
+			if (preg_match('/^choice(\d+)/', $multidatum->name, $matches)) {// A multichoice with several possible answers (checkboxes).
+				if (!(isset($start[$multidatum->attemptstepid]))) {
+					$multians[$multidatum->attemptstepid] = array();
+					$stfraction[$usrid][$questionid] = .001;
+					$start[$multidatum->attemptstepid] = 1;
+					$yes = array();
+				}
+				if (!(isset($questionanswers[$questionid]))) {
+					$qans = $DB->get_records('question_answers', array('question' => $questionid));
+					$qarray = array();
+					foreach ($qans as $qan) {
+						$qarray[$qan->id] = $qan;
+					}
+					$questionanswers[$questionid] = $qarray;
+				}
+				if ($multidatum->value) {
+					$myes = $questionanswers[$questionid][$myorder[$matches[1]]];
+					$anstext = preg_replace('/<p.+?>/', '', $myes->answer);
+					$yes[] = preg_replace("/<\/p>/", '', $anstext);
+					$stfraction[$usrid][$questionid] = $stfraction[$usrid][$questionid] + $myes->fraction;
+				}
+				$stanswers[$usrid][$questionid] = join('; ', $yes);
+				$stfraction[$usrid][$questionid] = $stfraction[$usrid][$questionid] + 0.0001;
+			}
+		}
+	}
+			
+	$returnvalues = array($stanswers, $stfraction, $stlink);
+    return $returnvalues;
 }
 /**
  * Return the student answers and fractions for multichoice questions with more than one choice.
@@ -538,12 +561,12 @@ function mmultichoice($qattempts, $usrid) {
                 $multresponse = preg_replace('/\<\/p\>\<p\>/', "; ", $multichoiceresponse);
                 $multresponse = preg_replace('/^\<p\>/', "", $multresponse);
                 $multresponse = preg_replace('/\<\/p\>$/', "", $multresponse);
-                $stanswers[$usrid][$qattempt->questionid] = $multresponse;
-                $stfraction[$usrid][$qattempt->questionid] = $mgrade;
+                $stanswers[$usrid][$datum->questionid] = $multresponse;
+                $stfraction[$usrid][$datum->questionid] = $mgrade;
             }
         }
     }
-    $result = array($stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]);
+    $result = array($stanswers[$usrid][$datum->questionid], $stfraction[$usrid][$datum->questionid]);
     return $result;
 }
 /**
