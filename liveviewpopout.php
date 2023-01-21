@@ -60,7 +60,7 @@ require_capability('mod/quiz:viewreports', $context);
 
 $quizcontextid = $context->id;
 $slots = liveviewslots($quizid, $quizcontextid);
-$question = liveviewquestion($slots);
+$question = liveviewquestion($slots, $singleqid);
 $course = $DB->get_record('course', array('id' => $quiz->course));
 require_login($course, true, $cm);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
@@ -585,50 +585,6 @@ if ($showresponses) {
     }
 } else {
     echo "\n</table>";
-}
-
-/**
- * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
- * @param int $quizid The id for this quiz.
- * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
- */
-function liveviewslots($quizid, $quizcontextid) {
-	global $DB;
-	$slots = array();
-	$slotsvalue = array();
-	$myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-	$singleqid = optional_param('singleqid', 0, PARAM_INT);
-	foreach ($myslots as $key => $value) {
-		$slotsvalue[$key] = $value->slot;
-	}
-	$qreferences = $DB->get_records('question_references', array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
-	foreach ($qreferences as $qreference) {
-		$slotid = $qreference -> itemid;
-		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
-		foreach ($questionversions as $questionversion) {
-			$questionid = $questionversion->questionid;
-		}
-		$slots[$questionid] = $slotsvalue[$slotid];
-	}
-	return $slots;
-}
-/**
- * Function to get the qtype, name, questiontext for each question.
- * @param array $slots and array of slot ids indexed by question ids.
- * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
- */
-function liveviewquestion($slots) {
-    global $DB;
-    $question = array();
-    foreach ($slots as $questionid => $slotvalue) {
-        if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
-            $question['qtype'][$questionid] = $myquestion->qtype;
-            $question['name'][$questionid] = $myquestion->name;
-            $question['questiontext'][$questionid] = $myquestion->questiontext;
-        }
-    }
-    return $question;
 }
 
 /**

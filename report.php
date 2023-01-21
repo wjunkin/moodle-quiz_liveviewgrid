@@ -84,30 +84,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
-        $changeoption = optional_param('changeoption', 0, PARAM_INT);
-        $rag = optional_param('rag', 1, PARAM_INT);
-        $evaluate = optional_param('evaluate', 1, PARAM_INT);
-        $showkey = optional_param('showkey', 1, PARAM_INT);
-        $order = optional_param('order', 0, PARAM_INT);
-        $group = optional_param('group', 0, PARAM_INT);
-        $id = optional_param('id', 0, PARAM_INT);
-        $mode = optional_param('mode', '', PARAM_ALPHA);
-        $compact = optional_param('compact', 1, PARAM_INT);
-        $singleqid = optional_param('singleqid', 0, PARAM_INT);
-        $showanswer = optional_param('showanswer', 0, PARAM_INT);
-        $shownames = optional_param('shownames', 1, PARAM_INT);
-        $status = optional_param('status', 0, PARAM_INT);
-        $refresht = optional_param('refresht', 3, PARAM_INT);
-		$activetime = optional_param('activetime', 10, PARAM_INT);
-        if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
-            $haslesson = 1;
-            $lessonid = optional_param('lessonid', 0, PARAM_INT);
-            $showlesson = optional_param('showlesson', 0, PARAM_INT);
-        } else {
-            $haslesson = 0;
-            $lessonid = 0;
-            $showlesson = 0;
-        }
+$hidden = liveviewgrid_update_hidden($course);
+foreach ($hidden as $hkey => $hvalue) {
+	$$hkey = $hvalue;
+}
         // This is only needed if this code is going to display the table.
 		if ($singleqid > 0) {
 			$slots = array();
@@ -131,39 +111,17 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
-        // The array of hidden values is hidden[].
-        $hidden = array();
-        $hidden['rag'] = $rag;
-        $hidden['id'] = $id;
-        $hidden['mode'] = $mode;
-        $hidden['evaluate'] = $evaluate;
-        $hidden['showkey'] = $showkey;
-        $hidden['order'] = $order;
-        $hidden['compact'] = $compact;
-        $hidden['group'] = $group;
-        $hidden['singleqid'] = $singleqid;
-        $hidden['showanswer'] = $showanswer;
-        $hidden['shownames'] = $shownames;
-        $hidden['status'] = $status;
-        $hidden['haslesson'] = $haslesson;
-        $hidden['showlesson'] = $showlesson;
-        $hidden['lessonid'] = $lessonid;
-        $hidden['refresht'] = $refresht;
-		$hidden['activetime'] = $activetime;
-        foreach ($hidden as $hiddenkey => $hiddenvalue) {
-            if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
-                && (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
-                // Don't carry group, id, singleqid, haslesson, or lessonid.
-                if ($changeoption) {
-                    $_SESSION[$hiddenkey] = $hiddenvalue;
-                } else {
-                    if (isset($_SESSION[$hiddenkey])) {
-                        $$hiddenkey = $_SESSION[$hiddenkey];
-                        $hidden[$hiddenkey] = $_SESSION[$hiddenkey];
-                    }
-                }
-            }
-        }
+		if ($refresht < 200) {
+			$myt = $refresht*10;
+			$refreshttitle = get_string('willautorefresh', 'quiz_liveviewgrid')."$myt".get_string('ifnewresponse', 'quiz_liveviewgrid');
+			$refreshmessage = get_string('autorefreshin', 'quiz_liveviewgrid')."$myt".get_string('ifnewresponse', 'quiz_liveviewgrid');
+		} else {
+			$refreshttitle = get_string('willnotauto', 'quiz_liveviewgrid');
+			$refreshmessage = get_string('autorefreshoff', 'quiz_liveviewgrid');
+		}
+		echo "<i class=\"icon fa fa-question-circle text-info fa-fw \"";
+		echo "  title=\"$refreshttitle\" role=\"img\" aria-label=\"$refreshttitle\"></i>";
+		echo $refreshmessage;
         $showresponses = false;
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
@@ -225,22 +183,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
         $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
-        //echo "\n<a href='$allresponsesurl'><button>".get_string('viewresponses', 'quiz_liveviewgrid')."</button></a>";
         if ($showresponses) {
-            // Script to hide or display the option form.
-            echo "\n<script>";
-            echo "\nfunction optionfunction() {";
-            echo "\n  var e=document.getElementById(\"option1\");";
-            echo "\n  var b=document.getElementById(\"button1\");";
-            echo "\n  if(e.style.display == \"none\") { ";
-            echo "\n      e.style.display = \"block\";";
-            echo "\n        b.innerHTML = \"".get_string('clicktohide', 'quiz_liveviewgrid')."\";";
-            echo "\n  } else {";
-            echo "\n      e.style.display=\"none\";";
-            echo "\n      b.innerHTML = \"".get_string('clicktodisplay', 'quiz_liveviewgrid')."\";";
-            echo "\n  }";
-            echo "\n}";
-            echo "\n</script>  ";
 			// CSS style for the table.
 			echo "\n<style>";
 			echo "\n .lrtable {";
@@ -249,7 +192,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 			echo "\n</style>";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
-//                $qtext2 = liveviewgrid_display_question($cm->id, $singleqid);
 				$qtext2 = $questiontext->questiontext;
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($questiontext->qtype == 'matrix') {
@@ -281,118 +223,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
                 echo "\n<br />";
             }
-            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
-            echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
-            echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
-            echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
-            echo "<input type='hidden' name='changeoption' value=1>";
-            echo "<input type='hidden' name='id' value=$id>";
-            echo "<input type='hidden' name='mode' value=$mode>";
-            echo "<input type='hidden' name='singleqid' value=$singleqid>";
-            echo "<input type='hidden' name='group' value=$group>";
-            if ($haslesson) {
-                echo "<input type='hidden' name='lessonid' value=$lessonid>";
-            }
-            $checked = array();
-            $notchecked = array();
-            foreach ($hidden as $hiddenkey => $hiddenvalue) {
-                if ($hiddenvalue) {
-                    $checked[$hiddenkey] = 'checked';
-                    $notchecked[$hiddenkey] = '';
-                } else {
-                    $checked[$hiddenkey] = '';
-                    $notchecked[$hiddenkey] = 'checked';
-                }
-            }
-            $twait = array(1, 2, 3, 6, 200);
-            foreach ($twait as $myt) {
-                $tindex = 'refresht'.$myt;
-                if ($refresht == $myt) {
-                    $checked[$tindex] = 'checked';
-                } else {
-                    $checked[$tindex] = '';
-                }
-            }
-			$tactive = array(5, 10, 30, 60, 600);
-            foreach ($tactive as $mat) {
-                $aindex = 'activet'.$mat;
-                if ($activetime == $mat) {
-                    $checked[$aindex] = 'checked';
-                } else {
-                    $checked[$aindex] = '';
-                }
-            }
-
-            $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
-            echo "\n<table>";
-            echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='showkey' value=1 ".$checked['showkey']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='showkey' value=0 ".$notchecked['showkey']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='shownames' value=0 ".$notchecked['shownames']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
-            echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='order' value=0 ".$notchecked['order']."> ";
-            echo get_string('lastname', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('makecompact', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='compact' value=1 ".$checked['compact']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='compact' value=0 ".$notchecked['compact']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            if ($singleqid > 0) {
-                echo "\n<tr>".$td.get_string('correctanswer', 'quiz_liveviewgrid')."</td>";
-                echo $td."<input type='radio' name='showanswer' value=1 ".$checked['showanswer']."> ";
-                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-                echo $td."<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer']."> ";
-                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            }
-            echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('showstatus', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='status' value=1 ".$checked['status']."> ";
-            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='status' value=0 ".$notchecked['status']."> ";
-            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            echo "\n<tr>".$td.get_string('checkt', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='refresht' value=1 ".$checked['refresht1'].">10 ";
-            echo " <input type='radio' name='refresht' value=2 ".$checked['refresht2'].">20 ";
-            echo " <input type='radio' name='refresht' value=3 ".$checked['refresht3'].">30 ";
-            echo " <input type='radio' name='refresht' value=6 ".$checked['refresht6'].">60 ";
-            echo " <input type='radio' name='refresht' value=200 ".$checked['refresht200'].">".
-                get_string('nevert', 'quiz_liveviewgrid')."</td>";
-            echo "\n<tr>".$td.get_string('tobeactive', 'quiz_liveviewgrid')."</td>";
-            echo $td."<input type='radio' name='activetime' value=5 ".$checked['activet5'].">5";
-            echo " <input type='radio' name='activetime' value=10 ".$checked['activet10'].">10";
-            echo " <input type='radio' name='activetime' value=30 ".$checked['activet30'].">30";
-            echo " <input type='radio' name='activetime' value=60 ".$checked['activet60'].">60";
-            echo " <input type='radio' name='activetime' value=600 ".$checked['activet600'].">600";
-			echo get_string('minutes', 'quiz_liveviewgrid');
-            echo "</td></tr>";
-			if ($haslesson) {
-                echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
-                echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
-                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-                echo $td."<input type='radio' name='showlesson' value=0 ".$notchecked['showlesson']."> ";
-                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
-            }
-            echo "\n</table>";
-            $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
-            echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
-            echo "</div>";
+			liveviewgrid_display_option_form($hidden);
         }
         // Button to select lesson.
         if ($showlesson) {
@@ -491,23 +322,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n .blinkhidden{";
             echo "\n    color: transparent;";
             echo "\n}";
-/**
-            echo "\n.first-col {";
-            echo "\n  position: absolute;";
-            echo "\n	width: 10em;";
-            echo "\n	margin-left: -10.1em; background:#ffffff;";
-            echo "\n}";
-
-            echo "\n.table-wrapper {";
-            echo "\n    overflow-x: scroll;";
-            if ($shownames) {
-                echo "\n	margin: 0 0 0 10em;";
-            } else {
-                echo "\n     margin: 0 0 0 0;";
-            }
-            echo "\n}";
-
-*/            echo "\n</style>";
+           echo "\n</style>";
 
             // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
             echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
@@ -579,7 +394,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
         if ($singleqid > 0) {
             // Find any student who has not submitted an answer if names are hidden.
-
             // Getting and preparing to sorting users.
             // The first and last name are in the initials array.
             $initials = array();
@@ -739,9 +553,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
 					$getvalues .= "&activetime=$activetime";
-                    echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-                        frameBorder=0 height='520' width='800'>";
-                    echo "</iframe>";
+						echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+							frameBorder=0 height='520' width='800'>";
+						echo "</iframe>";
                 } else if ($questiontext->qtype == 'matrix') {
                     $mdata = array();// An array for the number of times a row is answered correctly.
                     $mdatax = array();// An array for the number of times a row is answered incorrectly.
@@ -799,8 +613,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                         $rown ++;
                     }
                     $iframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/matrixgraph.php?$getvalues";
-                    echo "<iframe src=\"$iframeurl\" frameBorder=0 height='520' width='800'>";
-                    echo "</iframe>";
+					if ($refresht == 200) {
+						liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
+					} else {
+						
+						echo "<iframe src=\"$iframeurl\" frameBorder=0 width='800'>";
+						echo "</iframe>";
+					}
                     // End of matrix histogram.
                 }
             }
@@ -1015,53 +834,18 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo "\n</table>";
                 echo "\n</div>";
             }
-
-            // Javascript to refresh the page if the contents of the table change.
-            $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
-            // The number of seconds before checking to see if the answers have changed is the $refreshtime.
-            $refreshtime = 10 * $refresht;
-            $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
-            $sessiontimeout = $sessionconfig->value;
-            $maxrepeat = intval($sessiontimeout / $refreshtime);
-            // The number of refreshes without a new answer is $numrefresh.
-            $numrefresh = 0;
-            $replacetime = $refreshtime * 1000;
-            echo "\n\n<script type=\"text/javascript\">\nvar http = false;\nvar x=\"\";
-                    \n\nif(navigator.appName == \"Microsoft Internet Explorer\")
-                    {\nhttp = new ActiveXObject(\"Microsoft.XMLHTTP\");\n} else {\nhttp = new XMLHttpRequest();}";
-            echo "\n var numrefresh = $numrefresh;";
-            echo "\n var maxrepeat = $maxrepeat;";
-            echo "\n\nfunction replace() { ";
-            echo "\n    numrefresh ++;";
-            echo "\n    x=document.getElementById('timemodified');";
-            echo "\n    myname = x.getAttribute('name');";
-            echo "\n    if(numrefresh < $maxrepeat) {";
-            echo "\n       var t=setTimeout(\"replace()\",$replacetime);";
-            echo "\n    } else {";
-            echo "\n       myFunction();";
-            echo "\n    }";
-            echo "\n    http.open(\"GET\", \"".$graphicshashurl."\", true);";
-            echo "\n    http.onreadystatechange=function() {";
-            echo "\n       if(http.readyState == 4) {";
-            echo "\n          var newresponse = parseInt(http.responseText);";
-            echo "\n          var priormyname = parseInt(myname);";
-            echo "\n          if(newresponse == priormyname){";// Don't do anything.
-            echo "\n             } else {";
-            echo "\n                location.reload(true);";
-            echo "\n             }";
-            echo "\n        }";
-            echo "\n     }";
-            echo "\n  http.send(null);";
-            echo "\n}\nreplace();";
-            echo "\n</script>";
         } else {
-            $getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact&group=$group";
-            $getvalues .= "&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson&showlesson=$showlesson";
-            $getvalues .= "&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
-            $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
-            echo "<iframe src=\"$tableiframeurl\" frameBorder=0 height='520' width='100%'>";
-            echo "</iframe>";
-        }
+            if ($refresht == 200) {
+				liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
+			} else {
+				$getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact&group=$group";
+				$getvalues .= "&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson&showlesson=$showlesson";
+				$getvalues .= "&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
+				$tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
+				echo "<iframe src=\"$tableiframeurl\" frameBorder=10 width='100%'>";
+				echo "</iframe>";
+			}
+		}
         return true;
     }
     /**

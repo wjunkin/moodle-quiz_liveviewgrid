@@ -34,31 +34,13 @@ require_once($CFG->dirroot."/question/engine/lib.php");
 // The function liveviewgrid_get_answers($quizid).
 
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
-$rag = optional_param('rag', 1, PARAM_INT);
-$evaluate = optional_param('evaluate', 1, PARAM_INT);
-$showkey = optional_param('showkey', 1, PARAM_INT);
-$order = optional_param('order', 0, PARAM_INT);
-$group = optional_param('group', 0, PARAM_INT);
 $id = optional_param('id', 0, PARAM_INT);
-$mode = optional_param('mode', '', PARAM_ALPHA);
-$compact = optional_param('compact', 1, PARAM_INT);
-$singleqid = optional_param('singleqid', 0, PARAM_INT);
-$showanswer = optional_param('showanswer', 0, PARAM_INT);
-$shownames = optional_param('shownames', 1, PARAM_INT);
-$status = optional_param('status', 0, PARAM_INT);
-$refresht = optional_param('refresht', 3, PARAM_INT);
-$activetime = optional_param('activetime', 10, PARAM_INT);
 $cm = $DB->get_record('course_modules', array('id' => $id));
 $course = $DB->get_record('course', array('id' => $cm->course));
 $quiz = $DB->get_record('quiz', array('id' => $cm->instance));
-if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
-    $haslesson = 1;
-    $lessonid = optional_param('lessonid', 0, PARAM_INT);
-    $showlesson = optional_param('showlesson', 0, PARAM_INT);
-} else {
-    $haslesson = 0;
-    $lessonid = 0;
-    $showlesson = 0;
+$hidden = liveviewgrid_update_hidden($course);
+foreach ($hidden as $hkey => $hvalue) {
+	$$hkey = $hvalue;
 }
 echo "<html><head>";
 echo "<title>".get_string('iframe', 'quiz_liveviewgrid').$quiz->name."</title>";
@@ -78,7 +60,7 @@ require_capability('mod/quiz:viewreports', $context);
 require_login($course, true, $cm);
 $quizcontextid = $context->id;
 $slots = liveviewslots($quizid, $quizcontextid);
-$question = liveviewquestion($slots);
+$question = liveviewquestion($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
@@ -248,22 +230,7 @@ echo "\n}";
 echo "\n .blinkhidden{";
 echo "\n    color: transparent;";
 echo "\n}";
-/**
-echo "\n.first-col {";
-echo "\n  position: absolute;";
-echo "\n	width: 10em;";
-echo "\n	margin-left: -10.1em; background:#ffffff;";
-echo "\n}";
-
-echo "\n.table-wrapper {";
-echo "\n    overflow-x: scroll;";
-if ($shownames) {
-    echo "\n	margin: 0 0 0 10em;";
-} else {
-    echo "\n     margin: 0 0 0 0;";
-}
-echo "\n}";
-*/echo "\n</style>";
+echo "\n</style>";
 // CSS style for the table.
 echo "\n<style>";
 echo "\n .lrtable {";
@@ -655,49 +622,4 @@ function liveviewquizmaxtime($quizcontextid) {
     $arg = 'max(qa.timemodified)';
     $qmaxtime = intval($quiztime->$arg) + 1;
     return $qmaxtime;
-}
-
-/**
- * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
- * @param int $quizid The id for this quiz.
- * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
- */
-/**function liveviewslots($quizid, $quizcontextid) {
-	global $DB;
-	$slots = array();
-	$slotsvalue = array();
-	$myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-	$singleqid = optional_param('singleqid', 0, PARAM_INT);
-	foreach ($myslots as $key => $value) {
-		$slotsvalue[$key] = $value->slot;
-	}
-	$qreferences = $DB->get_records('question_references', array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
-	foreach ($qreferences as $qreference) {
-		$slotid = $qreference -> itemid;
-		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
-		foreach ($questionversions as $questionversion) {
-			$questionid = $questionversion->questionid;
-		}
-		$slots[$questionid] = $slotsvalue[$slotid];
-	}
-	return $slots;
-}
-*/
-/**
- * Function to get the qtype, name, questiontext for each question.
- * @param array $slots and array of slot ids indexed by question ids.
- * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
- */
-function liveviewquestion($slots) {
-    global $DB;
-    $question = array();
-    foreach ($slots as $questionid => $slotvalue) {
-        if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
-            $question['qtype'][$questionid] = $myquestion->qtype;
-            $question['name'][$questionid] = $myquestion->name;
-            $question['questiontext'][$questionid] = $myquestion->questiontext;
-        }
-    }
-    return $question;
 }

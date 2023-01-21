@@ -693,3 +693,558 @@ function liveviewslots($quizid, $quizcontextid) {
 	}
 	return $slots;
 }
+
+/**
+ * Function to display the table for the student responses
+ */
+
+function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid) {
+	global $DB;
+	// Getting and preparing to sorting users.
+	// The first and last name are in the initials array.
+	$hidden = liveviewgrid_update_hidden($course);
+	foreach ($hidden as $hkey => $hvalue) {
+		$$hkey = $hvalue;
+	}
+	$initials = array();
+	$slots = array();
+	$question = array();
+	$slots = liveviewslots($quizid, $quizcontextid);
+	$question = liveviewquestion($slots, $singleqid);
+	$sofar = liveview_who_sofar_gridview($quizid);
+	if (count($sofar) > 0) {
+		foreach ($sofar as $unuser) {
+			// If only a group is desired, make sure this student is in the group.
+			if ($group) {
+				if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+					$getresponse = true;
+				} else {
+					$getresponse = false;
+				}
+			} else {
+				$getresponse = true;
+			}
+			if ($getresponse) {
+				$usr = $DB->get_record('user', array('id' => $unuser));
+				if ($order) {
+					$initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
+				} else {
+					$initials[$unuser] = $usr->lastname.',&nbsp;'.$usr->firstname;
+				}
+			}
+		}
+	}
+	if ($compact) {
+		$trun = 1;
+		$dotdot = '';
+		// Truncate responses to 4 if compact is desired, else 40 or 200.
+	} else {
+		$trun = 50;
+		$dotdot = '....';
+	}
+	// This is needed to get the column lined up correctly.
+	echo "\n<div id=\"container\" style=\"margin-left:1px;margin-top:1px;background:white;\">";
+	echo "\n<table border=\"1\" width=\"100%\" id='timemodified' class='lrtable' name=$qmaxtime>\n";
+	echo "<thead><tr>";
+	if ($shownames) {
+		$activestyle = "style='background-size: 20% 100%;
+			background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
+			background-repeat: repeat;'";
+		echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
+	}
+	if ($showlesson) {
+		if ($lessonid) {
+			echo "<td>".$lesson->name."</td>";
+		} else {
+			echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+		}
+	}
+	if ($status) {
+		echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
+	}
+	// The array for storing the all the texts for tootips.
+	$tooltiptext = array();
+
+	$geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
+	$togglekey = '';
+	foreach ($slots as $key => $slotvalue) {
+		if (isset($question['name'][$key])) {
+			$hidden['singleqid'] = $key;
+			$safequestionname = trim(strip_tags($question['name'][$key]));
+			$buttontext = trim($safequestionname);
+			$myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
+			$ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
+			// Get rid of any <script> tags that may mess things up.
+			$ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
+			$tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
+			$info = '';
+			echo "<td>";
+			$linkid = "linkqtext_$key";
+			if (strlen($buttontext) > $trun) {
+				preg_match_all('/./u', $buttontext, $matches);
+				$ntrun = 0;
+				$truncated = '';
+				foreach ($matches[0] as $m) {
+					if ($ntrun < $trun) {
+						$truncated .= $m;
+					}
+					$ntrun++;
+				}
+				$buttontext = $truncated;
+			}
+			echo liveview_question_button($buttontext, $hidden, $linkid);
+			echo "</td>";
+		} else {
+			echo "<td></td>";
+		}
+		if ($question['qtype'][$key] == 'matrix') {
+			// Put in correct row answers for each matrix question.
+			$goodans[$key] = array();// The good answer for each row, indexed by row. There each question has unique rowids.
+			list($rowtext[$key], $collabel[$key], $goodans[$key], $grademethod[$key]) = goodans($key);
+		}
+	}
+	echo "</tr>\n</thead>\n";
+	$hidden['singleqid'] = $singleqid;
+	if ($showresponses) {
+// Getting and preparing to sorting users.
+// The first and last name are in the initials array.
+if (count($sofar) > 0) {
+list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+    foreach ($sofar as $unuser) {
+        // If only a group is desired, make sure this student is in the group.
+        if ($group) {
+            if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                $getresponse = true;
+            } else {
+                $getresponse = false;
+            }
+        } else {
+            $getresponse = true;
+        }
+        if ($getresponse) {
+            $usr = $DB->get_record('user', array('id' => $unuser));
+            if ($order) {
+                $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
+            } else {
+                $initials[$unuser] = $usr->lastname.',&nbsp;'.$usr->firstname;
+            }
+        }
+    }
+	if (count($initials)) {
+        asort($initials);
+        foreach ($initials as $newkey => $initial) {
+            $users[] = $newkey;
+        }
+    }
+
+}
+	    // Javascript and css for tooltips.
+        echo "\n<script type=\"text/javascript\">";
+        require_once("dw_tooltip_c.php");
+        echo "\n</script>";
+
+        echo "\n<style type=\"text/css\">";
+        echo "\ndiv#tipDiv {";
+            echo "\nfont-size:16px; line-height:1.2;";
+            echo "\ncolor:#000; background-color:#E1E5F1;";
+            echo "\nborder:1px solid #667295; padding:4px;";
+            echo "\nwidth:320px;";
+        echo "\n}";
+        echo "\n</style>";
+		// Create the table body (after the header).
+    if (isset($users)) {
+        $now = time();
+        $firsttime = $now - $activetime * 60;
+        echo "\n<tbody>";
+        foreach ($users as $user) {
+            // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
+            if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
+                echo "<tr>";
+                if ($shownames) {
+                    $bgcolor = '';
+                    if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
+                        $bgcolor = $activestyle;
+                    }
+                    echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
+                }
+                $myrow = '';
+                foreach ($slots as $questionid => $slotvalue) {
+                    if (isset($stlink[$user][$questionid])) {
+                        $link = $stlink[$user][$questionid];
+                    } else {
+                        $link = '';
+                    }
+                    if (($questionid != "") and ($questionid != 0)) {
+                        if (isset($stanswers[$user][$questionid])) {
+                            if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
+                                $answer = '';
+                                foreach ($stanswers[$user][$questionid] as $key => $value) {
+                                    $answer .= $key."=".$value."; ";
+                                }
+                            } else {
+                                $answer = $stanswers[$user][$questionid];
+                            }
+                            if ($status) {
+                                $ststatus[$user][$questionid] = 1;// Array to keep track of student progress.
+                            }
+                        } else {
+                            $answer = ' ';
+                        }
+                    }
+                        $style = '<td';
+                    if ($evaluate) {
+                        if ($question['qtype'][$questionid] == 'matrix') {
+                            $grade = 0;
+                            if (strlen($stanswers[$user][$questionid]) > 0) {
+                                $myansws = explode(';&nbsp;', $stanswers[$user][$questionid]);
+                                $mwrong = 0;// Keeping track of how many wrong answers there are.
+                                foreach ($myansws as $myansw) {
+                                    if ($myanskey = array_search($myansw, $goodans[$questionid])) {
+                                        $mdata[$myanskey] ++;
+                                        $correct = 1;
+                                        $grade ++;
+                                    } else {
+                                        // Find the row for the incorrect answer.
+                                        $myanskey = 0;
+                                        $anssplit = explode(':&nbsp;', $myansw);
+                                        $myanskey = array_search($anssplit[0], $rowtext[$questionid]);
+                                        $mdatax[$myanskey] ++;
+                                        $mwrong ++;
+                                    }
+                                }
+                                $matrixfr = 1;// The fraction for matrix questions, based on grademethod.
+                                if ($grademethod[$questionid] == 'kprime') {
+                                    if ($mwrong > 0) {
+                                        $matrixfr = 0.001;
+                                    }
+                                } else if ($grademethod[$questionid] == 'kany') {
+                                    if ($mwrong > 1) {
+                                        $matrixfr = 0.001;
+                                    } else if ($mwrong > 0) {
+                                        $matrixfr = 0.5;
+                                    }
+                                } else {
+                                    $matrixfr = $grade / count($rowtext[$questionid]) + .001;
+                                }
+                            } else {
+                                $matrixfr = 0;
+                            }
+                            $stfraction[$user][$questionid] = $matrixfr;
+                        }
+                        if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                            $myfraction = $stfraction[$user][$questionid];
+                            if ($rag == 1) {// Colors from image from Moodle.
+                                if ($myfraction < 0.0015) {
+                                    $redpart = 244;
+                                    $greenpart = 67;
+                                    $bluepart = 54;
+                                } else if ($myfraction > .999) {
+                                    $redpart = 139;
+                                    $greenpart = 195;
+                                    $bluepart = 74;
+                                } else {
+                                    $redpart = 255;
+                                    $greenpart = 152;
+                                    $bluepart = 0;
+                                }
+                            } else {
+                                // Make .5 match up to Moodle amber even when making them different with gradation.
+                                $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+                                $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+                                if ($redpart > 255) {
+                                    $redpart = 255;
+                                }
+                                $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+                            }
+                            $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+                        }
+                    }
+                    if ((strlen($answer) < $trun) || ($singleqid > 0)) {
+                            $myrow .= $style.">&nbsp;".$answer.$link."</td>";
+                    } else {
+                        // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
+                        $answer = preg_replace("/&nbsp;/", ' ', $answer);// Changing &nbsp; back to a space.
+                        $safeanswer = htmlentities($answer);
+                        $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
+                        $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
+                            $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                        // Making sure we pick up whole words.
+                        preg_match_all('/./u', $answer, $matches);
+                        $ntrun = 0;
+                        $truncated = '';
+                        foreach ($matches[0] as $m) {
+                            if ($ntrun < $trun) {
+                                $truncated .= $m;
+                            }
+                            $ntrun++;
+                        }
+                        $myrow .= $truncated.$link;
+                        $myrow .= " $dotdot</div></td>";
+                    }
+                }
+                if ($showlesson) {
+                    if ($lessonid > 0) {
+                        echo "<td>".$lessonstatus[$user]."</td>";
+                    } else {
+                        echo "<td>".get_string('nolesson', 'quiz_liveviewgrid')."</td>";
+                    }
+                }
+                if ($status) {
+                    $percentdone = 100 * count($ststatus[$user]) / count($slots);
+                    echo "<td>".number_format($percentdone, 1).'%</td>';
+                }
+                echo $myrow;
+                echo "</tr>\n";
+            }
+        }
+        echo "</tbody>";
+    }
+    echo "\n</table>";
+    echo "\n</div>";
+}
+    if (count($tooltiptext) > 0) {
+        $tooltiptexts = implode(",", $tooltiptext);
+        echo "\n<script>";
+        echo 'dw_Tooltip.defaultProps = {';
+            echo 'supportTouch: true'; // False by default.
+        echo '}';
+
+        echo "\ndw_Tooltip.content_vars = {";
+            echo $tooltiptexts;
+        echo "\n}";
+        echo "\n</script>";
+    }
+}
+
+/**
+ * Function to update the hidden values.
+ * @param array $hidden The hidden array for this quiz.
+ * @return array $hidden The corrected hidden values.
+ */
+
+function liveviewgrid_update_hidden ($course) {
+	global $DB;
+	$changeoption = optional_param('changeoption', 0, PARAM_INT);
+	$rag = optional_param('rag', 1, PARAM_INT);
+	$id = optional_param('id', 0, PARAM_INT);
+	$mode = optional_param('mode', '', PARAM_ALPHA);
+	$evaluate = optional_param('evaluate', 1, PARAM_INT);
+	$showkey = optional_param('showkey', 1, PARAM_INT);
+	$order = optional_param('order', 0, PARAM_INT);
+	$compact = optional_param('compact', 1, PARAM_INT);
+	$group = optional_param('group', 0, PARAM_INT);
+	$singleqid = optional_param('singleqid', 0, PARAM_INT);
+	$showanswer = optional_param('showanswer', 0, PARAM_INT);
+	$shownames = optional_param('shownames', 1, PARAM_INT);
+	$status = optional_param('status', 0, PARAM_INT);
+	if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
+		$haslesson = 1;
+		$lessonid = optional_param('lessonid', 0, PARAM_INT);
+		$showlesson = optional_param('showlesson', 0, PARAM_INT);
+	} else {
+		$haslesson = 0;
+		$lessonid = 0;
+		$showlesson = 0;
+	}
+	$refresht = optional_param('refresht', 3, PARAM_INT);
+	$activetime = optional_param('activetime', 10, PARAM_INT);
+	// The array of hidden values is hidden[].
+	$hidden = array();
+	$hidden['rag'] = $rag;
+	$hidden['id'] = $id;
+	$hidden['mode'] = $mode;
+	$hidden['evaluate'] = $evaluate;
+	$hidden['showkey'] = $showkey;
+	$hidden['order'] = $order;
+	$hidden['compact'] = $compact;
+	$hidden['group'] = $group;
+	$hidden['singleqid'] = $singleqid;
+	$hidden['showanswer'] = $showanswer;
+	$hidden['shownames'] = $shownames;
+	$hidden['status'] = $status;
+	$hidden['haslesson'] = $haslesson;
+	$hidden['showlesson'] = $showlesson;
+	$hidden['lessonid'] = $lessonid;
+	$hidden['refresht'] = $refresht;
+	$hidden['activetime'] = $activetime;
+	foreach ($hidden as $hiddenkey => $hiddenvalue) {
+		if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
+			&& (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
+			// Don't carry group, id, singleqid, haslesson, or lessonid.
+			if ($changeoption) {
+				$_SESSION[$hiddenkey] = $hiddenvalue;
+			} else {
+				if (isset($_SESSION[$hiddenkey])) {
+					$hidden[$hiddenkey] = $_SESSION[$hiddenkey];
+				}
+			}
+		}
+    }
+	return $hidden;
+}
+
+
+function liveviewgrid_display_option_form ($hidden) {
+	global $CFG;
+	foreach ($hidden as $hkey => $hvalue) {
+		$$hkey = $hvalue;
+	}
+			// Script to hide or display the option form.
+            echo "\n<script>";
+            echo "\nfunction optionfunction() {";
+            echo "\n  var e=document.getElementById(\"option1\");";
+            echo "\n  var b=document.getElementById(\"button1\");";
+            echo "\n  if(e.style.display == \"none\") { ";
+            echo "\n      e.style.display = \"block\";";
+            echo "\n        b.innerHTML = \"".get_string('clicktohide', 'quiz_liveviewgrid')."\";";
+            echo "\n  } else {";
+            echo "\n      e.style.display=\"none\";";
+            echo "\n      b.innerHTML = \"".get_string('clicktodisplay', 'quiz_liveviewgrid')."\";";
+            echo "\n  }";
+            echo "\n}";
+            echo "\n</script>  ";
+            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+            echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
+            echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
+            echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
+            echo "<input type='hidden' name='changeoption' value=1>";
+            echo "<input type='hidden' name='id' value=$id>";
+            echo "<input type='hidden' name='mode' value=$mode>";
+            echo "<input type='hidden' name='singleqid' value=$singleqid>";
+            echo "<input type='hidden' name='group' value=$group>";
+            if ($haslesson) {
+                echo "<input type='hidden' name='lessonid' value=$lessonid>";
+            }
+            $checked = array();
+            $notchecked = array();
+            foreach ($hidden as $hiddenkey => $hiddenvalue) {
+                if ($hiddenvalue) {
+                    $checked[$hiddenkey] = 'checked';
+                    $notchecked[$hiddenkey] = '';
+                } else {
+                    $checked[$hiddenkey] = '';
+                    $notchecked[$hiddenkey] = 'checked';
+                }
+            }
+            $twait = array(1, 2, 3, 6, 200);
+            foreach ($twait as $myt) {
+                $tindex = 'refresht'.$myt;
+                if ($refresht == $myt) {
+                    $checked[$tindex] = 'checked';
+                } else {
+                    $checked[$tindex] = '';
+                }
+            }
+			$tactive = array(5, 10, 30, 60, 600);
+            foreach ($tactive as $mat) {
+                $aindex = 'activet'.$mat;
+                if ($activetime == $mat) {
+                    $checked[$aindex] = 'checked';
+                } else {
+                    $checked[$aindex] = '';
+                }
+            }
+
+            $td = "<td style=\"padding:5px 8px;border:1px solid #CCC;\">";
+            echo "\n<table>";
+            echo "\n<tr>".$td.get_string('thecolorkey', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='showkey' value=1 ".$checked['showkey']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='showkey' value=0 ".$notchecked['showkey']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='shownames' value=0 ".$notchecked['shownames']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('studentsnames', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='order' value=1 ".$checked['order']."> ";
+            echo get_string('firstname', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='order' value=0 ".$notchecked['order']."> ";
+            echo get_string('lastname', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('makecompact', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='compact' value=1 ".$checked['compact']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='compact' value=0 ".$notchecked['compact']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            if ($singleqid > 0) {
+                echo "\n<tr>".$td.get_string('correctanswer', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showanswer' value=1 ".$checked['showanswer']."> ";
+                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showanswer' value=0 ".$notchecked['showanswer']."> ";
+                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            }
+            echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('showstatus', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='status' value=1 ".$checked['status']."> ";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='status' value=0 ".$notchecked['status']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "\n<tr>".$td.get_string('checkt', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='refresht' value=1 ".$checked['refresht1'].">10 ";
+            echo " <input type='radio' name='refresht' value=2 ".$checked['refresht2'].">20 ";
+            echo " <input type='radio' name='refresht' value=3 ".$checked['refresht3'].">30 ";
+            echo " <input type='radio' name='refresht' value=6 ".$checked['refresht6'].">60 ";
+            echo " <input type='radio' name='refresht' value=200 ".$checked['refresht200'].">".
+                get_string('nevert', 'quiz_liveviewgrid')."</td>";
+            echo "\n<tr>".$td.get_string('tobeactive', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='activetime' value=5 ".$checked['activet5'].">5";
+            echo " <input type='radio' name='activetime' value=10 ".$checked['activet10'].">10";
+            echo " <input type='radio' name='activetime' value=30 ".$checked['activet30'].">30";
+            echo " <input type='radio' name='activetime' value=60 ".$checked['activet60'].">60";
+            echo " <input type='radio' name='activetime' value=600 ".$checked['activet600'].">600";
+			echo get_string('minutes', 'quiz_liveviewgrid');
+            echo "</td></tr>";
+            echo "\n<tr>".$td.get_string('showautorefresh', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='ahowautorefresh' value=1 ".$checked['autorefresh'].">";
+            echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+            echo $td."<input type='radio' name='ahowautorefresh' value=0 ".$notchecked['ahowautorefresh']."> ";
+            echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            echo "</td></tr>";
+			if ($haslesson) {
+                echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
+                echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+                echo $td."<input type='radio' name='showlesson' value=0 ".$notchecked['showlesson']."> ";
+                echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+            }
+            echo "\n</table>";
+            $buttontext = get_string('submitoptionchanges', 'quiz_liveviewgrid');
+            echo "<br /><input type=\"submit\" value=\"$buttontext\"></form>";
+            echo "</div>";
+}
+
+/**
+ * Function to get the qtype, name, questiontext for each question.
+ * @param array $slots and array of slot ids indexed by question ids.
+ * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
+ */
+function liveviewquestion($slots, $singleqid) {
+    global $DB;
+    $question = array();
+    if ($singleqid > 0) {
+		$questionid = $singleqid;
+		$myquestion = $DB->get_record('question', array('id' => $questionid));
+		$question['qtype'][$questionid] = $myquestion->qtype;
+		$question['name'][$questionid] = $myquestion->name;
+		$question['questiontext'][$questionid] = $myquestion->questiontext;
+	} else {
+		foreach ($slots as $questionid => $slotvalue) {
+			if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+				$question['qtype'][$questionid] = $myquestion->qtype;
+				$question['name'][$questionid] = $myquestion->name;
+				$question['questiontext'][$questionid] = $myquestion->questiontext;
+			}
+		}
+	}
+    return $question;
+}
