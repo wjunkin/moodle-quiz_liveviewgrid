@@ -252,6 +252,50 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($answers as $answer) {
                         $myresponse[$answer->name] = $answer->value;
                     }
+                    if ($question->qtype == 'match') {
+                        // If a person answers a question more than once, the question_attempt_step->id changes.
+                        if (!(isset($qtempt[$qattemptstep->id]))) {
+                            $qtempt[$qattemptstep->id] = 1;
+                            $matchgrade[$qattemptstep->id] = 0;
+                            $matchanswer[$qattemptstep->id] = '';
+                        }
+                        $mymatch = array();
+                        $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $question->id));
+                        $myquestions = array();
+                        foreach ($subquestions as $subid => $subquestion) {
+                            $questiontext = preg_replace('/<p.+?>/', '', $subquestion->questiontext);
+                            $mymatch[$subid]['qtext'] = preg_replace("/<\/p>/", '', $questiontext);
+                            $mymatch[$subid]['atext'] = $subquestion->answertext;
+                        }
+                        if (isset($myresponse['_stemorder'])) {
+                            $stems[$qattempt->questionid] = explode(',', $myresponse['_stemorder']);
+                            $stemcount[$qattempt->questionid] = count($stems[$qattempt->questionid]);
+                        }
+                        if (isset($myresponse['_choiceorder'])) {
+                            $mchoices[$qattempt->questionid] = explode(',', $myresponse['_choiceorder']);
+                        }
+                        if (count($stems[$qattempt->questionid]) > 0) {
+                            foreach ($stems[$qattempt->questionid] as $stkey => $stvalue) {
+                                $choicekey = 'sub'.$stkey;
+                                if (isset($myresponse[$choicekey])) {
+                                    $mymchoice = $myresponse[$choicekey];
+                                    $stchoice = $mymchoice - 1;
+                                    // The choice array starts at 0 but values in question_attempt_step_data table starts at 1.
+                                    // The value of $stkey gives the place on the screen where the stem is displayed.
+                                    // Using this index in the stems array gives the id for the qtype_match_subquestions table.
+                                    // The choice selected from the mchoices comes from the index value of mymatch in this table.
+                                    $xchoice = $mchoices[$qattempt->questionid][$stchoice];
+                                    $matchanswer[$qattemptstep->id] .= $mymatch[$stems[$qattempt->questionid][$stkey]]['qtext'].
+                                        "->".$mymatch[$xchoice]['atext']."; ";
+                                    if ($stems[$qattempt->questionid][$stkey] == $xchoice) {
+                                        $matchgrade[$qattemptstep->id] ++;
+                                    }
+                                }
+                            }
+                        }
+                        $questionsummary = $qattempt->questionsummary;
+                        preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
+                    }
                     if (($question->qtype == 'matrix') && ($qattemptstep->state <> 'todo')) {
                         $matrixresponse = array();
                         $mgrade = 0;
@@ -390,6 +434,12 @@ function liveviewgrid_get_answers($quizid) {
                         $stanswers[$usrid][$qattempt->questionid] = $mmanswer;
                         $stfraction[$usrid][$qattempt->questionid] = $mmfraction;
                     }
+                }
+            }
+            if ($question->qtype == 'match') {
+                foreach ($matchanswer as $qtemptid => $matanswer) {
+                    $stanswers[$usrid][$qattempt->questionid] = $matanswer;
+                    $stfraction[$usrid][$qattempt->questionid] = $matchgrade[$qtemptid] / $stemcount[$qattempt->questionid];
                 }
             }
         }
