@@ -84,18 +84,18 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
-		$hidden = liveviewgrid_update_hidden($course);
-		foreach ($hidden as $hkey => $hvalue) {
-			$$hkey = $hvalue;
-		}
-        // This is only needed if this code is going to display the table.
-		if ($singleqid > 0) {
-			$slots = array();
-			$question = array();
-			$users = array();
-			$sofar = array();
+        $hidden = liveviewgrid_update_hidden($course);
+        foreach ($hidden as $hkey => $hvalue) {
+            $$hkey = $hvalue;
         }
-		$quizid = $quiz->id;
+        // This is only needed if this code is going to display the table.
+        if ($singleqid > 0) {
+            $slots = array();
+            $question = array();
+            $users = array();
+            $sofar = array();
+        }
+        $quizid = $quiz->id;
         $answer = '';
         $graphicshashurl = '';
         // Check permissions.
@@ -104,24 +104,27 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $quiz->name .= get_string('dynamicpage', 'quiz_liveviewgrid');
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
         // Since report.php is being displayed from /quiz/report, we need absolute address to get into the liveviewgrid directory.
-		echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\" type=\"text/css\" rel=\"stylesheet\">";
-		$context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
+        echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\"
+            type=\"text/css\" rel=\"stylesheet\">";
+        $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
         $quizcontextid = $context->id;
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
-		if ($refresht < 200) {
-			$myt = $refresht*10;
-			$refreshttitle = get_string('willautorefresh', 'quiz_liveviewgrid')."$myt".get_string('ifnewresponse', 'quiz_liveviewgrid');
-			$refreshmessage = get_string('autorefreshin', 'quiz_liveviewgrid')."$myt".get_string('ifnewresponse', 'quiz_liveviewgrid');
-		} else {
-			$refreshttitle = get_string('willnotauto', 'quiz_liveviewgrid');
-			$refreshmessage = get_string('autorefreshoff', 'quiz_liveviewgrid');
-		}
-		echo "<i class=\"icon fa fa-question-circle text-info fa-fw \"";
-		echo "  title=\"$refreshttitle\" role=\"img\" aria-label=\"$refreshttitle\"></i>";
-		echo $refreshmessage;
+        if ($refresht < 200) {
+            $myt = $refresht * 10;
+            $refreshttitle = get_string('willautorefresh', 'quiz_liveviewgrid')."$myt".
+                 get_string('ifnewresponse', 'quiz_liveviewgrid');
+            $refreshmessage = get_string('autorefreshin', 'quiz_liveviewgrid')."$myt".
+                 get_string('ifnewresponse', 'quiz_liveviewgrid');
+        } else {
+            $refreshttitle = get_string('willnotauto', 'quiz_liveviewgrid');
+            $refreshmessage = get_string('autorefreshoff', 'quiz_liveviewgrid');
+        }
+        echo "<i class=\"icon fa fa-question-circle text-info fa-fw \"";
+        echo "  title=\"$refreshttitle\" role=\"img\" aria-label=\"$refreshttitle\"></i>";
+        echo $refreshmessage;
         $showresponses = false;
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
@@ -136,7 +139,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $backurl = $_SERVER['HTTP_REFERER'];
                     // The request may have come from the iframe.
                     $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
-                    echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+                    echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".
+                         get_string('back', 'quiz_liveviewgrid')."</button></a>";
                 }
                 return true;// Don't show anything if teacher has to select a group and hasn't done this.
             } else if ($currentgroup > 0) {
@@ -152,51 +156,52 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         } else {
             $showresponses = true;
         }
-		// New location for this code.
+        // New location for this code.
         // This is only needed if this code is going to display the table.
-		if ($singleqid > 0) {
-			$slots = $this->liveviewslots($quizid, $quizcontextid);
-			$question = $this->liveviewquestion($slots);
-			$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-			// These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
-			$stanswers = array();
-			$stfraction = array();
-			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
-			// End of new location for the above code.
-			$qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
-			$sofar = liveview_who_sofar_gridview($quizid);
-			if ($lessonid > 0) {
-				$lessonsofar = liveview_who_sofar_lesson($lessonid);
-				if (count($lessonsofar) > 0) {
-					// Add in those who have started the lesson.
-					$allsofar = array_merge($sofar, $lessonsofar);
-					$sofar = array_unique($allsofar);
-				}
-			}
-		}
-		if (isset($_SERVER['HTTP_REFERER'])) {
+        if ($singleqid > 0) {
+            $slots = $this->liveviewslots($quizid, $quizcontextid);
+            $question = $this->liveviewquestion($slots);
+            $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+            // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
+            $stanswers = array();
+            $stfraction = array();
+            list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+            // End of new location for the above code.
+            $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
+            $sofar = liveview_who_sofar_gridview($quizid);
+            if ($lessonid > 0) {
+                $lessonsofar = liveview_who_sofar_lesson($lessonid);
+                if (count($lessonsofar) > 0) {
+                    // Add in those who have started the lesson.
+                    $allsofar = array_merge($sofar, $lessonsofar);
+                    $sofar = array_unique($allsofar);
+                }
+            }
+        }
+        if (isset($_SERVER['HTTP_REFERER'])) {
             $backurl = $_SERVER['HTTP_REFERER'];
             // The request may have come from the iframe.
             $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
-            echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+            echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".
+                 get_string('back', 'quiz_liveviewgrid')."</button></a>";
         }
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
         $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
         if ($showresponses) {
-			// CSS style for the table.
-			echo "\n<style>";
-			echo "\n .lrtable {";
-			echo "\n 	text-align: center;";
-			echo "\n 	}";
-			echo "\n</style>";
+            // CSS style for the table.
+            echo "\n<style>";
+            echo "\n .lrtable {";
+            echo "\n    text-align: center;";
+            echo "\n    }";
+            echo "\n</style>";
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
-				$qtext2 = $questiontext->questiontext;
-				if (preg_match('/<img src=\"@@PLUGINFILE@@/', $qtext2, $matches)) {
-					$qslot = $slots[$singleqid];
-					$qtext2 = changepic_url($qtext2, $singleqid, $courseid, $qslot, $USER->id);
-				}
+                $qtext2 = $questiontext->questiontext;
+                if (preg_match('/src=\"@@PLUGINFILE@@/', $qtext2, $matches)) {
+                    $qslot = $slots[$singleqid];
+                    $qtext2 = changepic_url($qtext2, $singleqid, $courseid, $qslot, $USER->id);
+                }
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($questiontext->qtype == 'matrix') {
                     list($rowtext, $collabel, $goodans, $grademethod) = goodans($singleqid);
@@ -227,7 +232,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 }
                 echo "\n<br />";
             }
-			liveviewgrid_display_option_form($hidden);
+            liveviewgrid_display_option_form($hidden);
         }
         // Button to select lesson.
         if ($showlesson) {
@@ -326,7 +331,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n .blinkhidden{";
             echo "\n    color: transparent;";
             echo "\n}";
-           echo "\n</style>";
+            echo "\n</style>";
 
             // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
             echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
@@ -556,10 +561,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 if (in_array($questiontext->qtype, $multitype)) {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
-					$getvalues .= "&activetime=$activetime";
-						echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-							frameBorder=0 height='520' width='800'>";
-						echo "</iframe>";
+                    $getvalues .= "&activetime=$activetime";
+                        echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+                            frameBorder=0 height='520' width='800'>";
+                        echo "</iframe>";
                 } else if ($questiontext->qtype == 'matrix') {
                     $mdata = array();// An array for the number of times a row is answered correctly.
                     $mdatax = array();// An array for the number of times a row is answered incorrectly.
@@ -617,13 +622,12 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                         $rown ++;
                     }
                     $iframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/matrixgraph.php?$getvalues";
-					if ($refresht == 200) {
-						liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
-					} else {
-						
-						echo "<iframe src=\"$iframeurl\" frameBorder=0 width='800'>";
-						echo "</iframe>";
-					}
+                    if ($refresht == 200) {
+                        liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
+                    } else {
+                        echo "<iframe src=\"$iframeurl\" frameBorder=0 width='800'>";
+                        echo "</iframe>";
+                    }
                     // End of matrix histogram.
                 }
             }
@@ -715,7 +719,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     foreach ($users as $user) {
                         // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
                         if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
-							echo "<tr>";
+                            echo "<tr>";
                             if ($shownames) {
                                 $bgcolor = '';
                                 if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
@@ -730,7 +734,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 } else {
                                     $link = '';
                                 }
-                                if (($questionid != "") and ($questionid != 0)) {
+                                if (($questionid != "") && ($questionid != 0)) {
                                     if (isset($stanswers[$user][$questionid])) {
                                         if (is_array($stanswers[$user][$questionid])
                                                 && (count($stanswers[$user][$questionid] > 1))) {
@@ -750,7 +754,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 }
                                     $style = '<td';
                                 if ($evaluate) {
-                                    if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                                    if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                                         $myfraction = $stfraction[$user][$questionid];
                                         if ($rag == 1) {// Colors from image from Moodle.
                                             if ($myfraction < 0.0015) {
@@ -840,16 +844,16 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
         } else {
             if ($refresht == 200) {
-				liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
-			} else {
-				$getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact&group=$group";
-				$getvalues .= "&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson&showlesson=$showlesson";
-				$getvalues .= "&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
-				$tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
-				echo "<iframe src=\"$tableiframeurl\" frameBorder=10 width='100%'>";
-				echo "</iframe>";
-			}
-		}
+                liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
+            } else {
+                $getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact";
+                $getvalues .= "&group=$group&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson";
+                $getvalues .= "&showlesson=$showlesson&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
+                $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
+                echo "<iframe src=\"$tableiframeurl\" frameBorder=10 width='100%'>";
+                echo "</iframe>";
+            }
+        }
         return true;
     }
     /**
@@ -903,31 +907,33 @@ class quiz_liveviewgrid_report extends quiz_default_report {
     /**
      * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
      * @param int $quizid The id for this quiz.
+     * @param int $quizcontextid The id for the context for this quiz.
      * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
      */
-private function liveviewslots($quizid, $quizcontextid) {
-	global $DB;
-	$slots = array();
-	$slotsvalue = array();
-	$myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-	$singleqid = optional_param('singleqid', 0, PARAM_INT);
-	foreach ($myslots as $key => $value) {
-		$slotsvalue[$key] = $value->slot;
-	}
-	$qreferences = $DB->get_records('question_references', array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
-	foreach ($qreferences as $qreference) {
-		$slotid = $qreference -> itemid;
-		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
-		foreach ($questionversions as $questionversion) {
-			$questionid = $questionversion->questionid;
-		}
-		if (($singleqid == 0) || ($singleqid == $questionid)) {
-			$slots[$questionid] = $slotsvalue[$slotid];
-		}
-	}
-	return $slots;
-}
+    private function liveviewslots($quizid, $quizcontextid) {
+        global $DB;
+        $slots = array();
+        $slotsvalue = array();
+        $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+        $singleqid = optional_param('singleqid', 0, PARAM_INT);
+        foreach ($myslots as $key => $value) {
+            $slotsvalue[$key] = $value->slot;
+        }
+        $qreferences = $DB->get_records('question_references',
+             array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+        foreach ($qreferences as $qreference) {
+            $slotid = $qreference->itemid;
+            $questionbankentryid = $qreference->questionbankentryid;
+            $questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
+            foreach ($questionversions as $questionversion) {
+                $questionid = $questionversion->questionid;
+            }
+            if (($singleqid == 0) || ($singleqid == $questionid)) {
+                $slots[$questionid] = $slotsvalue[$slotid];
+            }
+        }
+        return $slots;
+    }
 
     /**
      * Function to get the qtype, name, questiontext for each question.

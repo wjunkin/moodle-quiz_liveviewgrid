@@ -494,7 +494,7 @@ if ($showresponses) {
                     echo "<td  class=\"first-col\">".liveview_find_student_gridview($user)."</td>\n";
                 }
                 foreach ($slots as $questionid => $slotvalue) {
-                    if (($questionid != "") and ($questionid != 0)) {
+                    if (($questionid != "") && ($questionid != 0)) {
                         if (isset($stanswers[$user][$questionid])) {
                             if (isset($stanswers[$user][$questionid])) {
                                 if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
@@ -514,7 +514,7 @@ if ($showresponses) {
                     }
                     $style = '<td';
                     if ($evaluate) {
-                        if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                        if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
                             if ($rag == 1) {// Colors from image from Moodle.
                                 if ($myfraction < 0.0015) {

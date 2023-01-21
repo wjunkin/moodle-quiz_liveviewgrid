@@ -40,14 +40,15 @@ $course = $DB->get_record('course', array('id' => $cm->course));
 $quiz = $DB->get_record('quiz', array('id' => $cm->instance));
 $hidden = liveviewgrid_update_hidden($course);
 foreach ($hidden as $hkey => $hvalue) {
-	$$hkey = $hvalue;
+    $$hkey = $hvalue;
 }
 echo "<html><head>";
 echo "<title>".get_string('iframe', 'quiz_liveviewgrid').$quiz->name."</title>";
 echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\" type=\"text/css\" rel=\"stylesheet\">";
-
-echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".$CFG->theme."/".$CFG->themerev."_2/all\" />";
+echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\"
+     type=\"text/css\" rel=\"stylesheet\">";
+echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".
+     $CFG->theme."/".$CFG->themerev."_2/all\" />";
 echo "\n</head><body>";
 $slots = array();
 $question = array();
@@ -236,8 +237,8 @@ echo "\n</style>";
 // CSS style for the table.
 echo "\n<style>";
 echo "\n .lrtable {";
-echo "\n 	text-align: center;";
-echo "\n 	}";
+echo "\n    text-align: center;";
+echo "\n    }";
 echo "\n</style>";
 // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
 echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
@@ -394,7 +395,7 @@ if ($showresponses) {
                     } else {
                         $link = '';
                     }
-                    if (($questionid != "") and ($questionid != 0)) {
+                    if (($questionid != "") && ($questionid != 0)) {
                         if (isset($stanswers[$user][$questionid])) {
                             if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
                                 $answer = '';
@@ -451,7 +452,7 @@ if ($showresponses) {
                             }
                             $stfraction[$user][$questionid] = $matrixfr;
                         }
-                        if (isset($stfraction[$user][$questionid]) and (!($stfraction[$user][$questionid] == 'NA'))) {
+                        if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
                             if ($rag == 1) {// Colors from image from Moodle.
                                 if ($myfraction < 0.0015) {
