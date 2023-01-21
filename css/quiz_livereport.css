@@ -1,0 +1,47 @@
+div#container {
+    margin: 0;
+    max-height: 520px;
+    max-width: 100%;
+    overflow: scroll;
+    position: relative;
+    background: white;
+    font-family:Arial;
+}
+
+table {
+    border: none;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+thead th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background: #bbb;
+    border: 1px solid;
+}
+
+thead th:first-child {
+    left: 0;
+    z-index: 1;
+}
+
+tbody td {
+
+}
+
+tbody td:first-child {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    background:#eee;
+}
+
+th, td {
+    border-spacing: 0;
+    border:1px solid;
+    padding: 2px 5px;
+    vertical-align: middle;
+    min-width: 200px;
+}

@@ -63,6 +63,7 @@ if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
 echo "<html><head>";
 echo "<title>".get_string('iframe', 'quiz_liveviewgrid').$quiz->name."</title>";
 echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\" type=\"text/css\" rel=\"stylesheet\">";
 echo "\n</head><body>";
 $slots = array();
 $question = array();
@@ -247,7 +248,7 @@ echo "\n}";
 echo "\n .blinkhidden{";
 echo "\n    color: transparent;";
 echo "\n}";
-
+/**
 echo "\n.first-col {";
 echo "\n  position: absolute;";
 echo "\n	width: 10em;";
@@ -262,7 +263,7 @@ if ($shownames) {
     echo "\n     margin: 0 0 0 0;";
 }
 echo "\n}";
-echo "\n</style>";
+*/echo "\n</style>";
 // CSS style for the table.
 echo "\n<style>";
 echo "\n .lrtable {";
@@ -317,7 +318,7 @@ if ($compact) {
     $dotdot = '....';
 }
 // This is needed to get the column lined up correctly.
-echo "\n<div class=\"table-wrapper\">";
+echo "\n<div id=\"container\" style=\"margin-left:1px;margin-top:1px;background:white;\">";
 echo "\n<table border=\"1\" width=\"100%\" id='timemodified' class='lrtable' name=$qmaxtime>\n";
 echo "<thead><tr>";
 
@@ -380,6 +381,7 @@ foreach ($slots as $key => $slotvalue) {
 }
 echo "</tr>\n</thead>\n";
 $hidden['singleqid'] = $singleqid;
+
 if ($showresponses) {
     // Javascript and css for tooltips.
         echo "\n<script type=\"text/javascript\">";
@@ -660,7 +662,7 @@ function liveviewquizmaxtime($quizcontextid) {
  * @param int $quizid The id for this quiz.
  * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
  */
-function liveviewslots($quizid, $quizcontextid) {
+/**function liveviewslots($quizid, $quizcontextid) {
 	global $DB;
 	$slots = array();
 	$slotsvalue = array();
@@ -673,20 +675,15 @@ function liveviewslots($quizid, $quizcontextid) {
 	foreach ($qreferences as $qreference) {
 		$slotid = $qreference -> itemid;
 		$questionbankentryid = $qreference-> questionbankentryid;
-		$questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
-		$version = 0;
+		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
 		foreach ($questionversions as $questionversion) {
-			$newversion = $questionversion->version;
-			if ($newversion > $version) {
-				$questionid = $questionversion->questionid;
-				$version = $newversion; 
-			}
+			$questionid = $questionversion->questionid;
 		}
 		$slots[$questionid] = $slotsvalue[$slotid];
 	}
 	return $slots;
 }
-
+*/
 /**
  * Function to get the qtype, name, questiontext for each question.
  * @param array $slots and array of slot ids indexed by question ids.

@@ -161,12 +161,12 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
  * @param string $geturl The url for the form when submit is clicked.
  * @param array $hidden The array of keys and values for the hidden inputs in the form.
  */
-function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
+function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden,$quizcontextid) {
     global $DB, $USER;
     echo "\n<table border=0><tr><td>";
     echo get_string('whichquestion', 'quiz_liveviewgrid')."</td>";
-    $slots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
-    echo "\n<td><form action=\"$geturl\">";
+    $slots = liveviewslots($quizid, $quizcontextid);
+	echo "\n<td><form action=\"$geturl\">";
     $mysingleqid = 0;
     foreach ($hidden as $key => $value) {
         if ($key <> 'singleqid') {
@@ -180,8 +180,8 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden) {
     if ($mysingleqid) {
         echo "\n<option value=\"0\">".get_string('allquestions', 'quiz_liveviewgrid')."</option>";
     }
-    foreach ($slots as $slot) {
-        $question = $DB->get_record('question', array('id' => $slot->questionid));
+    foreach ($slots as $slotkey => $slot) {
+        $question = $DB->get_record('question', array('id' => $slotkey));
         if ($question->id <> $mysingleqid) {
             $questionname = $question->name;
             if (strlen($questionname) > 80) {
@@ -518,7 +518,6 @@ function liveviewgrid_get_answers($quizid) {
 			}
 		}
 	}
-			
 	$returnvalues = array($stanswers, $stfraction, $stlink);
     return $returnvalues;
 }
@@ -561,12 +560,12 @@ function mmultichoice($qattempts, $usrid) {
                 $multresponse = preg_replace('/\<\/p\>\<p\>/', "; ", $multichoiceresponse);
                 $multresponse = preg_replace('/^\<p\>/', "", $multresponse);
                 $multresponse = preg_replace('/\<\/p\>$/', "", $multresponse);
-                $stanswers[$usrid][$datum->questionid] = $multresponse;
-                $stfraction[$usrid][$datum->questionid] = $mgrade;
+                $stanswers[$usrid][$qattempt->questionid] = $multresponse;
+                $stfraction[$usrid][$qattempt->questionid] = $mgrade;
             }
         }
     }
-    $result = array($stanswers[$usrid][$datum->questionid], $stfraction[$usrid][$datum->questionid]);
+    $result = array($stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]);
     return $result;
 }
 /**
@@ -656,3 +655,31 @@ function goodans($questionid) {
     $return = array($rowtext, $collabel, $goodans, $grademethod);
     return $return;
 }
+
+/**
+ * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
+ * @param int $quizid The id for this quiz.
+ * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
+ */
+function liveviewslots($quizid, $quizcontextid) {
+	global $DB;
+	$slots = array();
+	$slotsvalue = array();
+	$myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+	$singleqid = optional_param('singleqid', 0, PARAM_INT);
+	foreach ($myslots as $key => $value) {
+		$slotsvalue[$key] = $value->slot;
+	}
+	$qreferences = $DB->get_records('question_references', array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+	foreach ($qreferences as $qreference) {
+		$slotid = $qreference -> itemid;
+		$questionbankentryid = $qreference-> questionbankentryid;
+		$questionversions = $DB->get_records('question_versions', array('id' => $questionbankentryid));
+		foreach ($questionversions as $questionversion) {
+			$questionid = $questionversion->questionid;
+		}
+		$slots[$questionid] = $slotsvalue[$slotid];
+	}
+	return $slots;
+}
+

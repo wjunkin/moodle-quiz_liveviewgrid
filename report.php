@@ -123,7 +123,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         require_capability('mod/quiz:viewreports', $this->context);
         $quiz->name .= get_string('dynamicpage', 'quiz_liveviewgrid');
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
-        $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
+        // Since report.php is being displayed from /quiz/report, we need absolute address to get into the liveviewgrid directory.
+		echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\" type=\"text/css\" rel=\"stylesheet\">";
+		$context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
         $quizcontextid = $context->id;
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
@@ -201,7 +203,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 			// These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 			$stanswers = array();
 			$stfraction = array();
-			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);		
 			// End of new location for the above code.
 			$qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
 			$sofar = liveview_who_sofar_gridview($quizid);
@@ -403,7 +405,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         // If a single question is being displayed, allow the teacher to select a different question.
         if ($singleqid > 0) {
-            liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden);
+            liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcontextid);
         }
         if ($singleqid > 0) {
             // Display progress of lesson. This code is taken from mod/lesson/locallib.php.
@@ -489,7 +491,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n .blinkhidden{";
             echo "\n    color: transparent;";
             echo "\n}";
-
+/**
             echo "\n.first-col {";
             echo "\n  position: absolute;";
             echo "\n	width: 10em;";
@@ -504,7 +506,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 echo "\n     margin: 0 0 0 0;";
             }
             echo "\n}";
-            echo "\n</style>";
+
+*/            echo "\n</style>";
 
             // Javascript and css to make a blinking 'Refresh Page' appear when the page stops refreshing responses.
             echo "\n<div id=\"blink1\" class=\"blinkhidden\" style=\"display:none;\">";
@@ -803,7 +806,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             }
 
             // This is needed to get the column lined up correctly.
-            echo "\n<div class=\"table-wrapper\">";
+            echo "\n<div id=\"container\" style=\"margin-left:1px;margin-top:1px;background:white;\">";
             echo "\n<table border=\"1\" width=\"100%\" id='timemodified' name=$qmaxtime class='lrtable'>\n";
             echo "<thead><tr>";
 
