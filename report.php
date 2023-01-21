@@ -108,11 +108,14 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $lessonid = 0;
             $showlesson = 0;
         }
-        $slots = array();
-        $question = array();
-        $users = array();
-        $sofar = array();
-        $quizid = $quiz->id;
+        // This is only needed if this code is going to display the table.
+		if ($singleqid > 0) {
+			$slots = array();
+			$question = array();
+			$users = array();
+			$sofar = array();
+        }
+		$quizid = $quiz->id;
         $answer = '';
         $graphicshashurl = '';
         // Check permissions.
@@ -122,13 +125,6 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $this->print_header_and_tabs($cm, $course, $quiz, 'liveviewgrid');
         $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
         $quizcontextid = $context->id;
-        $slots = $this->liveviewslots($quizid, $quizcontextid);
-        $question = $this->liveviewquestion($slots);
-        $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-        // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
-        $stanswers = array();
-        $stfraction = array();
-        list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
         $currentgroup = groups_get_activity_group($cm, true);
@@ -196,18 +192,29 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         } else {
             $showresponses = true;
         }
-
-        $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
-        $sofar = liveview_who_sofar_gridview($quizid);
-        if ($lessonid > 0) {
-            $lessonsofar = liveview_who_sofar_lesson($lessonid);
-            if (count($lessonsofar) > 0) {
-                // Add in those who have started the lesson.
-                $allsofar = array_merge($sofar, $lessonsofar);
-                $sofar = array_unique($allsofar);
-            }
-        }
-        if (isset($_SERVER['HTTP_REFERER'])) {
+		// New location for this code.
+        // This is only needed if this code is going to display the table.
+		if ($singleqid > 0) {
+			$slots = $this->liveviewslots($quizid, $quizcontextid);
+			$question = $this->liveviewquestion($slots);
+			$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+			// These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
+			$stanswers = array();
+			$stfraction = array();
+			list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);		
+			// End of new location for the above code.
+			$qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
+			$sofar = liveview_who_sofar_gridview($quizid);
+			if ($lessonid > 0) {
+				$lessonsofar = liveview_who_sofar_lesson($lessonid);
+				if (count($lessonsofar) > 0) {
+					// Add in those who have started the lesson.
+					$allsofar = array_merge($sofar, $lessonsofar);
+					$sofar = array_unique($allsofar);
+				}
+			}
+		}
+		if (isset($_SERVER['HTTP_REFERER'])) {
             $backurl = $_SERVER['HTTP_REFERER'];
             // The request may have come from the iframe.
             $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);

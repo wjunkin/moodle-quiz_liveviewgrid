@@ -79,3 +79,7 @@ Changes for version 2.1.3 (2021091100)
     Changed the code singleq_histogram.php (the code that was used for allresponses.php) so that it called on files only in report/liveviewgrid. Created a new file to show the histograms called multi_tooltip_graph.php. Previously only worked if liveviewpoll was installed.
 Changes for version 2.1.4 (2021101200)
     The program now handles matrix questions correctly. This included adding new files to create a histogram for matrix questions, matrixgraph.php and classes/quiz_liveviewgrid_matrixgraphlib.php to draw the histogram for matrix questions as well as changing the code in locallib.php, report.php, and table_iframe27.php to handle the display and grading/color for studeent responses.
+Changes for version 3.2 (2022050500) This version for Moodle 4.0+ (it will not work for versions before 4.0) handles match questions correctly.
+Changes for version 3.2.1 (2022050900) I have moved the code that checks which groups a teacher can see before the code that gets gets student responses.
+Changes for version 3.2.2 (2022051000) If the main report page doesn't display a table ($singleqid = 0) I have put some of the table code into an if statement that excludes this code.
+ 
