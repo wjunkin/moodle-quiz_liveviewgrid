@@ -130,7 +130,7 @@ if ($showresponses) {
         }
         echo "</span><br />";
     }
-    echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+    echo "\n<button id='button1' class='btn btn-primary' type='button'  onclick=\"optionfunction()\">";
     echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
     echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
     echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
@@ -354,7 +354,7 @@ if (($singleqid > 0) && (!($shownames))) {
     echo "<td>";
 
     echo "\n<div class=\"lvdropdown\" style='width: 100%'>";
-    echo "\n<button onclick=\"mylvdropdownFunction()\" class=\"lvdropbtn\" style='width: 100%'";
+    echo "\n<button onclick=\"mylvdropdownFunction()\" class=\"lvdropbtn btn btn-primary\" style='width: 100%'";
     if ((count($initials) > 0) && (count($noanswer) > 0)) {
         echo "title='".get_string('answeredinfo', 'quiz_liveviewgrid')."'";
     }

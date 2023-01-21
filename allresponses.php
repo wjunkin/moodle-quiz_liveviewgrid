@@ -52,7 +52,7 @@ echo "<h2 style='text-align:center'>".get_string('allresponses', 'quiz_liveviewg
 if (isset($_SERVER['HTTP_REFERER'])) {
     echo "\n<br /><a href='".$_SERVER['HTTP_REFERER']."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
 }
-echo "<input type=\"button\" id=\"printbutton\" onclick=\"window.print();\"
+echo "<input type=\"button\" class='btn btn-primary' id=\"printbutton\" onclick=\"window.print();\"
     title=\"".get_string('printinfo', 'quiz_liveviewgrid')."\"
     value=\"".get_string('printpage', 'quiz_liveviewgrid')."\" />";
 // Check permissions.
@@ -145,7 +145,7 @@ echo "\n.lvdropdown a:hover {background-color: #ddd;}";
 
 echo "\n.show {display: block;}";
 echo "\n</style>";
-echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+echo "\n<button id='button1' type='button' class='btn btn-primary' onclick=\"optionfunction()\">";
 echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
 echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
 echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php\">";

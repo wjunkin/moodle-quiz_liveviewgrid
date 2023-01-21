@@ -46,6 +46,8 @@ echo "<html><head>";
 echo "<title>".get_string('iframe', 'quiz_liveviewgrid').$quiz->name."</title>";
 echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
 echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\" type=\"text/css\" rel=\"stylesheet\">";
+
+echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".$CFG->theme."/".$CFG->themerev."_2/all\" />";
 echo "\n</head><body>";
 $slots = array();
 $question = array();

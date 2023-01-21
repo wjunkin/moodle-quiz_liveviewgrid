@@ -105,10 +105,10 @@ function liveview_question_button($buttontext, $hidden, $linkid) {
         $mytext .= "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
     }
     $mytext .= "<div class=\"showTip $linkid\">";
-    $mytext .= "<input type=\"submit\" value=\"".htmlentities($buttontext)."\"></form>";
+    $mytext .= "<input class='btn btn-primary' type=\"submit\" value=\"".htmlentities($buttontext)."\"></form>";
     $mytext .= "</div>";
     return $mytext;
-}
+}//echo "<input class='btn btn-primary' type=\"submit\" value=\"$buttontext\"></form></td>";
 
 /**
  * A function to create a dropdown menu for the groups.
@@ -1103,7 +1103,7 @@ function liveviewgrid_display_option_form ($hidden) {
             echo "\n  }";
             echo "\n}";
             echo "\n</script>  ";
-            echo "\n<button id='button1' type='button'  onclick=\"optionfunction()\">";
+            echo "\n<button id='button1' type='button' class='btn btn-primary'  onclick=\"optionfunction()\">";
             echo get_string('clicktodisplay', 'quiz_liveviewgrid')."</button>";
             echo "\n<div class='myoptions' id='option1' style=\"display:none;\">";
             echo "<form action=\"".$CFG->wwwroot."/mod/quiz/report.php\">";
@@ -1247,4 +1247,22 @@ function liveviewquestion($slots, $singleqid) {
 		}
 	}
     return $question;
+}
+
+function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
+	global $CFG, $DB;
+	$pics = array();
+	$pics = explode('@@PLUGINFILE@@/', $qtext2);
+	$id=14;
+	$time = time();
+	$ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+	$coursecontextid = $ccontext->id;
+	$ucontext = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $userid));
+	$usercontextid = $ucontext->id;
+	$quba = $DB->insert_record('question_usages', array('contextid' => $usercontextid, 'component' => 'core_question_preview', 'preferredbehaviour' => 'deferredfeedback'));
+	$attempt = $DB->insert_record('question_attempts', array('questionusageid' => $quba, 'slot' => $slot, 'behaviour' => 'deferredfeedback', 'questionid' => $questionid, 'variant' => 1, 'maxmark' => 1.0, 'minfraction' => 0.0, 'flagged' => 0, 'questionsummary' => 'Hi, world', 'rightanswer' => 'Helloworld', 'timemodified' => $time));
+	$astep = $DB->insert_record('question_attempt_steps', array('questionattemptid' => $attempt, 'sequencenumber' => 0, 'state' => 'todo', 'timecreated' => $time, 'userid' => $userid));
+	$replacetext = "http://localhost/moodle402b/pluginfile.php/$coursecontextid/question/questiontext/$quba/$slot/$questionid/";
+	$qtextgood = implode($replacetext, $pics);
+	return $qtextgood;
 }

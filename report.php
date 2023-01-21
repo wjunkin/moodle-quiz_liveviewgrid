@@ -84,10 +84,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      */
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB, $CFG, $USER;
-$hidden = liveviewgrid_update_hidden($course);
-foreach ($hidden as $hkey => $hvalue) {
-	$$hkey = $hvalue;
-}
+		$hidden = liveviewgrid_update_hidden($course);
+		foreach ($hidden as $hkey => $hvalue) {
+			$$hkey = $hvalue;
+		}
         // This is only needed if this code is going to display the table.
 		if ($singleqid > 0) {
 			$slots = array();
@@ -136,7 +136,7 @@ foreach ($hidden as $hkey => $hvalue) {
                     $backurl = $_SERVER['HTTP_REFERER'];
                     // The request may have come from the iframe.
                     $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
-                    echo "\n<br /><a href='".$backurl."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+                    echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
                 }
                 return true;// Don't show anything if teacher has to select a group and hasn't done this.
             } else if ($currentgroup > 0) {
@@ -178,7 +178,7 @@ foreach ($hidden as $hkey => $hvalue) {
             $backurl = $_SERVER['HTTP_REFERER'];
             // The request may have come from the iframe.
             $backurl = preg_replace('/report\/liveviewgrid\/table_iframe27/', 'report', $backurl);
-            echo "\n<br /><a href='".$backurl."'><button>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
+            echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".get_string('back', 'quiz_liveviewgrid')."</button></a>";
         }
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
@@ -193,6 +193,10 @@ foreach ($hidden as $hkey => $hvalue) {
             if ($singleqid > 0) {
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
 				$qtext2 = $questiontext->questiontext;
+				if (preg_match('/<img src=\"@@PLUGINFILE@@/', $qtext2, $matches)) {
+					$qslot = $slots[$singleqid];
+					$qtext2 = changepic_url($qtext2, $singleqid, $courseid, $qslot, $USER->id);
+				}
                 echo "\n".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
                 if ($questiontext->qtype == 'matrix') {
                     list($rowtext, $collabel, $goodans, $grademethod) = goodans($singleqid);
@@ -391,7 +395,7 @@ foreach ($hidden as $hkey => $hvalue) {
         foreach ($hidden as $key => $value) {
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
         }
-        echo "<input type=\"submit\" value=\"$buttontext\"></form></td>";
+        echo "<input class='btn btn-primary' type=\"submit\" value=\"$buttontext\"></form></td>";
         if ($singleqid > 0) {
             // Find any student who has not submitted an answer if names are hidden.
             // Getting and preparing to sorting users.
@@ -491,7 +495,7 @@ foreach ($hidden as $hkey => $hvalue) {
             echo "<td>";
 
             echo "\n<div class=\"lvdropdown\" style='width: 100%'>";
-            echo "\n<button onclick=\"mylvdropdownFunction()\" class=\"lvdropbtn\" style='width: 100%'";
+            echo "\n<button onclick=\"mylvdropdownFunction()\" class=\"lvdropbtn btn btn-primary\" style='width: 100%'";
             if ((count($initials) > 0) && (count($noanswer) > 0)) {
                 echo "title='".get_string('answeredinfo', 'quiz_liveviewgrid')."'";
             }
