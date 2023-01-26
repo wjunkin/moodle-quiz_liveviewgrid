@@ -1274,7 +1274,6 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
     global $CFG, $DB;
     $pics = array();
     $pics = explode('@@PLUGINFILE@@/', $qtext2);
-    $id = 14;$debug = optional_param('debug', 0, PARAM_INT);if($debug) {$mynum = count($pics) - 1;echo "\n<br />There are $mynum images in this question text.";} else {echo "\n<br />debug is $debug";}
     $time = time();
     $ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
     $coursecontextid = $ccontext->id;
