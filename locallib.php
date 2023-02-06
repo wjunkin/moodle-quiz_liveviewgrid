@@ -21,7 +21,7 @@
  * @copyright  2018 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+//$multisingle=1; //Twingsister to be considered multisingle is missing 
 /**
  * Return the number of users who have submitted answers to this quiz instance.
  *
@@ -258,7 +258,8 @@ function liveviewgrid_get_answers($quizid) {
         $qubaid = $datum->uniqueid;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
-        if ($question->qtype == 'multichoice') {
+        if ($question->qtype == 'geogebra') { // Twingsister
+        } else if ($question->qtype == 'multichoice') {
             $multidata[$datum->id] = $datum;
             // I will deal with multichoice later.
         } else if (($question->qtype == 'essay') || ($question->qtype == 'shortanswer')) {
@@ -480,7 +481,7 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
-    if (count($multidata) > 0) {// Here all questions are qtype = multichoice.
+    if (($question->qtype == 'multichoice') &&  (count($multidata) > 0)) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
             $questionid = $multidatum->questionid;
             $usrid = $multidatum->userid;
