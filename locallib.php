@@ -253,6 +253,7 @@ function liveviewgrid_get_answers($quizid) {
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
     $datumm = array();
+    $multidata = array(); //Twingsister
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
@@ -481,7 +482,7 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
-    if (($question->qtype == 'multichoice') &&  (count($multidata) > 0)) {// Here all questions are qtype = multichoice.
+    if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
             $questionid = $multidatum->questionid;
             $usrid = $multidatum->userid;
