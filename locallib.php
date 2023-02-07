@@ -252,7 +252,7 @@ function liveviewgrid_get_answers($quizid) {
     $stfraction = array();
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
-    $datumm = array();
+    $datum = array();
     $multidata = array(); //Twingsister
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
@@ -260,6 +260,14 @@ function liveviewgrid_get_answers($quizid) {
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'geogebra') { // Twingsister
+            if ($datum->name == 'answer') {
+            xdebug_break();
+       //     $foo=array_keys($datum);
+                $stanswers[$usrid][$datum->questionid] = $datum->value;
+                //$tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
+                //$stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
+                $stfraction[$usrid][$datum->questionid] = $datum->value;
+            }
         } else if ($question->qtype == 'multichoice') {
             $multidata[$datum->id] = $datum;
             // I will deal with multichoice later.
@@ -705,7 +713,7 @@ function liveviewslots($quizid, $quizcontextid) {
  * @param int $quizcontextid The id for the context for this quiz.
  */
 function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid) {
-    global $DB, $USER;
+    global $DB, $USER,$CFG;
     // Getting and preparing to sorting users.
     // The first and last name are in the initials array.
     $hidden = liveviewgrid_update_hidden($course);
@@ -770,7 +778,6 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
     }
     // The array for storing the all the texts for tootips.
     $tooltiptext = array();
-
     $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
     $togglekey = '';
     foreach ($slots as $key => $slotvalue) {
@@ -1057,6 +1064,7 @@ function liveviewgrid_update_hidden ($course) {
         $showlesson = 0;
     }
     $refresht = optional_param('refresht', 3, PARAM_INT);
+    //$showautorefresh = optional_param('showautorefresh', 0, PARAM_INT);
     $activetime = optional_param('activetime', 10, PARAM_INT);
     // The array of hidden values is hidden[].
     $hidden = array();
@@ -1076,6 +1084,7 @@ function liveviewgrid_update_hidden ($course) {
     $hidden['showlesson'] = $showlesson;
     $hidden['lessonid'] = $lessonid;
     $hidden['refresht'] = $refresht;
+    //$hidden['showautorefresh'] = $showautorefresh;
     $hidden['activetime'] = $activetime;
     foreach ($hidden as $hiddenkey => $hiddenvalue) {
         if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
@@ -1218,12 +1227,14 @@ function liveviewgrid_display_option_form ($hidden) {
     echo " <input type='radio' name='activetime' value=600 ".$checked['activet600'].">600";
     echo get_string('minutes', 'quiz_liveviewgrid');
     echo "</td></tr>";
+    /*
     echo "\n<tr>".$td.get_string('showautorefresh', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='ahowautorefresh' value=1 ".$checked['autorefresh'].">";
+    echo $td."<input type='radio' name='showautorefresh' value=1 ".$checked['showautorefresh'].">";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='ahowautorefresh' value=0 ".$notchecked['ahowautorefresh']."> ";
+    echo $td."<input type='radio' name='showautorefresh' value=0 ".$notchecked['showautorefresh']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     echo "</td></tr>";
+    */
     if ($haslesson) {
         echo "\n<tr>".$td.get_string('showlessonstatus', 'quiz_liveviewgrid')."</td>";
         echo $td."<input type='radio' name='showlesson' value=1 ".$checked['showlesson']."> ";
