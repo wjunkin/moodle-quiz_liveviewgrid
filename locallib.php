@@ -261,7 +261,7 @@ function liveviewgrid_get_answers($quizid) {
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'geogebra') { // Twingsister
             if ($datum->name == 'answer') {
-            xdebug_break();
+            //xdebug_break();
        //     $foo=array_keys($datum);
                 $stanswers[$usrid][$datum->questionid] = $datum->value;
                 //$tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
