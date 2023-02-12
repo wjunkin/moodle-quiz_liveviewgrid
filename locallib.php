@@ -498,6 +498,12 @@ function liveviewgrid_get_answers($quizid) {
                 $ans = $DB->get_record('question_answers', array('id' => $chosen));
                 $anstext = preg_replace('/<p.+?>/', '', $ans->answer);
                 $anstext = preg_replace("/<\/p>/", '', $anstext);
+                // Check if answer has a picture.
+                if (preg_match('/src=\"@@PLUGINFILE@@/', $anstext, $matches)) {
+                    $quiz = $DB->get_record('quiz', array('id' => $quizid));
+                    $anstext = answerpic_url($anstext, $questionid, $chosen, $courseid, $usrid);
+                }
+
                 $stanswers[$usrid][$questionid] = $anstext;
                 $stfraction[$usrid][$questionid] = $ans->fraction;
             }
@@ -975,8 +981,8 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
                             $answer = preg_replace("/&nbsp;/", ' ', $answer);// Changing &nbsp; back to a space.
                             $safeanswer = htmlentities($answer);
                             $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
-                            $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".addslashes($safeanswer1).$link."'";
-                                $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                            $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".$answer.$link."'";
+                            $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
                             // Making sure we pick up whole words.
                             preg_match_all('/./u', $answer, $matches);
                             $ntrun = 0;
@@ -987,6 +993,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
                                 }
                                 $ntrun++;
                             }
+                            $truncated = htmlentities($truncated);
                             $myrow .= $truncated.$link;
                             $myrow .= " $dotdot</div></td>";
                         }
@@ -1263,7 +1270,7 @@ function liveviewquestion($slots, $singleqid) {
 }
 
 /**
- * Function to change the urls of image links to the correct url.
+ * Function to change the urls of image links in question text to the correct url.
  * @param text $qtext2 The text to be changed.
  * @param int $questionid The id of the question where the text is found.
  * @param int $courseid The id course containing this quiz.
@@ -1289,4 +1296,36 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
     $replacetext = $CFG->wwwroot."/pluginfile.php/$coursecontextid/question/questiontext/$quba/$slot/$questionid/";
     $qtextgood = implode($replacetext, $pics);
     return $qtextgood;
+}
+
+/**
+ * Function to change the urls of image links in answer text to the correct url.
+ * @param text $answer The text to be changed.
+ * @param int $questionid The id of the question where the text is found.
+ * @param int $answerid The id of the answer the student selected.
+ * @param int $courseid The id course containing this quiz.
+ * @param int $userid The id for the user (teacher) using the Live Report module.
+ */
+function answerpic_url($answer, $questionid, $answerid, $courseid, $userid) {
+    global $CFG, $DB;
+    $pics = array();
+    $pics = explode('@@PLUGINFILE@@/', $answer);
+    $time = time();
+    $slot = 1;// Just a dummy number.
+    $ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+    $coursecontextid = $ccontext->id;
+    $ucontext = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $userid));
+    $usercontextid = $ucontext->id;
+    $quba = $DB->insert_record('question_usages', array('contextid' => $usercontextid, 'component' => 'core_question_preview',
+        'preferredbehaviour' => 'deferredfeedback'));
+    $attempt = $DB->insert_record('question_attempts', array('questionusageid' => $quba, 'slot' => $slot,
+        'behaviour' => 'deferredfeedback', 'questionid' => $questionid, 'variant' => 1, 'maxmark' => 1.0, 'minfraction' => 0.0,
+        'flagged' => 0, 'questionsummary' => 'Hi, world', 'rightanswer' => 'Helloworld', 'timemodified' => $time));
+    $astep = $DB->insert_record('question_attempt_steps', array('questionattemptid' => $attempt, 'sequencenumber' => 0,
+        'state' => 'todo', 'timecreated' => $time, 'userid' => $userid));
+    $astepdata = $DB->insert_record('question_attempt_step_data',
+        array('attemptstepid' => $astep, 'name' => '_order', 'value' => $answerid));
+    $replacetext = $CFG->wwwroot."/pluginfile.php/$coursecontextid/question/answer/$quba/$slot/$answerid/";
+    $answergood = implode($replacetext, $pics);
+    return $answergood;
 }
