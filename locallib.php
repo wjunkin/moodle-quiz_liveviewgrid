@@ -261,12 +261,13 @@ function liveviewgrid_get_answers($quizid) {
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'geogebra') { // Twingsister
             if ($datum->name == 'answer') {
-            //xdebug_break();
-       //     $foo=array_keys($datum);
-                $stanswers[$usrid][$datum->questionid] = $datum->value;
-                //$tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
-                //$stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
-                $stfraction[$usrid][$datum->questionid] = $datum->value;
+            xdebug_break();
+            //$foo=array_keys($datum);
+            // $datum->value; contains a percent % separated list of answers
+                $stanswers[$usrid][$datum->questionid] =0.5;  // TWINGSISTER DEBUG $datum->value;
+                $tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
+                $stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
+                //$stfraction[$usrid][$datum->questionid] = $datum->value;
             }
         } else if ($question->qtype == 'multichoice') {
             $multidata[$datum->id] = $datum;
