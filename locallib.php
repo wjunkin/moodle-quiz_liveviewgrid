@@ -250,23 +250,25 @@ function liveviewgrid_get_answers($quizid) {
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
+    $ggbcode= array(); //Twingsister collect ggb last saved status
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
     $datum = array();
-    $multidata = array(); //Twingsister
+    //$multidata = array(); //Twingsister 
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'geogebra') { // Twingsister
+            //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
             if ($datum->name == 'answer') {
             xdebug_break();
             //$foo=array_keys($datum);
             // $datum->value; contains a percent % separated list of answers
-                $stanswers[$usrid][$datum->questionid] =0.5;  // TWINGSISTER DEBUG $datum->value;
+                $stanswers[$usrid][$datum->questionid] ="A tooltip";  // TWINGSISTER DEBUG $datum->value;
                 $tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
-                $stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
+                $stfraction[$usrid][$datum->questionid] = 1.0; //sets the color// $tfresponse->fraction;
                 //$stfraction[$usrid][$datum->questionid] = $datum->value;
             }
         } else if ($question->qtype == 'multichoice') {
