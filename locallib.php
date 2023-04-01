@@ -208,7 +208,48 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
     }
     echo "</tr></table>";
 }
-
+function ggbTotal(array $answers,string $resp){
+ //$j = 0;
+ $fraction = 0;
+ $summary = '';
+ //$responseclass = '';
+ $values = explode("%",$resp); // Twingsister
+ $resmap = array();
+ foreach ($values as $ans) {
+  $tmp=explode(':',$ans);
+  $resmap[$tmp[0]]=$tmp[1];
+ }
+ if(count($resmap)!=count($answers)){
+     $fraction=1.0;
+     $summary='mismatch answers';
+ } else {
+    foreach ($answers as $answer) {
+        //  add a comma if necessary
+        if ($summary !== '') {
+            $summary .= ', ';
+        }
+        // the name of the variable
+        $summary .= $answer->answer . '=';
+        //$responseclass .= $answer->answer . '=' . $values[$j];
+        // contribution to the result
+        $valnum = (array_key_exists($answer->answer,$resmap)?$resmap[$answer->answer]:'1');
+        $valnum =  ($valnum == "true"?1:($valnum == "false"?0:floatval($valnum)));
+        $fraction += ($answer->fraction)*$valnum;
+        $summary .= sprintf("%.2f",$valnum) . ',' .
+            get_string('grade', 'grades') . ': ' .
+            sprintf("%.2f",$answer->fraction);
+            //$summary .= format_float($valnum, 2, false, false) . ',' .
+            //            get_string('grade', 'grades') . ': ' .
+            //            format_float($answer->fraction, 2, false, false);
+            //$j++;
+    }
+    if ($fraction > 1) {
+        $fraction = 1;
+    }
+    $summary .= '; ' . get_string('total', 'grades') . ': ' . $fraction;
+ }
+    return array('summary'=>$summary, 'fraction'=>$fraction);//,'responseclass'=>$responseclass);
+} 
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  *
@@ -254,7 +295,7 @@ function liveviewgrid_get_answers($quizid) {
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
     $datum = array();
-    //$multidata = array(); //Twingsister 
+    $multidata = array(); //Twingsister 
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
@@ -264,12 +305,12 @@ function liveviewgrid_get_answers($quizid) {
             //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
             if ($datum->name == 'answer') {
             xdebug_break();
-            //$foo=array_keys($datum);
-            // $datum->value; contains a percent % separated list of answers
-                $stanswers[$usrid][$datum->questionid] ="A tooltip";  // TWINGSISTER DEBUG $datum->value;
-                $tfresponse = $DB->get_record('question_answers', array('id' => $datum->questionid));
-                $stfraction[$usrid][$datum->questionid] = 1.0; //sets the color// $tfresponse->fraction;
-                //$stfraction[$usrid][$datum->questionid] = $datum->value;
+                // get all the ->answer the name of the variable ->fraction the fraction in the note ->feedback
+                $ggbanswers =$DB->get_records('question_answers', array('question' => $datum->questionid), $sort='', $fields='*', $limitfrom=0, $limitnum=0);
+                //$datum->value; contains a percent % separated list of answers
+                $tot=ggbTotal($ggbanswers,$datum->value);
+                $stanswers[$usrid][$datum->questionid] =$tot['summary'];//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
+                $stfraction[$usrid][$datum->questionid] =$tot['fraction']; //sets the color// $tfresponse->fraction;
             }
         } else if ($question->qtype == 'multichoice') {
             $multidata[$datum->id] = $datum;
