@@ -212,13 +212,22 @@ function ggbTotal(array $answers,string $resp){
  //$j = 0;
  $fraction = 0;
  $summary = '';
- //$responseclass = '';
- $values = explode("%",$resp); // Twingsister
- $resmap = array();
- foreach ($values as $ans) {
-  $tmp=explode(':',$ans);
-  $resmap[$tmp[0]]=$tmp[1];
- }
+ if (str_contains($resp, ':')) {
+    $values = explode("%",$resp); // Twingsister
+    $resmap = array();
+    foreach ($values as $ans) {
+        $tmp=explode(':',$ans);
+        $resmap[$tmp[0]]=$tmp[1];
+    }
+ } else {
+     $i=0;
+     foreach ($answers as $answer) {
+         $resmap[$answer->answer]=($resp[$i]=='0'?'false':'true');
+         $i++;
+         // string $resp is like "0110"
+     }
+         
+ } //old qtype
  if(count($resmap)!=count($answers)){
      $fraction=1.0;
      $summary='mismatch answers';
