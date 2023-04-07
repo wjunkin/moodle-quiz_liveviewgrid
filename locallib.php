@@ -208,7 +208,52 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
     }
     echo "</tr></table>";
 }
-
+/**
+ * A function to return the answer and fractional value (grade) for geogebra questions..
+ *
+ * @param array $answers The answers in the question_answer table.
+ * @param string $resp The responses from the student.
+ * @return array $return $return['summary'] =  summary of student resonse. $return['fraction'] = fractional value for this response.
+ **/
+function ggbtotal(array $answers, string $resp) {
+    $fraction = 0;
+    $summary = '';
+    $values = explode("%", $resp);
+    $resmap = array();
+    foreach ($values as $ans) {
+        $tmp = explode(':', $ans);
+        $resmap[$tmp[0]] = $tmp[1];
+    }
+    if (count($resmap) != count($answers)) {
+        $fraction = 1.0;
+        $summary = 'mismatch answers';
+    } else {
+        foreach ($answers as $answer) {
+            // Add a comma if necessary.
+            if ($summary !== '') {
+                $summary .= ', ';
+            }
+            // The name of the variable.
+            $summary .= $answer->answer . '=';
+            // Contribution to the result.
+            $valnum = (array_key_exists($answer->answer, $resmap) ? $resmap[$answer->answer] : '1');
+            $valnum = ($valnum == "true" ? 1 : ($valnum == "false" ? 0 : floatval($valnum)));
+            $fraction += ($answer->fraction) * $valnum;
+            $summary .= sprintf("%.2f", $valnum) . ',' .
+                get_string('grade', 'grades') . ': ' .
+                sprintf("%.2f", $answer->fraction);
+        }
+        if ($fraction > 1) {
+            $fraction = 1;
+        }
+        $summary .= '; ' . get_string('total', 'grades') . ': ' . $fraction;
+    }
+    // Note: responseclass becomes $responseclass.
+	$return = array();
+	$return['summary'] = $summary;
+	$return['fraction'] = $fraction;
+	return $return;
+}
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  *
@@ -250,15 +295,26 @@ function liveviewgrid_get_answers($quizid) {
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
+    $ggbcode = array(); // Twingsister collect ggb last saved status.
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
-    $datumm = array();
+    $datum = array();
+    $multidata = array(); // Twingsister.
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
-        if ($question->qtype == 'multichoice') {
+        if ($question->qtype == 'geogebra') { // Twingsister.
+            if ($datum->name == 'answer') {
+                // Get all the ->answer the name of the variable ->fraction the fraction in the note ->feedback.
+                $ggbanswers = $DB->get_records('question_answers', array('question' => $datum->questionid),
+                    $sort = '', $fields = '*', $limitfrom = 0, $limitnum = 0);
+                $tot = ggbtotal($ggbanswers, $datum->value);
+                $stanswers[$usrid][$datum->questionid] = $tot['summary'];// A tooltip.
+                $stfraction[$usrid][$datum->questionid] = $tot['fraction']; // Sets the color, $tfresponse->fraction.
+            }
+        } else if ($question->qtype == 'multichoice') {
             $multidata[$datum->id] = $datum;
             // I will deal with multichoice later.
         } else if (($question->qtype == 'essay') || ($question->qtype == 'shortanswer')) {
@@ -413,7 +469,7 @@ function liveviewgrid_get_answers($quizid) {
                     }
                     $stanswers[$usrid][$datum->questionid] = join(';&nbsp;', $matrixresponse[$datum->attemptstepid]);
                     $stfraction[$usrid][$datum->questionid] = 0.0001;
-                } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
+                } else if (count($myresponse) > 0) {
                     $clozeresponse = array();// An array for the Close responses.
                     $clozegrade = 0;
                     $multimresponse = array();
@@ -480,7 +536,7 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
-    if (count($multidata) > 0) {// Here all questions are qtype = multichoice.
+    if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
             $questionid = $multidatum->questionid;
             $usrid = $multidatum->userid;
@@ -503,7 +559,6 @@ function liveviewgrid_get_answers($quizid) {
                     $quiz = $DB->get_record('quiz', array('id' => $quizid));
                     $anstext = answerpic_url($anstext, $questionid, $chosen, $courseid, $usrid);
                 }
-
                 $stanswers[$usrid][$questionid] = $anstext;
                 $stfraction[$usrid][$questionid] = $ans->fraction;
             }
@@ -709,7 +764,7 @@ function liveviewslots($quizid, $quizcontextid) {
  * @param int $quizcontextid The id for the context for this quiz.
  */
 function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid) {
-    global $DB, $USER;
+    global $DB, $USER, $CFG;
     // Getting and preparing to sorting users.
     // The first and last name are in the initials array.
     $hidden = liveviewgrid_update_hidden($course);
@@ -774,7 +829,6 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
     }
     // The array for storing the all the texts for tootips.
     $tooltiptext = array();
-
     $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
     $togglekey = '';
     foreach ($slots as $key => $slotvalue) {
@@ -982,7 +1036,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
                             $safeanswer = htmlentities($answer);
                             $safeanswer1 = preg_replace("/\n/", "<br />", $safeanswer);
                             $tooltiptext[] .= "\n    link".$user.'_'.$questionid.": '".$answer.$link."'";
-                            $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
+                                $myrow .= $style."><div class=\"showTip link".$user.'_'.$questionid."\">";
                             // Making sure we pick up whole words.
                             preg_match_all('/./u', $answer, $matches);
                             $ntrun = 0;
@@ -1052,6 +1106,7 @@ function liveviewgrid_update_hidden ($course) {
     $showanswer = optional_param('showanswer', 0, PARAM_INT);
     $shownames = optional_param('shownames', 1, PARAM_INT);
     $status = optional_param('status', 0, PARAM_INT);
+    $showautorefresh = optional_param('showautorefresh', 1, PARAM_INT);
     if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
         $haslesson = 1;
         $lessonid = optional_param('lessonid', 0, PARAM_INT);
@@ -1082,6 +1137,7 @@ function liveviewgrid_update_hidden ($course) {
     $hidden['lessonid'] = $lessonid;
     $hidden['refresht'] = $refresht;
     $hidden['activetime'] = $activetime;
+    $hidden['showautorefresh'] = $showautorefresh;
     foreach ($hidden as $hiddenkey => $hiddenvalue) {
         if ((!($hiddenkey == 'id')) && (!($hiddenkey == 'singleqid')) && (!($hiddenkey == 'haslesson'))
             && (!($hiddenkey == 'lessonid')) && (!($hiddenkey == 'group'))) {
@@ -1097,7 +1153,6 @@ function liveviewgrid_update_hidden ($course) {
     }
     return $hidden;
 }
-
 
 /**
  * Function to display the option form.
@@ -1224,9 +1279,9 @@ function liveviewgrid_display_option_form ($hidden) {
     echo get_string('minutes', 'quiz_liveviewgrid');
     echo "</td></tr>";
     echo "\n<tr>".$td.get_string('showautorefresh', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='ahowautorefresh' value=1 ".$checked['autorefresh'].">";
+    echo $td."<input type='radio' name='showautorefresh' value=1 ".$checked['showautorefresh'].">";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='ahowautorefresh' value=0 ".$notchecked['ahowautorefresh']."> ";
+    echo $td."<input type='radio' name='showautorefresh' value=0 ".$notchecked['showautorefresh']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     echo "</td></tr>";
     if ($haslesson) {
@@ -1297,7 +1352,6 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
     $qtextgood = implode($replacetext, $pics);
     return $qtextgood;
 }
-
 /**
  * Function to change the urls of image links in answer text to the correct url.
  * @param text $answer The text to be changed.

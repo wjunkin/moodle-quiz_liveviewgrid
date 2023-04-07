@@ -124,7 +124,9 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         echo "<i class=\"icon fa fa-question-circle text-info fa-fw \"";
         echo "  title=\"$refreshttitle\" role=\"img\" aria-label=\"$refreshttitle\"></i>";
-        echo $refreshmessage;
+        if ($showautorefresh == 1) {
+            echo $refreshmessage;
+        }
         $showresponses = false;
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
