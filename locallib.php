@@ -313,7 +313,7 @@ function liveviewgrid_get_answers($quizid) {
         if ($question->qtype == 'geogebra') { // Twingsister
             //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
             if ($datum->name == 'answer') {
-            xdebug_break();
+           // xdebug_break();
                 // get all the ->answer the name of the variable ->fraction the fraction in the note ->feedback
                 $ggbanswers =$DB->get_records('question_answers', array('question' => $datum->questionid), $sort='', $fields='*', $limitfrom=0, $limitnum=0);
                 //$datum->value; contains a percent % separated list of answers
