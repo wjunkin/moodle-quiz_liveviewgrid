@@ -218,12 +218,21 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
 function ggbtotal(array $answers, string $resp) {
     $fraction = 0;
     $summary = '';
-    $values = explode("%", $resp);
-    $resmap = array();
-    foreach ($values as $ans) {
-        $tmp = explode(':', $ans);
-        $resmap[$tmp[0]] = $tmp[1];
-    }
+    if (preg_match('/:/', $resp)) {
+        $values = explode("%", $resp); // Twingsister.
+        $resmap = array();
+        foreach ($values as $ans) {
+            $tmp = explode(':', $ans);
+            $resmap[$tmp[0]] = $tmp[1];
+        }
+    } else {
+        $i = 0;
+        foreach ($answers as $answer) {
+            $resmap[$answer->answer] = ($resp[$i] == '0' ? 'false' : 'true');
+            $i++;
+            // String $resp is like "0110".
+        }
+    } // Old qtype.
     if (count($resmap) != count($answers)) {
         $fraction = 1.0;
         $summary = 'mismatch answers';
@@ -249,10 +258,10 @@ function ggbtotal(array $answers, string $resp) {
         $summary .= '; ' . get_string('total', 'grades') . ': ' . $fraction;
     }
     // Note: responseclass becomes $responseclass.
-	$return = array();
-	$return['summary'] = $summary;
-	$return['fraction'] = $fraction;
-	return $return;
+    $return = array();
+    $return['summary'] = $summary;
+    $return['fraction'] = $fraction;
+    return $return;
 }
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
@@ -536,7 +545,7 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
-    if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
+    if (count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
             $questionid = $multidatum->questionid;
             $usrid = $multidatum->userid;
