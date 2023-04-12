@@ -1,3 +1,6 @@
+#This repository is Obsolete
+Please refer to [THIS](https://github.com/wjunkin/moodle-quiz_liveviewgrid
+) repository for a working copy
 # moodle-quiz_liveviewgrid
 Dynamic quiz spreadsheet.
 This plugin, Live Report, is compatible for Moodle 3.2+.
