@@ -96,3 +96,10 @@ Changes for version 3.2.1 (2022050900)
 Changes for version 3.2.2 (2022051000) 
     If the main report page doesn't display a table ($singleqid = 0) I have put some of the 
     table code into an if statement that excludes this code.
+Changes for version v5.0.13 (2023041100) 
+    The program now runs faster. It handles images in questions text and/or the student answers for most Moodle sites.
+    The program runs much faster.
+    The interface is cleaned up and looks better.
+    The teacher has the option to hide the key of grading colors.
+    The teacher can choose how often to refresh the view.
+    The program starts to handle geogebra questiontypes correctly.
