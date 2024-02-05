@@ -315,6 +315,7 @@ $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';
 foreach ($slots as $key => $slotvalue) {
     if (isset($question['name'][$key])) {
+        //echo $key."</br>";
         $hidden['singleqid'] = $key;
         $safequestionname = trim(strip_tags($question['name'][$key]));
         $buttontext = trim($safequestionname);
@@ -378,6 +379,7 @@ if ($showresponses) {
         }
     }
     // Create the table.
+    $row=0;
     if (isset($users)) {
         $now = time();
         $firsttime = $now - $activetime * 60;
@@ -386,6 +388,7 @@ if ($showresponses) {
             // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
             if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
                 echo "<tr>";
+                $row=$row+1;
                 if ($shownames) {
                     $bgcolor = '';
                     if ($DB->get_records_sql("SELECT id FROM {user} WHERE lastaccess > $firsttime AND id = $user")) {
@@ -527,7 +530,7 @@ if ($showresponses) {
     }
     echo "\n</table>";
     echo "\n</div>";
-
+    echo "Users quizzing:";echo $row;
     if (count($tooltiptext) > 0) {
         $tooltiptexts = implode(",", $tooltiptext);
         echo "\n<script>";

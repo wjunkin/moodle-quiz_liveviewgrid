@@ -327,6 +327,7 @@ function liveviewslots($quizid, $quizcontextid) {
     $slotsvalue = array();
     $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
+    //echo json_encode($myslots);die;
     foreach ($myslots as $key => $value) {
         $slotsvalue[$key] = $value->slot;
     }

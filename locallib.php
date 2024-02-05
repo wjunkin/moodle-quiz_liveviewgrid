@@ -212,9 +212,10 @@ function ggbTotal(array $answers,string $resp){
  //$j = 0;
  $fraction = 0;
  $summary = '';
- if (str_contains($resp, ':')) {
-    $values = explode("%",$resp); // Twingsister
-    $resmap = array();
+ // what if an empty string
+ $resmap = array();
+ if (empty($resp)){}elseif(str_contains($resp, ':')) {
+    $values = explode("%",$resp); // Twingsister key:balue%key:value no trailing %
     foreach ($values as $ans) {
         $tmp=explode(':',$ans);
         $resmap[$tmp[0]]=$tmp[1];
@@ -224,7 +225,7 @@ function ggbTotal(array $answers,string $resp){
      foreach ($answers as $answer) {
          $resmap[$answer->answer]=($resp[$i]=='0'?'false':'true');
          $i++;
-         // string $resp is like "0110"
+         // string $resp is like "0110" THIS IS OLD
      }
          
  } //old qtype
@@ -308,7 +309,7 @@ function liveviewgrid_get_answers($quizid) {
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
-        $mydm = new quiz_liveviewgrid_fraction($qubaid);
+        //$mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'geogebra') { // Twingsister
             //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
@@ -477,6 +478,7 @@ function liveviewgrid_get_answers($quizid) {
                     $stanswers[$usrid][$datum->questionid] = join(';&nbsp;', $matrixresponse[$datum->attemptstepid]);
                     $stfraction[$usrid][$datum->questionid] = 0.0001;
                 } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
+                    $mydm = new quiz_liveviewgrid_fraction($qubaid);
                     $clozeresponse = array();// An array for the Close responses.
                     $clozegrade = 0;
                     $multimresponse = array();
@@ -738,14 +740,21 @@ function goodans($questionid) {
 function liveviewslots($quizid, $quizcontextid) {
     global $DB;
     $slots = array();
+    //$altslots = array();
     $slotsvalue = array();
     $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
+    //echo json_encode($myslots);
     foreach ($myslots as $key => $value) {
         $slotsvalue[$key] = $value->slot;
     }
     $qreferences = $DB->get_records('question_references',
         array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+    //echo json_encode($qreferences);
+    //foreach ($myslots as $key => $value) {
+    //    $altslots[$key] = $value->slot;
+    //}
+    //echo json_encode($altslots);
     foreach ($qreferences as $qreference) {
         $slotid = $qreference->itemid;
         $questionbankentryid = $qreference->questionbankentryid;
@@ -755,6 +764,7 @@ function liveviewslots($quizid, $quizcontextid) {
         }
         $slots[$questionid] = $slotsvalue[$slotid];
     }
+    //echo json_encode($slots);
     return $slots;
 }
 
