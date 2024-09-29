@@ -26,6 +26,7 @@ require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php'
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_fraction.php");
 require_once($CFG->dirroot."/question/engine/lib.php");
+//xdebug_break();
 
 // Include locallib.php to obtain the functions needed. This includes the following.
 // The function liveviewgrid_group_dropdownmenu($courseid, $GETurl, $canaccess, $hidden).
@@ -62,13 +63,19 @@ $context = context_module::instance($cm->id);
 require_capability('mod/quiz:viewreports', $context);
 require_login($course, true, $cm);
 $quizcontextid = $context->id;
-$slots = liveviewslots($quizid, $quizcontextid);
-$question = liveviewquestion($slots, $singleqid);
+$slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
+$question = liveviewquestionall($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+//xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
+//these are ok even for random questions
 list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+//echo "-----------found these answers---------";
+//echo json_encode($stanswers);
+//echo json_encode($stfraction);
+//echo json_encode($stlink);
 // Check to see if the teacher has permissions to see all groups or the selected group.
 $groupmode = groups_get_activity_groupmode($cm, $course);
 $currentgroup = groups_get_activity_group($cm, true);
@@ -313,10 +320,13 @@ $tooltiptext = array();
 
 $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';
+//xdebug_break();
 foreach ($slots as $key => $slotvalue) {
-    if (isset($question['name'][$key])) {
-        //echo $key."</br>";
+    // Here is the header of the display one column for every question
+    // ordetion without a reference (e.g. randomly selected) gets NOREF in the header
         $hidden['singleqid'] = $key;
+    if ((!isdummykey($key))&&  isset($question['name'][$key])) { //(!isdummykey($key))
+        //echo $key."</br>";
         $safequestionname = trim(strip_tags($question['name'][$key]));
         $buttontext = trim($safequestionname);
         $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
@@ -329,9 +339,11 @@ foreach ($slots as $key => $slotvalue) {
         // Get rid of any <script> tags that may mess things up.
         $ttiptext = preg_replace("/\<script.*\<\/script\>/m", '', $ttiptext);
         $tooltiptext[] .= "\n    linkqtext_".$key.": '".addslashes($ttiptext)."'";
+    } else{$tooltiptext[] .= "\n    linkqtext_".$key.": '"."Randomly selected question"."'";}
         $info = '';
         echo "<td>";
         $linkid = "linkqtext_$key";
+        if((!isdummykey($key))){
         if (strlen($buttontext) > $trun) {
             preg_match_all('/./u', $buttontext, $matches);
             $ntrun = 0;
@@ -344,20 +356,19 @@ foreach ($slots as $key => $slotvalue) {
             }
             $buttontext = $truncated;
         }
+        }else{$buttontext="Ref";$hidden;}//$linkid="'Randomquiz'";}
         echo liveview_question_button($buttontext, $hidden, $linkid);
         echo "</td>";
-    } else {
-        echo "<td></td>";
-    }
-    if ($question['qtype'][$key] == 'matrix') {
+        //echo "<td>NOREF</td>";
+    if ((!isdummykey($key))&& $question['qtype'][$key] == 'matrix') { // TWINGSISTER
         // Put in correct row answers for each matrix question.
         $goodans[$key] = array();// The good answer for each row, indexed by row. There each question has unique rowids.
         list($rowtext[$key], $collabel[$key], $goodans[$key], $grademethod[$key]) = goodans($key);
     }
 }
+// header of the table is out
 echo "</tr>\n</thead>\n";
 $hidden['singleqid'] = $singleqid;
-
 if ($showresponses) {
     // Javascript and css for tooltips.
         echo "\n<script type=\"text/javascript\">";
@@ -385,8 +396,9 @@ if ($showresponses) {
         $firsttime = $now - $activetime * 60;
         echo "\n<tbody>";
         foreach ($users as $user) {
+            // go if singleqid is  dummy
             // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
-            if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
+            if (($shownames) || ($singleqid == 0) || isdummykey($singleqid)|| isset($stanswers[$user][$singleqid])) {
                 echo "<tr>";
                 $row=$row+1;
                 if ($shownames) {
@@ -397,15 +409,20 @@ if ($showresponses) {
                     echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                 }
                 $myrow = '';
+                // put a link if there is a reference
                 foreach ($slots as $questionid => $slotvalue) {
-                    if (isset($stlink[$user][$questionid])) {
+                    if(isdummykey($questionid)){$questionid=0;}
+                    //xdebug_break();
+                    // if it is a randomly selected quiz adjust $questionid
+                   //if(!isdummykey($questionid))&&
+                    if (isset($stlink[$user][$questionid])) { //Twingsister
                         $link = $stlink[$user][$questionid];
                     } else {
                         $link = '';
                     }
-                    if (($questionid != "") && ($questionid != 0)) {
+                    if (!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) {//
                         if (isset($stanswers[$user][$questionid])) {
-                            if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] > 1))) {
+                            if (is_array($stanswers[$user][$questionid]) && (count($stanswers[$user][$questionid] )> 1)) {
                                 $answer = '';
                                 foreach ($stanswers[$user][$questionid] as $key => $value) {
                                     $answer .= $key."=".$value."; ";
@@ -422,7 +439,7 @@ if ($showresponses) {
                     }
                         $style = '<td';
                     if ($evaluate) {
-                        if ($question['qtype'][$questionid] == 'matrix') {
+                        if ((!isdummykey($questionid))&&($questionid != "") && ($questionid != 0)&& $question['qtype'][$questionid] == 'matrix') {
                             $grade = 0;
                             if (strlen($stanswers[$user][$questionid]) > 0) {
                                 $myansws = explode(';&nbsp;', $stanswers[$user][$questionid]);
@@ -459,9 +476,10 @@ if ($showresponses) {
                                 $matrixfr = 0;
                             }
                             $stfraction[$user][$questionid] = $matrixfr;
-                        }
+                        }//(!isdummykey($questionid))&&
                         if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                             $myfraction = $stfraction[$user][$questionid];
+                            //echo "here for the color", $myfraction;
                             if ($rag == 1) {// Colors from image from Moodle.
                                 if ($myfraction < 0.0015) {
                                     $redpart = 244;
@@ -486,9 +504,10 @@ if ($showresponses) {
                                 $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
                             }
                             $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
-                        }
+                        } //else if(isdummykey($questionid)){}
                     }
-                    if ((strlen($answer) < $trun) || ($singleqid > 0)) {
+                       // xdebug_break();    
+                    if ( ($singleqid > 0)||(strlen($answer) < $trun) ) { //isdummykey($questionid)||
                             $myrow .= $style.">&nbsp;".$answer.$link."</td>";
                     } else {
                         // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
@@ -510,7 +529,7 @@ if ($showresponses) {
                         $myrow .= $truncated.$link;
                         $myrow .= " $dotdot</div></td>";
                     }
-                }
+                } // all the grades are in the table
                 if ($showlesson) {
                     if ($lessonid > 0) {
                         echo "<td>".$lessonstatus[$user]."</td>";
@@ -531,6 +550,7 @@ if ($showresponses) {
     echo "\n</table>";
     echo "\n</div>";
     echo "Users quizzing:";echo $row;
+    //echo json_encode($tooltiptext); die;
     if (count($tooltiptext) > 0) {
         $tooltiptexts = implode(",", $tooltiptext);
         echo "\n<script>";

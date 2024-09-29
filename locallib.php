@@ -111,7 +111,7 @@ function liveview_question_button($buttontext, $hidden, $linkid) {
 /**
  * A function to create a dropdown menu for the groups.
  *
- * @param int $courseid The id for the course.
+ * @param int $courseid The id for the course
  * @param string $geturl The url for the form when submit is clicked.
  * @param int $canaccess Whether the user can (1) or cannot (0) access all groups.
  * @param array $hidden The array of keys and values for the hidden inputs in the form.
@@ -210,9 +210,10 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
 }
 function ggbTotal(array $answers,string $resp){
  //$j = 0;
- $fraction = 0;
- $summary = '';
+ $fraction = 0.0; //the mark
+ $summary = ''; // the explaination
  // what if an empty string
+ //echo "Convert --->",$resp;
  $resmap = array();
  if (empty($resp)){}elseif(str_contains($resp, ':')) {
     $values = explode("%",$resp); // Twingsister key:balue%key:value no trailing %
@@ -220,7 +221,7 @@ function ggbTotal(array $answers,string $resp){
         $tmp=explode(':',$ans);
         $resmap[$tmp[0]]=$tmp[1];
     }
- } else {
+ } else { //old string of 01
      $i=0;
      foreach ($answers as $answer) {
          $resmap[$answer->answer]=($resp[$i]=='0'?'false':'true');
@@ -228,7 +229,7 @@ function ggbTotal(array $answers,string $resp){
          // string $resp is like "0110" THIS IS OLD
      }
          
- } //old qtype
+ } //end old qtype
  if(count($resmap)!=count($answers)){
      $fraction=1.0;
      $summary='mismatch answers';
@@ -243,8 +244,8 @@ function ggbTotal(array $answers,string $resp){
         //$responseclass .= $answer->answer . '=' . $values[$j];
         // contribution to the result
         $valnum = (array_key_exists($answer->answer,$resmap)?$resmap[$answer->answer]:'1');
-        $valnum =  ($valnum == "true"?1:($valnum == "false"?0:floatval($valnum)));
-        $fraction += ($answer->fraction)*$valnum;
+        $valnum =  ($valnum == "true"?1.0:($valnum == "false"?0.0:floatval($valnum)));
+        $fraction += ((float)($answer->fraction))*((float)$valnum);
         $summary .= sprintf("%.2f",$valnum) . ',' .
             get_string('grade', 'grades') . ': ' .
             sprintf("%.2f",$answer->fraction);
@@ -267,6 +268,7 @@ function ggbTotal(array $answers,string $resp){
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
  **/
 function liveviewgrid_get_answers($quizid) {
+    //xdebug_break();    
     global $DB;
     $role = $DB->get_record('role', array('shortname' => 'student'));
     $studentroleid = $role->id;
@@ -297,27 +299,67 @@ function liveviewgrid_get_answers($quizid) {
         WHERE qza.quiz = $quizid AND ra.roleid = $studentroleid AND ra.contextid = $coursecontextid $whereqid $wheregroup";
     $params = array();
     $data = $DB->get_records_sql($sqldata, $params);
-
+    //echo json_encode($data);
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
     $ggbcode= array(); //Twingsister collect ggb last saved status
     $stlink = array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
-    $datum = array();
+    $datum = array();// the list of answers. Some special objects for Cloze are stored here
     $multidata = array(); //Twingsister 
-    foreach ($data as $key => $datum) {
+    //$multiansweridmax=-1;//Twingsister
+    $multianswerattemptstepidmax=-1;//Twingsister
+    //$multiansweranswers=array();
+    foreach ($data as $key => $datum) {//Quiz contains questions. One iteration for each question answer 
+        //xdebug_break();       // datum could be just an attempt or a single answer in a multiple question multianswer (not a multiple choice with more than one correct answer)
+        // for $question->qtype == 'multianswer' the $datum->name is _sub1_separators or is sub1_answer with some value or blank
+        //$datum->id or $key is the key in the DB table mdl40_question_attempt_step_data the $datum->attemptstepid is the same for several entries and identifies 
+        // the question answer attempt. There are multiple attempts for the same quiz
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
         //$mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
-        if ($question->qtype == 'geogebra') { // Twingsister
+        if ($question->qtype == 'multianswer') { // Twingsister
+            if (($datum->attemptstepid>=$multianswerattemptstepidmax)){//($datum->id > $multiansweridmax)
+                if (($datum->attemptstepid>$multianswerattemptstepidmax)){//($datum->id > $multiansweridmax)
+                // this could be the most recent attempt first item
+                  $myres = array();
+                  $clozegrade=0;
+                  $multianswerattemptstepidmax=$datum->attemptstepid;
+                } 
+                if (preg_match('/sub(\d+)\_answer/', $datum->name, $matches)) {// in a multianswer sub1_answer matches
+                    $clozequestionid = $datum->questionid;
+                    // Finding the number of parts.
+                    //xdebug_break(); 
+                    $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
+                    $index = $matches[1];
+                    $mydm = new quiz_liveviewgrid_fraction($qubaid);
+                    $myres[$datum->name] = $datum->value;
+                    $newres = $mydm->get_fraction($datum->slot, $myres);
+                    $stfraction[$usrid][$datum->questionid] =$newres[1];
+                    $stanswers[$usrid][$datum->questionid] =$newres[0];
+                    //$clozegrade = $clozegrade + $newres[1];
+                    //$tempans = $newres[0]."; part $onemore";
+                    //$nextindex = $index + 1;
+                    //$tempcorrect = 'part '.$matches[1].': ';
+                    //if (preg_match("/$tempcorrect(.*); part $nextindex/", $tempans, $ansmatch)) {
+                        //$clozeresponse[$matches[1]] = $ansmatch[1];
+                    //}
+                }
+                //xdebug_break(); 
+                
+            }
+        }
+        else if ($question->qtype == 'geogebra') { // Twingsister
             //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
             if ($datum->name == 'answer') {
            // xdebug_break();
                 // get all the ->answer the name of the variable ->fraction the fraction in the note ->feedback
                 $ggbanswers =$DB->get_records('question_answers', array('question' => $datum->questionid), $sort='', $fields='*', $limitfrom=0, $limitnum=0);
                 //$datum->value; contains a percent % separated list of answers
+                //echo json_encode($ggbanswers),"---HELLO---",$datum->value;
+                //echo "--HELLO---".$datum->questionid."--".$datum->value;
                 $tot=ggbTotal($ggbanswers,$datum->value);
                 $stanswers[$usrid][$datum->questionid] =$tot['summary'];//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
                 $stfraction[$usrid][$datum->questionid] =$tot['fraction']; //sets the color// $tfresponse->fraction;
@@ -346,7 +388,8 @@ function liveviewgrid_get_answers($quizid) {
             if (($datum->state == 'complete') || ($datum->state == 'invalid')
                 || ($datum->state == 'todo')) {
                 // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
-                $myresponse[$datum->name] = $datum->value;
+                $myresponse[$datum->name] = $datum->value;// for multianswer sometimes get here and assign _sub1_separators or sub1_answer with empty value
+                // in these cases no contribution to the final points
                 if ($question->qtype == 'match') {
                     // If a person answers a question more than once, the question_attempt_step->id changes.
                     if (!(isset($qtempt[$datum->attemptstepid]))) {
@@ -477,7 +520,7 @@ function liveviewgrid_get_answers($quizid) {
                     }
                     $stanswers[$usrid][$datum->questionid] = join(';&nbsp;', $matrixresponse[$datum->attemptstepid]);
                     $stfraction[$usrid][$datum->questionid] = 0.0001;
-                } else if ((count($myresponse) > 0) && ($multisingle == 1)) {
+                } else if ((count($myresponse) > 0)  ) { // Twingsister left behind &&($multisingle == 1)
                     $mydm = new quiz_liveviewgrid_fraction($qubaid);
                     $clozeresponse = array();// An array for the Close responses.
                     $clozegrade = 0;
@@ -486,7 +529,7 @@ function liveviewgrid_get_answers($quizid) {
                     foreach ($myresponse as $key => $respon) {
                         // For cloze questions the key will be sub(\d+)_answer.
                         // I need to take the answer that follows part (\d+):(*)?;.
-                        if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {
+                        if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {// in a multianswer sub1_answer matches
                             $clozequestionid = $datum->questionid;
                             // Finding the number of parts.
                             $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
@@ -544,6 +587,7 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
+    //xdebug_break();    
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
     if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
@@ -731,16 +775,33 @@ function goodans($questionid) {
     return $return;
 }
 
+//  TWINGSISTER ADDED
+
+//$dummycnt=0;
+function dummykey(){
+    global $dummycnt;
+    $dummycnt = $dummycnt + 1;
+    return PHP_INT_MAX-$dummycnt;
+}//(floor(microtime(true)));}//11115 strval(-floor(microtime(true)));}
+function isdummykey($key){
+    global $dummycnt;
+    //echo $dummycnt." ".$key;die;
+    return $key>=floor(PHP_INT_MAX/2);
+}//((int)$key)
 /**
- * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
+ * TWINGSISTER ADDED
+ * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz,
+ * INCLUDING those inserted by random selection in a category.
  * @param int $quizid The id for this quiz.
  * @param int $quizcontextid The id of the context for this quiz.
  * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
  */
-function liveviewslots($quizid, $quizcontextid) {
+function liveviewslotsall($quizid, $quizcontextid) {
+global  $dummycnt;
+$dummycnt=0;
     global $DB;
     $slots = array();
-    //$altslots = array();
+    //$altslots = array(); //to use randoms
     $slotsvalue = array();
     $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
@@ -748,6 +809,7 @@ function liveviewslots($quizid, $quizcontextid) {
     foreach ($myslots as $key => $value) {
         $slotsvalue[$key] = $value->slot;
     }
+    //echo json_encode($slotsvalue);
     $qreferences = $DB->get_records('question_references',
         array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
     //echo json_encode($qreferences);
@@ -765,6 +827,46 @@ function liveviewslots($quizid, $quizcontextid) {
         $slots[$questionid] = $slotsvalue[$slotid];
     }
     //echo json_encode($slots);
+    // insert dummy keys for slots missing a question reference (for random selected question for instance)
+    foreach ($myslots as $key => $value) {
+        $toseek=$value->slot;
+        $found=false;
+        foreach ($slots as $skey => $svalue) {
+            if($svalue==$toseek){$found=true;}
+        }
+       if(!$found) $slots[dummykey()]=$toseek; // question with no $value->slot;
+    }
+    asort($slots,SORT_NUMERIC);// Twingsister must be ordered according to values that are strings
+    //echo json_encode($slots);
+    return $slots;
+}
+
+/**
+ * Function to get the questionids as the keys to the $slots array so we know all the questions in the quiz.
+ * @param int $quizid The id for this quiz.
+ * @param int $quizcontextid The id of the context for this quiz.
+ * @return array $slots The slot values (from the quiz_slots table) indexed by questionids.
+ */
+function liveviewslots($quizid, $quizcontextid) {
+    global $DB;
+    $slots = array();
+    $slotsvalue = array();
+    $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+    $singleqid = optional_param('singleqid', 0, PARAM_INT);
+    foreach ($myslots as $key => $value) {
+        $slotsvalue[$key] = $value->slot;
+    }
+    $qreferences = $DB->get_records('question_references',
+        array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+    foreach ($qreferences as $qreference) {
+        $slotid = $qreference->itemid;
+        $questionbankentryid = $qreference->questionbankentryid;
+        $questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
+        foreach ($questionversions as $questionversion) {
+            $questionid = $questionversion->questionid;
+        }
+        $slots[$questionid] = $slotsvalue[$slotid];
+    }
     return $slots;
 }
 
@@ -1317,6 +1419,34 @@ function liveviewgrid_display_option_form ($hidden) {
  * @param int $singleqid The id of the question in the quiz.
  * @return array $question. A doubly indexed array giving qtype, qname, and qtext for the questions.
  */
+function liveviewquestionall($slots, $singleqid) {
+    // if in slots some ids are  dummy they are filled with default values
+    // this is useful for randomly selected questions.
+    global $DB;
+    $question = array();
+    if (($singleqid > 0)&&!isdummykey($singleid)) {
+        $questionid = $singleqid;
+        $myquestion = $DB->get_record('question', array('id' => $questionid));
+        $question['qtype'][$questionid] = $myquestion->qtype;
+        $question['name'][$questionid] = $myquestion->name;
+        $question['questiontext'][$questionid] = $myquestion->questiontext;
+    } else {
+        foreach ($slots as $questionid => $slotvalue) {
+            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+                $question['qtype'][$questionid] = $myquestion->qtype;
+                $question['name'][$questionid] = $myquestion->name;
+                $question['questiontext'][$questionid] = $myquestion->questiontext;
+            } else {
+                $question['qtype'][$questionid] = "Random";
+                $question['name'][$questionid] = "Randomly selected";
+                $question['questiontext'][$questionid] =  "Randomly selected";
+            }
+        }
+    }
+    return $question;
+}
+
+
 function liveviewquestion($slots, $singleqid) {
     global $DB;
     $question = array();

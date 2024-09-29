@@ -83,11 +83,13 @@ class quiz_liveviewgrid_report extends quiz_default_report {
      * @return bool True if successful.
      */
     public function display($quiz, $cm, $course) {
+        //xdebug_break();
         global $OUTPUT, $DB, $CFG, $USER;
         $hidden = liveviewgrid_update_hidden($course);
         foreach ($hidden as $hkey => $hvalue) {
             $$hkey = $hvalue;
         }
+        //if ($singleqid == 0) { echo "foo";die;}
         // This is only needed if this code is going to display the table.
         if ($singleqid > 0) {
             $slots = array();
@@ -158,7 +160,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         // New location for this code.
         // This is only needed if this code is going to display the table.
-        if ($singleqid > 0) {
+        //if ($singleqid > 0) {
             $slots = $this->liveviewslots($quizid, $quizcontextid);
             $question = $this->liveviewquestion($slots);
             $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
@@ -177,7 +179,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $sofar = array_unique($allsofar);
                 }
             }
-        }
+        //}
         if (isset($_SERVER['HTTP_REFERER'])) {
             $backurl = $_SERVER['HTTP_REFERER'];
             // The request may have come from the iframe.
@@ -195,7 +197,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n    text-align: center;";
             echo "\n    }";
             echo "\n</style>";
-            if ($singleqid > 0) {
+            if ($singleqid > 0 && !isdummykey($singleqid)) {
+                //echo "here i ti";echo $singleqid;die;
                 $questiontext = $DB->get_record('question', array('id' => $singleqid));
                 $qtext2 = $questiontext->questiontext;
                 if (preg_match('/src=\"@@PLUGINFILE@@/', $qtext2, $matches)) {
@@ -247,7 +250,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($singleqid > 0) {
             liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcontextid);
         }
-        if ($singleqid > 0) {
+        //if ($singleqid > 0) {
             // Display progress of lesson. This code is taken from mod/lesson/locallib.php.
             // If the code there changes, this will have to be modified accordingly.
             if (($lessonid) && (count($sofar))) {
@@ -347,7 +350,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n    bl.style.display = \"block\";";
             echo "\n }";
             echo "\n</script>";
-        }
+        //}
         if ($showkey && $showresponses) {
             echo get_string('fractioncolors', 'quiz_liveviewgrid')."\n<br />";
             echo "<table border=\"1\" width=\"100%\" class='lrtable'>\n";
@@ -401,7 +404,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             echo "\n<input type=\"hidden\" name=\"$key\" value=\"$value\">";
         }
         echo "<input class='btn btn-primary' type=\"submit\" value=\"$buttontext\"></form></td>";
-        if ($singleqid > 0) {
+        // if ($singleqid > 0) { //sigle col
             // Find any student who has not submitted an answer if names are hidden.
             // Getting and preparing to sorting users.
             // The first and last name are in the initials array.
@@ -428,8 +431,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     }
                 }
             }
-        }
-        if (($singleqid > 0) && (!($shownames))) {
+        //} //sigle col
+        if (  (!($shownames))) {//sigle col ($singleqid > 0)
             // Add in the style for the lvdropdown table and javascript for hover.
             echo "\n<style>";
             echo "\n.lvdropbtn {";
@@ -555,7 +558,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $dotdot = '....';
             }
             // Put in a histogram if the question has a histogram and a single question is displayed.
-            if ($singleqid > 0) {
+            // for random question not easy to understand if a histogram is possible
+            if ($singleqid > 0 && !isdummykey($singleqid)) {
                 $trun = 200;
                 $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
                 if (in_array($questiontext->qtype, $multitype)) {
@@ -654,6 +658,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $tooltiptext = array();
 
             $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
+            xdebug_break();
             foreach ($slots as $key => $slotvalue) {
                 if (isset($question['name'][$key])) {
                     $hidden['singleqid'] = $key;
