@@ -309,7 +309,7 @@ function liveviewgrid_get_answers($quizid) {
     $datum = array();// the list of answers. Some special objects for Cloze are stored here
     $multidata = array(); //Twingsister 
     //$multiansweridmax=-1;//Twingsister
-    $multianswerattemptstepidmax=-1;//Twingsister
+    $multianswerattemptstepidmax=array();//Twingsister
     //$multiansweranswers=array();
     foreach ($data as $key => $datum) {//Quiz contains questions. One iteration for each question answer 
         //xdebug_break();       // datum could be just an attempt or a single answer in a multiple question multianswer (not a multiple choice with more than one correct answer)
@@ -321,12 +321,16 @@ function liveviewgrid_get_answers($quizid) {
         //$mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'multianswer') { // Twingsister
-            if (($datum->attemptstepid>=$multianswerattemptstepidmax)){//($datum->id > $multiansweridmax)
-                if (($datum->attemptstepid>$multianswerattemptstepidmax)){//($datum->id > $multiansweridmax)
+         $questionid_now=$datum->questionid;
+         if(!(array_key_exists($usrid,$multianswerattemptstepidmax)&& array_key_exists($questionid_now,$multianswerattemptstepidmax[$usrid]))){
+          $multianswerattemptstepidmax[$usrid][$questionid_now]=-1;
+         }
+            if(($datum->attemptstepid>=$multianswerattemptstepidmax[$usrid][$questionid_now])){//($datum->id > $multiansweridmax)
+                if (($datum->attemptstepid>$multianswerattemptstepidmax[$usrid][$questionid_now])){//($datum->id > $multiansweridmax)
                 // this could be the most recent attempt first item
                   $myres = array();
                   $clozegrade=0;
-                  $multianswerattemptstepidmax=$datum->attemptstepid;
+                  $multianswerattemptstepidmax[$usrid][$questionid_now]=$datum->attemptstepid;
                 } 
                 if (preg_match('/sub(\d+)\_answer/', $datum->name, $matches)) {// in a multianswer sub1_answer matches
                     $clozequestionid = $datum->questionid;
