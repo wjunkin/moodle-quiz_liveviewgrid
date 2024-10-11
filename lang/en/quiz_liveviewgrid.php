@@ -97,6 +97,7 @@ $string['rightanswer'] = ' <b>Right answer:</b> ';
 $string['rightansweressay'] = 'This is an essay question.';
 $string['seconds'] = ' seconds.';
 $string['showstudentnames'] = 'Show student names';
+$string['showaverage'] = 'Show average grade';
 $string['showstatus'] = 'Show student percent progress in quiz.';
 $string['showlessonstatus'] = 'Show student percent progress in lesson.';
 $string['somethingiswrongwithanswerid'] = 'Something is wrong with answer id = ';

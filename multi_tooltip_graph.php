@@ -33,6 +33,7 @@ $evaluate = optional_param('evaluate', 0, PARAM_INT);
 $norefresh = optional_param('norefresh', 0, PARAM_INT);
 $groupid = optional_param('groupid', 0, PARAM_INT);
 $shownames = optional_param('shownames', 0, PARAM_INT);
+$showaverage = optional_param('showaverage', 0, PARAM_INT);//Twingsister
 $order = optional_param('order', 0, PARAM_INT);
 $id = optional_param('id', 0, PARAM_INT);
 $cmid = $id;
@@ -255,6 +256,7 @@ if (!($norefresh)) {
     echo "\n<input type='hidden' name='questionid' value='$questionid'>";
     echo "\n<input type='hidden' name='evaluate' value='$evaluate'>";
     echo "\n<input type='hidden' name='shownames' value='$shownames'>";
+    echo "\n<input type='hidden' name='showaverage' value='$showaverage'>";
     echo "\n<input type='hidden' name='order' value='$order'>";
     echo "</form>";
     echo "\n</div>";

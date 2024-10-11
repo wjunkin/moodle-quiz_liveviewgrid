@@ -263,6 +263,7 @@ function ggbTotal(array $answers,string $resp){
 } 
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
+ * Returns correct fraction grade even for randomly selected questions
  *
  * @param int $quizid The id for the quiz.
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
@@ -552,6 +553,11 @@ function liveviewgrid_get_answers($quizid) {
                         }
                         // For matrix questions the key will be cell(\d+).
                     }
+                    //xdebug_break();// question type calculated has some attempts recorded and when
+                    // control gets here and $myresponse['answer'] is set and $stfraction is then set
+                    // correctly. If answer is wrong it gets 0.001 points (why?)
+                    // All the attempts are considered and therefore in $stfraction the last examined by this loop is
+                    // assigned and remains as result. 
                     $response = array();
                     if (isset($myresponse['attachments'])) {
                         // Get the linked icon appropriate for this attempt.
@@ -641,6 +647,7 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
+    //xdebug_break(); 
     $returnvalues = array($stanswers, $stfraction, $stlink);
     return $returnvalues;
 }
@@ -1204,6 +1211,43 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
 }
 
 /**
+ *
+ * Function to set backgroud color for a grade 
+ * @param float $myfraction The grade 
+ * @param int $rag The style ==1 
+ * @return string, the string to style the backgriund color
+ */
+function liveviewgrid_color_for_grade ($myfraction,$rag) {
+    
+if ($rag == 1) {// Colors from image from Moodle.
+    if ($myfraction < 0.0015) {
+        $redpart = 244;
+        $greenpart = 67;
+        $bluepart = 54;
+    } else if ($myfraction > .999) {
+        $redpart = 139;
+        $greenpart = 195;
+        $bluepart = 74;
+    } else {
+        $redpart = 255;
+        $greenpart = 152;
+        $bluepart = 0;
+    }
+} else {
+    // Make .5 match up to Moodle amber even when making them different with gradation.
+    $greenpart = intval(67 + 212 * $myfraction - 84 * $myfraction * $myfraction);
+    $redpart = intval(244 + 149 * $myfraction - 254 * $myfraction * $myfraction);
+    if ($redpart > 255) {
+        $redpart = 255;
+    }
+    $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
+}
+$style = " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+return $style;
+}
+
+/**
+ * 
  * Function to update the hidden values.
  * @param obj $course The course where this quiz is found.
  * @return array $hidden The corrected hidden values.
@@ -1222,6 +1266,7 @@ function liveviewgrid_update_hidden ($course) {
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
     $showanswer = optional_param('showanswer', 0, PARAM_INT);
     $shownames = optional_param('shownames', 1, PARAM_INT);
+    $showaverage = optional_param('showaverage', 1, PARAM_INT);
     $status = optional_param('status', 0, PARAM_INT);
     if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
         $haslesson = 1;
@@ -1248,6 +1293,7 @@ function liveviewgrid_update_hidden ($course) {
     $hidden['singleqid'] = $singleqid;
     $hidden['showanswer'] = $showanswer;
     $hidden['shownames'] = $shownames;
+    $hidden['showaverage'] = $showaverage;
     $hidden['status'] = $status;
     $hidden['haslesson'] = $haslesson;
     $hidden['showlesson'] = $showlesson;
@@ -1348,6 +1394,11 @@ function liveviewgrid_display_option_form ($hidden) {
     echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+    echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+    echo "\n<tr>".$td.get_string('showaverage', 'quiz_liveviewgrid')."</td>";
+    echo $td."<input type='radio' name='showaverage' value=1 ".$checked['showaverage']."> ";
+    echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+    echo $td."<input type='radio' name='showaverage' value=0 ".$notchecked['showaverage']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";

@@ -32,6 +32,7 @@ $courseid = optional_param('courseid', 0, PARAM_INT);
 $evaluate = optional_param('evaluate', 1, PARAM_INT);
 $group = optional_param('group', 0, PARAM_INT);
 $shownames = optional_param('shownames', 0, PARAM_INT);
+$showaverage = optional_param('showaverage', 0, PARAM_INT);
 $order = optional_param('order', 0, PARAM_INT);
 $questiontext = $DB->get_record('question', array('id' => $questionid));
 $cmid = optional_param('cmid', 0, PARAM_INT);

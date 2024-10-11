@@ -189,7 +189,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         }
         $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
         $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
-        $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
+        $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames&showaverage=$showaverage";
         if ($showresponses) {
             // CSS style for the table.
             echo "\n<style>";
@@ -852,7 +852,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
             } else {
                 $getvalues = "mode=liveviewgrid&rag=$rag&id=".$cm->id."&evaluate=$evaluate&order=$order&compact=$compact";
-                $getvalues .= "&group=$group&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson";
+                $getvalues .= "&group=$group&showanswer=$showanswer&shownames=$shownames&showaverage=$showaverage&status=$status&haslesson=$haslesson";
                 $getvalues .= "&showlesson=$showlesson&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
                 $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
                 echo "<iframe src=\"$tableiframeurl\" frameBorder=10 width='100%'>";

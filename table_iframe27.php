@@ -66,7 +66,7 @@ $quizcontextid = $context->id;
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-//xdebug_break();
+xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
@@ -93,6 +93,7 @@ $hidden['group'] = $group;
 $hidden['singleqid'] = $singleqid;
 $hidden['showanswer'] = $showanswer;
 $hidden['shownames'] = $shownames;
+$hidden['showaverage'] = $showaverage;//Twingsister
 $hidden['status'] = $status;
 $hidden['haslesson'] = $haslesson;
 $hidden['showlesson'] = $showlesson;
@@ -305,6 +306,9 @@ if ($shownames) {
         background-repeat: repeat;'";
     echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
 }
+if ($showaverage) {//twingsister
+    echo "<td>Average</td>";
+}
 if ($showlesson) {
     if ($lessonid) {
         echo "<td>".$lesson->name."</td>";
@@ -320,7 +324,7 @@ $tooltiptext = array();
 
 $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';
-//xdebug_break();
+xdebug_break();
 foreach ($slots as $key => $slotvalue) {
     // Here is the header of the display one column for every question
     // ordetion without a reference (e.g. randomly selected) gets NOREF in the header
@@ -368,6 +372,8 @@ foreach ($slots as $key => $slotvalue) {
 }
 // header of the table is out
 echo "</tr>\n</thead>\n";
+        //echo "<td>AverageMove</td>";// adding student average
+        //echo "</td>";
 $hidden['singleqid'] = $singleqid;
 if ($showresponses) {
     // Javascript and css for tooltips.
@@ -408,11 +414,27 @@ if ($showresponses) {
                     }
                     echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                 }
+                if ($showaverage) {//Twingsister/ adding student average'';
+                    $avg=0;$count=0;
+                    foreach ($slots as $questionid => $slotvalue) {
+                        $count=$count+1;
+                        if ((!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) &&
+                                isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
+                                    $avg=$avg+$stfraction[$user][$questionid];
+                        }
+                      }
+                      if ($count>0) {
+                          $avg=$avg/$count;
+                          $avgstr = '<td '.liveviewgrid_color_for_grade($avg,$rag).">&nbsp; "." </td>";
+                          ;
+                      }else $avgstr="<td></td>";
+                    echo $avgstr;
+                }
                 $myrow = '';
                 // put a link if there is a reference
                 foreach ($slots as $questionid => $slotvalue) {
-                    if(isdummykey($questionid)){$questionid=0;}
-                    //xdebug_break();
+                    xdebug_break();
+                    if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
                     // if it is a randomly selected quiz adjust $questionid
                    //if(!isdummykey($questionid))&&
                     if (isset($stlink[$user][$questionid])) { //Twingsister
@@ -437,7 +459,7 @@ if ($showresponses) {
                             $answer = ' ';
                         }
                     }
-                        $style = '<td';
+                    $style = '<td';// close with $myrow .= $style.">&nbsp;".$answer.$link."</td>";
                     if ($evaluate) {
                         if ((!isdummykey($questionid))&&($questionid != "") && ($questionid != 0)&& $question['qtype'][$questionid] == 'matrix') {
                             $grade = 0;
@@ -477,7 +499,11 @@ if ($showresponses) {
                             }
                             $stfraction[$user][$questionid] = $matrixfr;
                         }//(!isdummykey($questionid))&&
+                        xdebug_break();
+                        // backgroud color set for randomly selected questions too
+                        //if (isset($stfraction[$user][$oldquestionid]) && (!($stfraction[$user][$oldquestionid] == 'NA'))) {
                         if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
+                            //$myfraction = $stfraction[$user][$oldquestionid];
                             $myfraction = $stfraction[$user][$questionid];
                             //echo "here for the color", $myfraction;
                             if ($rag == 1) {// Colors from image from Moodle.

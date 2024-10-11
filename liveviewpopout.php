@@ -39,6 +39,7 @@ $compact = optional_param('compact', 1, PARAM_INT);
 $singleqid = optional_param('singleqid', 0, PARAM_INT);
 $showanswer = optional_param('showanswer', 0, PARAM_INT);
 $shownames = optional_param('shownames', 1, PARAM_INT);
+$showaverage = optional_param('showaverage', 1, PARAM_INT);
 $slots = array();
 $question = array();
 $users = array();
@@ -105,6 +106,7 @@ $hidden['group'] = $group;
 $hidden['singleqid'] = $singleqid;
 $hidden['showanswer'] = $showanswer;
 $hidden['shownames'] = $shownames;
+$hidden['showaverage'] = $showaverage;
 $sofar = liveview_who_sofar_gridview($quizid);
 
 if ($showresponses) {
@@ -161,6 +163,11 @@ if ($showresponses) {
     echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+    echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+    echo "\n<tr>".$td.get_string('showaverage', 'quiz_liveviewgrid')."</td>";
+    echo $td."<input type='radio' name='showaverage' value=1 ".$checked['showaverage']."> ";
+    echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+    echo $td."<input type='radio' name='showaverage' value=0 ".$notchecked['showaverage']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
@@ -398,7 +405,7 @@ if ($singleqid > 0) {
     $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
     if (in_array($questiontext->qtype, $multitype)) {
         $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
-        $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
+        $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&showaverage=$showaverage";
         echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
             frameBorder=0 height='520' width='800'>";
         echo "</iframe>";

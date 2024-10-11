@@ -38,6 +38,7 @@ $mode = optional_param('mode', '', PARAM_ALPHA);
 $compact = optional_param('compact', 1, PARAM_INT);
 $showanswer = optional_param('showanswer', 0, PARAM_INT);
 $shownames = optional_param('shownames', 1, PARAM_INT);
+$showaverage = optional_param('showaverage', 1, PARAM_INT);
 $slots = array();
 $question = array();
 $users = array();
@@ -105,6 +106,7 @@ $hidden['compact'] = $compact;
 $hidden['group'] = $group;
 $hidden['showanswer'] = $showanswer;
 $hidden['shownames'] = $shownames;
+$hidden['showaverage'] = $showaverage;
 // Add in the style for the lvdropdown table and javascript for hover.
 echo "\n<style>";
 echo "\n.lvdropbtn {";
@@ -175,6 +177,11 @@ echo "\n<tr>".$td.get_string('colorindicategrades', 'quiz_liveviewgrid')."</td>"
 echo $td."<input type='radio' name='evaluate' value=1 ".$checked['evaluate']."> ";
 echo get_string('yes', 'quiz_liveviewgrid')."</td>";
 echo $td."<input type='radio' name='evaluate' value=0 ".$notchecked['evaluate']."> ";
+echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
+echo "\n<tr>".$td.get_string('showaverage', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showaverage' value=1 ".$checked['showaverage']."> ";
+echo get_string('yes', 'quiz_liveviewgrid')."</td>";
+echo $td."<input type='radio' name='showaverage' value=0 ".$notchecked['showaverage']."> ";
 echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
 echo "\n<tr>".$td.get_string('showstudentnames', 'quiz_liveviewgrid')."</td>";
 echo $td."<input type='radio' name='shownames' value=1 ".$checked['shownames']."> ";
@@ -293,7 +300,7 @@ foreach ($slots as $key => $slotvalue) {
     if ($singleqid > 0) {
         $trun = 200;
         $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
-        $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
+        $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&showaverage=$showaverage";
         echo "<br /><iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/singleq_histogram.php?$getvalues\"
             frameBorder=0 height='520' width='100%' id='iframeFor".$questiontext->id."'>";
         echo "</iframe>";
