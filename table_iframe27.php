@@ -66,7 +66,7 @@ $quizcontextid = $context->id;
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-xdebug_break();
+//xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
@@ -324,7 +324,7 @@ $tooltiptext = array();
 
 $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';
-xdebug_break();
+//xdebug_break();
 foreach ($slots as $key => $slotvalue) {
     // Here is the header of the display one column for every question
     // ordetion without a reference (e.g. randomly selected) gets NOREF in the header
@@ -414,26 +414,37 @@ if ($showresponses) {
                     }
                     echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                 }
+                //xdebug_break();
                 if ($showaverage) {//Twingsister/ adding student average'';
-                    $avg=0;$count=0;
+                    $avg=0.0;$count=0.0;
+                    $countdummy=0;
                     foreach ($slots as $questionid => $slotvalue) {
-                        $count=$count+1;
-                        if ((!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) &&
-                                isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
-                                    $avg=$avg+$stfraction[$user][$questionid];
+                        if ((($questionid != "") && ($questionid != 0))&&
+                        // old accepting also dummies for randomly questions if ((!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) &&
+                            isset($stfraction[$user][$questionid]) &&(!($stfraction[$user][$questionid] == 'NA')) ) {
+                                $count=$count+1.0;
+                                $avg=$avg+$stfraction[$user][$questionid];
+                                } else if (isdummykey($questionid)){$countdummy=$countdummy+1;}
+                      }
+                    foreach ($stfraction[$user] as $questionid => $slotvalue) {
+                        if(!isset($slots[$questionid])){// in $slots there is a dummy
+                            $count=$count+1.0;
+                            $avg=$avg+$stfraction[$user][$questionid];
+                            $countdummy=$countdummy-1;
                         }
                       }
-                      if ($count>0) {
-                          $avg=$avg/$count;
-                          $avgstr = '<td '.liveviewgrid_color_for_grade($avg,$rag).">&nbsp; "." </td>";
-                          ;
+                      if ($count>0 && $countdummy==0) {
+                          //$avg=$avg/$count;
+                          $avg=$avg/count($slots);
+                          $stringavg=sprintf('%.02f',$avg*10.00);
+                          $avgstr = "<td  ".liveviewgrid_color_for_grade($avg,$rag).">&nbsp; ".$stringavg." </td>";
                       }else $avgstr="<td></td>";
                     echo $avgstr;
                 }
                 $myrow = '';
                 // put a link if there is a reference
                 foreach ($slots as $questionid => $slotvalue) {
-                    xdebug_break();
+                    //xdebug_break();
                     if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
                     // if it is a randomly selected quiz adjust $questionid
                    //if(!isdummykey($questionid))&&
@@ -499,7 +510,7 @@ if ($showresponses) {
                             }
                             $stfraction[$user][$questionid] = $matrixfr;
                         }//(!isdummykey($questionid))&&
-                        xdebug_break();
+                        //xdebug_break();
                         // backgroud color set for randomly selected questions too
                         //if (isset($stfraction[$user][$oldquestionid]) && (!($stfraction[$user][$oldquestionid] == 'NA'))) {
                         if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {

@@ -11,3 +11,4 @@ For multichoice, truefalse, and calculatedmulti question types, a histogram is d
 For all other question types, the response from each student is given in one line on the page. The teacher has several options: a) Hide/Show students names; b) Sort by first/last names; c) Make spreadsheet compact/expanded.
 To install this module, place the liveviewgrid directory as a sub-directory in the <your moodle site>/mod/quiz/report/ directory, creating the <your moodle site>/mod/quiz/report/liveviewgrid/ directory.
 After installing this quiz report module, teachers can click on the "Live Report" option in the "Report" drop-down menu to access this spreadsheet.
+NOTE that you needto install the [ALGEBRA question type](https://moodle.org/plugins/qtype_algebra/versions) to have a correct live view of the Formula question type. After installing choose EQUIVALENCE as evaluation method.

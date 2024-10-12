@@ -21,7 +21,6 @@
  * @copyright  2018 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-//$multisingle=1; //Twingsister to be considered multisingle is missing 
 /**
  * Return the number of users who have submitted answers to this quiz instance.
  *
@@ -30,7 +29,6 @@
  */
 function liveview_who_sofar_gridview($quizid) {
     global $DB;
-
     $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
     $studentrole = $DB->get_record('role', array('shortname' => 'student'));
     $quiz = $DB->get_record('quiz', array('id' => $quizid));
@@ -111,7 +109,7 @@ function liveview_question_button($buttontext, $hidden, $linkid) {
 /**
  * A function to create a dropdown menu for the groups.
  *
- * @param int $courseid The id for the course
+ * @param int $courseid The id for the course.
  * @param string $geturl The url for the form when submit is clicked.
  * @param int $canaccess Whether the user can (1) or cannot (0) access all groups.
  * @param array $hidden The array of keys and values for the hidden inputs in the form.
@@ -208,12 +206,17 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
     }
     echo "</tr></table>";
 }
+/**
+ * A function to return the answer and fractional value (grade) for geogebra questions..
+ *
+ * @param array $answers The answers in the question_answer table.
+ * @param string $resp The responses from the student.
+ * @return array $return $return['summary'] =  summary of student resonse. $return['fraction'] = fractional value for this response.
+ **/
 function ggbTotal(array $answers,string $resp){
- //$j = 0;
- $fraction = 0.0; //the mark
+ $fraction = 0.0;// the mark.
  $summary = ''; // the explaination
  // what if an empty string
- //echo "Convert --->",$resp;
  $resmap = array();
  if (empty($resp)){}elseif(str_contains($resp, ':')) {
     $values = explode("%",$resp); // Twingsister key:balue%key:value no trailing %
@@ -249,10 +252,6 @@ function ggbTotal(array $answers,string $resp){
         $summary .= sprintf("%.2f",$valnum) . ',' .
             get_string('grade', 'grades') . ': ' .
             sprintf("%.2f",$answer->fraction);
-            //$summary .= format_float($valnum, 2, false, false) . ',' .
-            //            get_string('grade', 'grades') . ': ' .
-            //            format_float($answer->fraction, 2, false, false);
-            //$j++;
     }
     if ($fraction > 1) {
         $fraction = 1;
@@ -261,6 +260,10 @@ function ggbTotal(array $answers,string $resp){
  }
     return array('summary'=>$summary, 'fraction'=>$fraction);//,'responseclass'=>$responseclass);
 } 
+// Algebra qtype must be installed to list Formula qtype
+//xdebug_break();  
+global $CFG;
+require_once($CFG->dirroot . '/question/type/algebra/parser.php');
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  * Returns correct fraction grade even for randomly selected questions
@@ -290,7 +293,7 @@ function liveviewgrid_get_answers($quizid) {
         $groupjoin = '';
         $wheregroup = '';
     }
-        $sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary
+        $sqldata = "SELECT qasd.*, qa.questionid, qza.userid, qza.uniqueid, qas.state, qa.slot, qa.questionsummary, qa.rightanswer
         FROM {question_attempt_step_data} qasd
         JOIN {question_attempt_steps} qas ON qasd.attemptstepid = qas.id
         JOIN {question_attempts} qa ON qas.questionattemptid = qa.id
@@ -319,6 +322,7 @@ function liveviewgrid_get_answers($quizid) {
         // the question answer attempt. There are multiple attempts for the same quiz
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
+        $myrightanswer = $datum->rightanswer;
         //$mydm = new quiz_liveviewgrid_fraction($qubaid);
         $question = $DB->get_record('question', array('id' => $datum->questionid));
         if ($question->qtype == 'multianswer') { // Twingsister
@@ -355,6 +359,21 @@ function liveviewgrid_get_answers($quizid) {
                 //xdebug_break(); 
                 
             }
+        }
+        else if ($question->qtype == 'formulas'&& $datum->state == 'complete') { 
+            // Twingsister
+                //xdebug_break(); 
+                $stanswers[$usrid][$datum->questionid] =$datum->value;//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
+                $p = new qtype_algebra_parser;
+                $q = new qtype_algebra_parser;
+                $exprp = $p->parse($datum->rightanswer);
+                $exprq = $q->parse($datum->value);
+                if($exprp->equivalent($exprq)){
+                    $stfraction[$usrid][$datum->questionid]=1.0; //sets the color// $tfresponse->fraction;
+                }else{
+                    $stfraction[$usrid][$datum->questionid]=0.0; //sets the color// $tfresponse->fraction;
+                }
+                $stlink[$usrid][$datum->questionid] = ' ';
         }
         else if ($question->qtype == 'geogebra') { // Twingsister
             //if ($datum->name == 'ggbbase64') {$ggbcode[$usrid][$datum->questionid]= $datum->value;}//Twingsister
@@ -598,6 +617,13 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     //xdebug_break();    
+	if ($question->qtype == 'shortanswer') {
+		if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
+			$stfraction[$usrid][$datum->questionid] = 1.0;
+		} else {
+			$stfraction[$usrid][$datum->questionid] = .001;
+		}
+	}
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
     if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
@@ -1242,7 +1268,8 @@ if ($rag == 1) {// Colors from image from Moodle.
     }
     $bluepart = intval(54 - 236 * $myfraction + 256 * $myfraction * $myfraction);
 }
-$style = " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
+if($myfraction>0.6){$fontcolor="color:#00ff00;";}else{$fontcolor="";}
+$style = "style='$fontcolor background-color: rgb($redpart, $greenpart, $bluepart)'";
 return $style;
 }
 
@@ -1423,7 +1450,7 @@ function liveviewgrid_display_option_form ($hidden) {
         echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     }
     echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
+    echo $td."<input type='radio' name='rag' value=0 ".$checked['rag']."> ";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";

@@ -192,7 +192,7 @@ if ($showresponses) {
         echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
     }
     echo "\n<tr>".$td.get_string('colorindicategrade', 'quiz_liveviewgrid')."</td>";
-    echo $td."<input type='radio' name='rag' value=1 ".$checked['rag']."> ";
+    echo $td."<input type='radio' name='rag' value=0 ".$checked['rag']."> ";
     echo get_string('yes', 'quiz_liveviewgrid')."</td>";
     echo $td."<input type='radio' name='rag' value=0 ".$notchecked['rag']."> ";
     echo get_string('no', 'quiz_liveviewgrid')."</td></tr>";
