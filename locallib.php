@@ -366,11 +366,17 @@ function liveviewgrid_get_answers($quizid) {
                 $stanswers[$usrid][$datum->questionid] =$datum->value;//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
                 $p = new qtype_algebra_parser;
                 $q = new qtype_algebra_parser;
-                $exprp = $p->parse($datum->rightanswer);
-                $exprq = $q->parse($datum->value);
-                if($exprp->equivalent($exprq)){
-                    $stfraction[$usrid][$datum->questionid]=1.0; //sets the color// $tfresponse->fraction;
-                }else{
+                try {
+                    $exprp = $p->parse($datum->rightanswer);
+                    $exprq = $q->parse($datum->value);
+                    if($exprp->equivalent($exprq)){
+                        $stfraction[$usrid][$datum->questionid]=1.0; //sets the color// $tfresponse->fraction;
+                    }else{
+                        $stfraction[$usrid][$datum->questionid]=0.0; //sets the color// $tfresponse->fraction;
+                    }
+                }
+                catch(Exception $e) {
+                    $stanswers[$usrid][$datum->questionid] =$e->getMessage();//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
                     $stfraction[$usrid][$datum->questionid]=0.0; //sets the color// $tfresponse->fraction;
                 }
                 $stlink[$usrid][$datum->questionid] = ' ';
