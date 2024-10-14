@@ -66,7 +66,7 @@ $quizcontextid = $context->id;
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-xdebug_break();
+//xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
@@ -448,7 +448,7 @@ if ($showresponses) {
                 $myrow = '';
                 // put a link if there is a reference
                 foreach ($slots as $questionid => $slotvalue) {
-                    xdebug_break();
+                    //xdebug_break();
                     if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
                     // if it is a randomly selected quiz adjust $questionid
                    //if(!isdummykey($questionid))&&

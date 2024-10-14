@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024101300;//Twingsister
+$plugin->version   = 2024101301;//Twingsister
 $plugin->requires  = 2022041900;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_liveviewgrid';

@@ -658,7 +658,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
             $tooltiptext = array();
 
             $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
-            xdebug_break();
+            //xdebug_break();
             foreach ($slots as $key => $slotvalue) {
                 if (isset($question['name'][$key])) {
                     $hidden['singleqid'] = $key;

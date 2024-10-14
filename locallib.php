@@ -846,7 +846,7 @@ function isdummykey($key){
 function liveviewslotsall($quizid, $quizcontextid) {
 global  $dummycnt;
 $dummycnt=0;
-xdebug_break();
+//xdebug_break();
     global $DB;
     $slots = array();
     //$altslots = array(); //to use randoms
@@ -1041,7 +1041,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
         if (count($sofar) > 0) {
-            xdebug_break();
+            //xdebug_break();
             list($stanswers, $stfraction, $stlink,$stslot) = liveviewgrid_get_answers($quizid);
             foreach ($sofar as $unuser) {
                 // If only a group is desired, make sure this student is in the group.
