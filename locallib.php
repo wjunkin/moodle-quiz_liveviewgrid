@@ -267,9 +267,10 @@ require_once($CFG->dirroot . '/question/type/algebra/parser.php');
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  * Returns correct fraction grade even for randomly selected questions
- *
+ * The randomly selected are indexed with the questionid theyreceive after the selection
  * @param int $quizid The id for the quiz.
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
+ * $returnvalues[2] = $stlink[$stid][$qid], $returnvalues[3] = $stslot[$stid][$qid].
  **/
 function liveviewgrid_get_answers($quizid) {
     //xdebug_break();    
@@ -309,6 +310,7 @@ function liveviewgrid_get_answers($quizid) {
     $stfraction = array();
     $ggbcode= array(); //Twingsister collect ggb last saved status
     $stlink = array();
+    $stslot=array();
     // The array for $data to multichoice questions with more than one answer (checkboxes).
     $datum = array();// the list of answers. Some special objects for Cloze are stored here
     $multidata = array(); //Twingsister 
@@ -320,7 +322,9 @@ function liveviewgrid_get_answers($quizid) {
         // for $question->qtype == 'multianswer' the $datum->name is _sub1_separators or is sub1_answer with some value or blank
         //$datum->id or $key is the key in the DB table mdl40_question_attempt_step_data the $datum->attemptstepid is the same for several entries and identifies 
         // the question answer attempt. There are multiple attempts for the same quiz
+        // $datum for an attempt for a question for a randomly selected contains a slot and a questionid 
         $usrid = $datum->userid;
+        $stslot[$usrid][$datum->questionid]=$datum->slot;
         $qubaid = $datum->uniqueid;
         $myrightanswer = $datum->rightanswer;
         //$mydm = new quiz_liveviewgrid_fraction($qubaid);
@@ -621,15 +625,15 @@ function liveviewgrid_get_answers($quizid) {
                 $stfraction[$usrid][$datum->questionid] = $matchgrade[$qtemptid] / $stemcount[$datum->questionid];
             }
         }
+	   if ($question->qtype == 'shortanswer') {
+		  if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
+			$stfraction[$usrid][$datum->questionid] = 1.0;
+		  } else {
+			$stfraction[$usrid][$datum->questionid] = .001;
+		  }
+	   }
     }
     //xdebug_break();    
-	if ($question->qtype == 'shortanswer') {
-		if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
-			$stfraction[$usrid][$datum->questionid] = 1.0;
-		} else {
-			$stfraction[$usrid][$datum->questionid] = .001;
-		}
-	}
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
     if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
@@ -680,7 +684,7 @@ function liveviewgrid_get_answers($quizid) {
         }
     }
     //xdebug_break(); 
-    $returnvalues = array($stanswers, $stfraction, $stlink);
+    $returnvalues = array($stanswers, $stfraction, $stlink,$stslot);
     return $returnvalues;
 }
 /**
@@ -842,6 +846,7 @@ function isdummykey($key){
 function liveviewslotsall($quizid, $quizcontextid) {
 global  $dummycnt;
 $dummycnt=0;
+xdebug_break();
     global $DB;
     $slots = array();
     //$altslots = array(); //to use randoms
@@ -855,6 +860,7 @@ $dummycnt=0;
     //echo json_encode($slotsvalue);
     $qreferences = $DB->get_records('question_references',
         array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+    // random selected questions do not show in question_references
     //echo json_encode($qreferences);
     //foreach ($myslots as $key => $value) {
     //    $altslots[$key] = $value->slot;
@@ -1035,7 +1041,8 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
         // Getting and preparing to sorting users.
         // The first and last name are in the initials array.
         if (count($sofar) > 0) {
-            list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+            xdebug_break();
+            list($stanswers, $stfraction, $stlink,$stslot) = liveviewgrid_get_answers($quizid);
             foreach ($sofar as $unuser) {
                 // If only a group is desired, make sure this student is in the group.
                 if ($group) {

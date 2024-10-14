@@ -66,12 +66,13 @@ $quizcontextid = $context->id;
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
 $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-//xdebug_break();
+xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
 //these are ok even for random questions
-list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+list($stanswers, $stfraction, $stlink,$stslot) = liveviewgrid_get_answers($quizid);
+//xdebug_break();
 //echo "-----------found these answers---------";
 //echo json_encode($stanswers);
 //echo json_encode($stfraction);
@@ -416,35 +417,38 @@ if ($showresponses) {
                 }
                 //xdebug_break();
                 if ($showaverage) {//Twingsister/ adding student average'';
-                    $avg=0.0;$count=0.0;
-                    $countdummy=0;
+                    $avg=0.0;
+                    //$count=0.0;
+                    //$countdummy=0;
                     foreach ($slots as $questionid => $slotvalue) {
                         if ((($questionid != "") && ($questionid != 0))&&
                         // old accepting also dummies for randomly questions if ((!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) &&
                             isset($stfraction[$user][$questionid]) &&(!($stfraction[$user][$questionid] == 'NA')) ) {
-                                $count=$count+1.0;
+                                //$count=$count+1.0;
                                 $avg=$avg+$stfraction[$user][$questionid];
-                                } else if (isdummykey($questionid)){$countdummy=$countdummy+1;}
+                                } //else if (isdummykey($questionid)){$countdummy=$countdummy+1;}
                       }
-                    foreach ($stfraction[$user] as $questionid => $slotvalue) {
-                        if(!isset($slots[$questionid])){// in $slots there is a dummy
-                            $count=$count+1.0;
-                            $avg=$avg+$stfraction[$user][$questionid];
-                            $countdummy=$countdummy-1;
+                    if(isset($stfraction[$user])) {
+                        foreach ($stfraction[$user] as $questionid => $slotvalue) {
+                            if(!isset($slots[$questionid])){// in $slots there is a dummy
+                                //$count=$count+1.0;
+                                $avg=$avg+$stfraction[$user][$questionid];
+                                //$countdummy=$countdummy-1;
+                            }
                         }
                       }
-                      if ($count>0 && $countdummy==0) {
+                      //if ($count>0 && $countdummy==0) {
                           //$avg=$avg/$count;
                           $avg=$avg/count($slots);
                           $stringavg=sprintf('%.02f',$avg*10.00);
                           $avgstr = "<td  ".liveviewgrid_color_for_grade($avg,$rag).">&nbsp; ".$stringavg." </td>";
-                      }else $avgstr="<td></td>";
+                      //}else $avgstr="<td></td>";
                     echo $avgstr;
                 }
                 $myrow = '';
                 // put a link if there is a reference
                 foreach ($slots as $questionid => $slotvalue) {
-                    //xdebug_break();
+                    xdebug_break();
                     if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
                     // if it is a randomly selected quiz adjust $questionid
                    //if(!isdummykey($questionid))&&
@@ -512,7 +516,7 @@ if ($showresponses) {
                         }//(!isdummykey($questionid))&&
                         //xdebug_break();
                         // backgroud color set for randomly selected questions too
-                        //if (isset($stfraction[$user][$oldquestionid]) && (!($stfraction[$user][$oldquestionid] == 'NA'))) {
+                        //if (isset($stfraction[$user][$oldquestionid]) && (!($stfraction[$user][$oldquestionid] == 'NA'))) 
                         if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                             //$myfraction = $stfraction[$user][$oldquestionid];
                             $myfraction = $stfraction[$user][$questionid];
@@ -544,7 +548,9 @@ if ($showresponses) {
                         } //else if(isdummykey($questionid)){}
                     }
                        // xdebug_break();    
-                    if ( ($singleqid > 0)||(strlen($answer) < $trun) ) { //isdummykey($questionid)||
+                    if(($questionid == 0)){
+                            $myrow .= $style.">&nbsp;"."Random"."</td>";
+                    }else if ( ($singleqid > 0)||(strlen($answer) < $trun) ) { //isdummykey($questionid)||
                             $myrow .= $style.">&nbsp;".$answer.$link."</td>";
                     } else {
                         // Making a tooltip out of a long answer. The htmlentities function leaves single quotes unchanged.
