@@ -261,13 +261,73 @@ function ggbTotal(array $answers,string $resp){
     return array('summary'=>$summary, 'fraction'=>$fraction);//,'responseclass'=>$responseclass);
 } 
 // Algebra qtype must be installed to list Formula qtype
-//xdebug_break();  
 global $CFG;
 require_once($CFG->dirroot . '/question/type/algebra/parser.php');
 /**
+ * Only relevant attempts are left
+ * @param array $datain The sequence of records to be filtered.
+ * @return array $dataout. 
+ **/
+function liveviewgrid_purge_answers($datain) {
+//xdebug_break();  
+    $multiattemptstepidmax=array();//Twingsister
+    foreach ($datain as $key => $datum) {//Quiz contains questions. One iteration for each question answer 
+        $questionid_now=$datum->questionid;
+        $usrid = $datum->userid;
+        if(!(array_key_exists($usrid,$multiattemptstepidmax)&& array_key_exists($questionid_now,$multiattemptstepidmax[$usrid]))){
+            $multiattemptstepidmax[$usrid][$questionid_now]=-1;
+        }
+        if(($datum->attemptstepid>=$multiattemptstepidmax[$usrid][$questionid_now])){
+            if (($datum->attemptstepid>$multiattemptstepidmax[$usrid][$questionid_now])){
+                // this could be the most recent attempt first item
+                $multiattemptstepidmax[$usrid][$questionid_now]=$datum->attemptstepid;
+            }
+       }
+    }
+    $dataout = array();
+    foreach ($datain as $key => $datum) {//Quiz contains questions. One iteration for each question answer 
+        $questionid_now=$datum->questionid;
+        $usrid = $datum->userid;
+        if($datum->attemptstepid==$multiattemptstepidmax[$usrid][$questionid_now]){
+            $dataout[$key]=$datum;
+        }
+    }
+    // in dataout all the attempts for all $usrid and $questionid holding the maximum attemptstepid
+    // if in several attempts for a quiz with random selected questions out of a qbank there are still multiple records for the same 
+    // slot. Only the highest attemptstepid must be kept even if different questionid
+    $multislotattemptstepidmax=array();//Twingsister
+    foreach ($dataout as $key => $datum) {// TODO 
+        $slot_now=$datum->slot;
+        $attempt_now=$datum->attemptstepid;
+        $usrid = $datum->userid;
+        if(!(array_key_exists($usrid,$multislotattemptstepidmax)&& array_key_exists($slot_now,$multislotattemptstepidmax[$usrid]))){
+            $multislotattemptstepidmax[$usrid][$slot_now]=$attempt_now;
+        }
+        if(($attempt_now>=$multislotattemptstepidmax[$usrid][$slot_now])){
+            if (($datum->attemptstepid>$multislotattemptstepidmax[$usrid][$slot_now])){
+                $multiattemptstepidmax[$usrid][$slot_now]=$datum->attemptstepid;
+            }
+        }
+    }
+    $datafin = array();
+    foreach ($dataout as $key => $datum) {//Quiz contains questions. One iteration for each question answer
+        $slot_now=$datum->slot;
+        $usrid = $datum->userid;
+        if($datum->attemptstepid==$multislotattemptstepidmax[$usrid][$slot_now]){
+            $datafin[$key]=$datum;
+        }
+    }
+    return $datafin;
+}
+/**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  * Returns correct fraction grade even for randomly selected questions
- * The randomly selected are indexed with the questionid theyreceive after the selection
+ * The randomly selected are indexed with the questionid they receive after the radom selection
+ * The query in the DB collect all record ranging across different $userid, $questionid $attemptstepid
+ * The algorithm was concieved not to consider the $attemptstepid on the ground of the fact that the last record in the DB gives the
+ * last attempt. For cloze question this is not always true so the variable $multianswerattemptstepidmax has been introduced.
+ * It is managed only by the multianswer branch and ensure  that, for the multibranch question type the record with the highest attemptstepid 
+ * is recorded.
  * @param int $quizid The id for the quiz.
  * @return array $returnvalues. $returnvalues[0] = $stanswers[$stid][$qid], $returnvalues[1] = $stfraction[$stid][$qid].
  * $returnvalues[2] = $stlink[$stid][$qid], $returnvalues[3] = $stslot[$stid][$qid].
@@ -303,8 +363,9 @@ function liveviewgrid_get_answers($quizid) {
         $groupjoin
         WHERE qza.quiz = $quizid AND ra.roleid = $studentroleid AND ra.contextid = $coursecontextid $whereqid $wheregroup";
     $params = array();
-    $data = $DB->get_records_sql($sqldata, $params);
+    $datain = $DB->get_records_sql($sqldata, $params);
     //echo json_encode($data);
+    $data=liveviewgrid_purge_answers($datain);
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
     $stanswers = array();
     $stfraction = array();
