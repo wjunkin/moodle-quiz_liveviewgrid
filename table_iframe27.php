@@ -611,7 +611,7 @@ if ($showresponses) {
     }
     echo "\n</table>";
     echo "\n</div>";
-    echo "Users quizzing:";echo $row;
+    //echo "Users quizzing:";echo $row;
     //echo json_encode($tooltiptext); die;
     if (count($tooltiptext) > 0) {
         $tooltiptexts = implode(",", $tooltiptext);
