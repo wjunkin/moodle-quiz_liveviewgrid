@@ -319,6 +319,34 @@ function liveviewgrid_purge_answers($datain) {
     }
     return $datafin;
 }
+function liveviewgrid_collect_MC($datain) {
+    global $DB;
+    $dataMC = array();
+    $dataOther = array();
+    $dataMCAnsw = array();
+    $dataMC_order = array();
+    $dataMCchoice = array();
+    foreach ($datain as $key => $datum) {//Quiz contains questions. One iteration for each question answer 
+        $question = $DB->get_record('question', array('id' => $datum->questionid));
+        if ($question->qtype == 'multichoice') {
+            $dataMC[$key]=$datum;
+            if ($datum->name == '_order') {
+                $dataMC_order[$key]=$datum;
+            }
+            if ($datum->name == 'answer') {
+                $dataMCAnsw[$key]=$datum;
+            }
+            if (preg_match('/^choice(\d+)/', $datum->name, $match)) {
+                //xdebug_break();    
+                $dataMCchoice[$key][$match[1]] = $datum;
+            }
+        }
+        else {
+            $dataOther[$key]=$datum;
+        }
+    }
+    return array($dataMC,$dataMCAnsw, $dataMC_order, $dataMCchoice,$dataOther);
+}
 /**
  * A function to return the most recent response of all students to the questions in a quiz and the grade for the answers.
  * Returns correct fraction grade even for randomly selected questions
@@ -344,7 +372,7 @@ function liveviewgrid_get_answers($quizid) {
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
     $group = optional_param('group', 0, PARAM_INT);
     $whereqid = '';
-    if ($singleqid > 0) {
+    if ($singleqid > 0 && !isdummykey($singleqid)) {
         $whereqid = "AND qa.questionid = $singleqid";
     }
     if ($group > 0) {
@@ -363,15 +391,87 @@ function liveviewgrid_get_answers($quizid) {
         $groupjoin
         WHERE qza.quiz = $quizid AND ra.roleid = $studentroleid AND ra.contextid = $coursecontextid $whereqid $wheregroup";
     $params = array();
+    //xdebug_break();    
     $datain = $DB->get_records_sql($sqldata, $params);
     //echo json_encode($data);
-    $data=liveviewgrid_purge_answers($datain);
-    // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
+    [$dataMC,$dataMCAnsw, $dataMC_order, $dataMCchoice,$dataOther]=liveviewgrid_collect_MC($datain); 
+    $dataMC_order=liveviewgrid_purge_answers($dataMC_order);
+    $order=array();
+    // load $order  for multiple choice from _order stuffed in attempt
+    foreach ($dataMC_order as $mdkey => $multidatum) {
+            $questionid = $multidatum->questionid;
+            $usrid = $multidatum->userid;
+            $order[$usrid][$questionid] = $multidatum->value;
+    }
+    // load the answers for multiple choice
     $stanswers = array();
     $stfraction = array();
-    $ggbcode= array(); //Twingsister collect ggb last saved status
     $stlink = array();
     $stslot=array();
+    // init $stanswers $stfraction
+    foreach ($dataMC as $mdkey => $multidatum) {
+            $questionid = $multidatum->questionid;
+            $usrid = $multidatum->userid;
+            if (!(isset($stfraction[$usrid][$questionid]))) {
+                $stanswers[$usrid][$questionid] = ' ';
+                $stfraction[$usrid][$questionid] = .001;
+                $stslot[$usrid][$questionid] =$multidatum->slot; ;
+            }
+    }
+    // set single answers
+    $dataMCAnsw=liveviewgrid_purge_answers($dataMCAnsw);
+    foreach ($dataMCAnsw as $mdkey => $multidatum) {
+            $questionid = $multidatum->questionid;
+            $usrid = $multidatum->userid;
+            $myorder = explode(',', $order[$usrid][$questionid]);
+            $chosen = $myorder[$multidatum->value];
+            $ans = $DB->get_record('question_answers', array('id' => $chosen));
+            $anstext = preg_replace("/<\/p>/", '', $ans->answer);
+            $anstext = preg_replace('/<p.*>/U', '', $anstext); //ex pattern
+            $stanswers[$usrid][$questionid] = $anstext;
+            $stfraction[$usrid][$questionid] = $ans->fraction;
+            //$stlink[$usrid][$questionid] =' ' ;
+            //$stslot[$usrid][$questionid] =$multidatum->slot; ;
+     }
+     // handle multiple choice with multiple answers
+                xdebug_break();    
+    $dataMCchoice2=array();
+    foreach ($dataMCchoice as $key => $datachoiceatt) {
+        $dataMCchoice2[$key]=liveviewgrid_purge_answers($datachoiceatt);
+    }
+    foreach ($dataMCchoice2 as $key => $datachoiceatt2) {
+        foreach ($datachoiceatt2 as $ident => $multidatum) {
+            $questionid = $multidatum->questionid;
+            $usrid = $multidatum->userid;
+            preg_match('/^choice(\d+)/', $multidatum->name, $matches);
+            if (!(isset($start[$multidatum->attemptstepid]))) {
+               $multians[$multidatum->attemptstepid] = array();
+               $stfraction[$usrid][$questionid] = .001;
+               $start[$multidatum->attemptstepid] = 1;
+               $yes = array();
+             }
+             if (!(isset($questionanswers[$questionid]))) {
+                 $qans = $DB->get_records('question_answers', array('question' => $questionid));
+               $qarray = array();
+               foreach ($qans as $qan) { $qarray[$qan->id] = $qan; }
+               $questionanswers[$questionid] = $qarray;
+              }
+              if ($multidatum->value) {
+                $myorder = explode(',', $order[$usrid][$questionid]);
+                $myes = $questionanswers[$questionid][$myorder[$matches[1]]];
+                $anstext = preg_replace("/<\/p>/", '', $myes->answer);
+                $yes[] = preg_replace('/<p.*>/U', '', $anstext);
+                $stfraction[$usrid][$questionid] = $stfraction[$usrid][$questionid] + $myes->fraction;
+              }
+              $stanswers[$usrid][$questionid] = join('; ', $yes);
+              $stfraction[$usrid][$questionid] = $stfraction[$usrid][$questionid] + 0.0001;
+        }
+    }
+    // multiple choice completely handled
+    $data=liveviewgrid_purge_answers($dataOther);
+    //xdebug_break(); 
+    // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
+    $ggbcode= array(); //Twingsister collect ggb last saved status
     // The array for $data to multichoice questions with more than one answer (checkboxes).
     $datum = array();// the list of answers. Some special objects for Cloze are stored here
     $multidata = array(); //Twingsister 
@@ -459,10 +559,11 @@ function liveviewgrid_get_answers($quizid) {
                 $stanswers[$usrid][$datum->questionid] =$tot['summary'];//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
                 $stfraction[$usrid][$datum->questionid] =$tot['fraction']; //sets the color// $tfresponse->fraction;
             }
-        } else if ($question->qtype == 'multichoice') {
-            $multidata[$datum->id] = $datum;
-            // I will deal with multichoice later.
-        } else if (($question->qtype == 'essay') || ($question->qtype == 'shortanswer')) {
+        } //else if ($question->qtype == 'multichoice') {
+           // $multidata[$datum->id] = $datum;
+            // I will deal with multichoice later.// now I deal at beginning
+        //} 
+        else if (($question->qtype == 'essay') || ($question->qtype == 'shortanswer')) {
             if ($datum->name == 'answer') {
                 $stanswers[$usrid][$datum->questionid] = $datum->value;
             }
@@ -694,7 +795,9 @@ function liveviewgrid_get_answers($quizid) {
 		  }
 	   }
     }
-    //xdebug_break();    
+    // loop ends in multidata were collected $question->qtype == 'multichoice' now deal with them with another loop
+    /********
+    xdebug_break();    
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
     if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
@@ -704,16 +807,18 @@ function liveviewgrid_get_answers($quizid) {
                 $stanswers[$usrid][$questionid] = ' ';
                 $stfraction[$usrid][$questionid] = .001;
             }
-
             if ($multidatum->name == '_order') {
                 $order[$usrid][$questionid] = $multidatum->value;
             }
-            $myorder = explode(',', $order[$usrid][$questionid]);
-            if ($multidatum->name == 'answer') {// Multichice with only one answer.
-                $chosen = $myorder[$multidatum->value];
-                $ans = $DB->get_record('question_answers', array('id' => $chosen));
-                $anstext = preg_replace('/<p.+?>/', '', $ans->answer);
-                $anstext = preg_replace("/<\/p>/", '', $anstext);
+            if (isset($order[$usrid][$questionid])) {
+                $myorder = explode(',', $order[$usrid][$questionid]);
+            }
+            if ($multidatum->name == 'answer') {// Multichoice with only one answer.
+                //$chosen = $myorder[$multidatum->value];
+                $ans = $DB->get_record('question_answers', array('question' => $questionid));//Twingsister
+                //$ans = $DB->get_record('question_answers', array('id' => $chosen));
+                $anstext = preg_replace("/<\/p>/", '', $ans->answer);
+                $anstext = preg_replace('/<p.*>/', '', $anstext); //ex pattern
                 $stanswers[$usrid][$questionid] = $anstext;
                 $stfraction[$usrid][$questionid] = $ans->fraction;
             }
@@ -734,6 +839,7 @@ function liveviewgrid_get_answers($quizid) {
                     $questionanswers[$questionid] = $qarray;
                 }
                 if ($multidatum->value) {
+                    xdebug_break();    
                     $myes = $questionanswers[$questionid][$myorder[$matches[1]]];
                     $anstext = preg_replace('/<p.+?>/', '', $myes->answer);
                     $yes[] = preg_replace("/<\/p>/", '', $anstext);
@@ -743,7 +849,8 @@ function liveviewgrid_get_answers($quizid) {
                 $stfraction[$usrid][$questionid] = $stfraction[$usrid][$questionid] + 0.0001;
             }
         }
-    }
+    } // also multichoice got their marks  Multichioce ends
+    */
     //xdebug_break(); 
     $returnvalues = array($stanswers, $stfraction, $stlink,$stslot);
     return $returnvalues;

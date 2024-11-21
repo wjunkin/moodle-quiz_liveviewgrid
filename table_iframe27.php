@@ -65,12 +65,15 @@ require_login($course, true, $cm);
 $quizcontextid = $context->id;
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
-$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+//$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 //xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
 $stanswers = array();
 $stfraction = array();
+$stslot=array();
+$stlink=array();
 //these are ok even for random questions
+//the questionid selected are given
 list($stanswers, $stfraction, $stlink,$stslot) = liveviewgrid_get_answers($quizid);
 //xdebug_break();
 //echo "-----------found these answers---------";
@@ -305,7 +308,7 @@ if ($shownames) {
     $activestyle = "style='background-size: 20% 100%;
         background-image: linear-gradient(to right, rgba(170, 225, 170, 1) 0%, rgba(230, 255, 230, 1) 100%);
         background-repeat: repeat;'";
-    echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')."</th>";
+    echo "<th class=\"first-col\">".get_string('name', 'quiz_liveviewgrid')." (".count($sofar).")</th>";
 }
 if ($showaverage) {//twingsister
     echo "<td>Average</td>";
@@ -361,7 +364,7 @@ foreach ($slots as $key => $slotvalue) {
             }
             $buttontext = $truncated;
         }
-        }else{$buttontext="Ref";$hidden;}//$linkid="'Randomquiz'";}
+        }else{$buttontext="Random";$hidden;}//$linkid="'Randomquiz'";}
         echo liveview_question_button($buttontext, $hidden, $linkid);
         echo "</td>";
         //echo "<td>NOREF</td>";
@@ -447,9 +450,24 @@ if ($showresponses) {
                 }
                 $myrow = '';
                 // put a link if there is a reference
+                // dummy questionid must be converted to real questionid before display
+                //xdebug_break();
+                foreach ($slots as $questionid => $slotvalue) {
+                    if(isdummykey($questionid)){
+                        foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
+                            if($slotvalue==$tryslotvalue){
+                                // delete $slots[$questionid] entry
+                                unset($slots[$questionid]);
+                                $slots[$newquestionid]=$slotvalue;}
+                        }
+                    }
+                }
+                //  questionid for random selected are now on
+                $question = liveviewquestionall($slots, 0);
+                $slotswithgrade=0; // Twingsister
                 foreach ($slots as $questionid => $slotvalue) {
                     //xdebug_break();
-                    if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
+                    // The for above makes this useless if(isdummykey($questionid)){$oldquestionid=$questionid;$questionid=0;}
                     // if it is a randomly selected quiz adjust $questionid
                    //if(!isdummykey($questionid))&&
                     if (isset($stlink[$user][$questionid])) { //Twingsister
@@ -475,6 +493,7 @@ if ($showresponses) {
                         }
                     }
                     $style = '<td';// close with $myrow .= $style.">&nbsp;".$answer.$link."</td>";
+                    $slotswithgrade=$slotswithgrade+1; // Twingsister also $slotvalue
                     if ($evaluate) {
                         if ((!isdummykey($questionid))&&($questionid != "") && ($questionid != 0)&& $question['qtype'][$questionid] == 'matrix') {
                             $grade = 0;
@@ -547,7 +566,7 @@ if ($showresponses) {
                             $style .= " style='background-color: rgb($redpart, $greenpart, $bluepart)'";
                         } //else if(isdummykey($questionid)){}
                     }
-                       // xdebug_break();    
+                    //xdebug_break();   // use $stslot[$user][$questionid]
                     if(($questionid == 0)){
                             $myrow .= $style.">&nbsp;"."Random"."</td>";
                     }else if ( ($singleqid > 0)||(strlen($answer) < $trun) ) { //isdummykey($questionid)||

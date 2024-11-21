@@ -161,13 +161,22 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         // New location for this code.
         // This is only needed if this code is going to display the table.
         //if ($singleqid > 0) {
+        //xdebug_break();
             $slots = $this->liveviewslots($quizid, $quizcontextid);
             $question = $this->liveviewquestion($slots);
             $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
             // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
             $stanswers = array();
             $stfraction = array();
-            list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
+            $stslot=array();
+            list($stanswers, $stfraction, $stlink,$stslot) = liveviewgrid_get_answers($quizid);
+            if (isdummykey($singleqid)) {$slots=array();
+                 foreach ($stslot as $u => $slottable) {
+                     foreach ($slottable as $quizident => $slotno) {
+                         $slots[$quizident]=$slotno;
+                     }
+                 }
+            }
             // End of new location for the above code.
             $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
             $sofar = liveview_who_sofar_gridview($quizid);
@@ -558,7 +567,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $dotdot = '....';
             }
             // Put in a histogram if the question has a histogram and a single question is displayed.
-            // for random question not easy to understand if a histogram is possible
+            // for random selected question not easy to understand if a histogram is possible
             if ($singleqid > 0 && !isdummykey($singleqid)) {
                 $trun = 200;
                 $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
@@ -659,7 +668,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
 
             $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
             //xdebug_break();
-            foreach ($slots as $key => $slotvalue) {
+            if(isdummykey($singleqid)){
+                    echo "<td>Random</td>";
+            } else{
+             foreach ($slots as $key => $slotvalue) {
                 if (isset($question['name'][$key])) {
                     $hidden['singleqid'] = $key;
                     $safequestionname = trim(strip_tags($question['name'][$key]));
@@ -689,6 +701,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 } else {
                     echo "<td></td>";
                 }
+             }
             }
             echo "</tr>\n</thead>\n";
             $hidden['singleqid'] = $singleqid;
@@ -713,6 +726,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     }
                 }
                 // Create the table.
+            //xdebug_break();
                 if (isset($users)) {
                     // Style for users that are currently active in Moodle.
                     $activestyle = "style='background-size: 20% 100%;
@@ -721,7 +735,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $now = time();
                     $firsttime = $now - 300;
                     echo "\n<tbody>";
+                    $ststatus=array();
+                    //xdebug_break();
                     foreach ($users as $user) {
+                        $ststatus[$user]=array();
                         // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
                         if (($shownames) || ($singleqid == 0) || isset($stanswers[$user][$singleqid])) {
                             echo "<tr>";
@@ -732,7 +749,10 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 }
                                 echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                             }
+                            xdebug_break();
                             $myrow = '';
+                            if(isdummykey($singleqid)){$slots=$stslot[$user];}
+                            // for dummy a list of a singleton with the questionid for the user
                             foreach ($slots as $questionid => $slotvalue) {
                                 if (isset($stlink[$user][$questionid])) {
                                     $link = $stlink[$user][$questionid];
