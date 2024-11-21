@@ -434,7 +434,7 @@ function liveviewgrid_get_answers($quizid) {
             //$stslot[$usrid][$questionid] =$multidatum->slot; ;
      }
      // handle multiple choice with multiple answers
-                xdebug_break();    
+                //xdebug_break();    
     $dataMCchoice2=array();
     foreach ($dataMCchoice as $key => $datachoiceatt) {
         $dataMCchoice2[$key]=liveviewgrid_purge_answers($datachoiceatt);
@@ -797,7 +797,7 @@ function liveviewgrid_get_answers($quizid) {
     }
     // loop ends in multidata were collected $question->qtype == 'multichoice' now deal with them with another loop
     /********
-    xdebug_break();    
+    //xdebug_break();    
     $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
     if ( count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
@@ -839,7 +839,7 @@ function liveviewgrid_get_answers($quizid) {
                     $questionanswers[$questionid] = $qarray;
                 }
                 if ($multidatum->value) {
-                    xdebug_break();    
+                    //xdebug_break();    
                     $myes = $questionanswers[$questionid][$myorder[$matches[1]]];
                     $anstext = preg_replace('/<p.+?>/', '', $myes->answer);
                     $yes[] = preg_replace("/<\/p>/", '', $anstext);

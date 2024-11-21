@@ -749,7 +749,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                                 }
                                 echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                             }
-                            xdebug_break();
+                            //xdebug_break();
                             $myrow = '';
                             if(isdummykey($singleqid)){$slots=$stslot[$user];}
                             // for dummy a list of a singleton with the questionid for the user
