@@ -63,6 +63,7 @@ $context = context_module::instance($cm->id);
 require_capability('mod/quiz:viewreports', $context);
 require_login($course, true, $cm);
 $quizcontextid = $context->id;
+//xdebug_break();
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
 $question = liveviewquestionall($slots, $singleqid);
 //$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
@@ -453,14 +454,14 @@ if ($showresponses) {
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
                 foreach ($slots as $questionid => $slotvalue) {
-                    if(isdummykey($questionid)){
+                    //if(isdummykey($questionid)){// useless if the two mapping disagree stlot rulez
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
                                 $slots[$newquestionid]=$slotvalue;}
                         }
-                    }
+                    //}
                 }
                 //  questionid for random selected are now on
                 $question = liveviewquestionall($slots, 0);
@@ -536,6 +537,7 @@ if ($showresponses) {
                         //xdebug_break();
                         // backgroud color set for randomly selected questions too
                         //if (isset($stfraction[$user][$oldquestionid]) && (!($stfraction[$user][$oldquestionid] == 'NA'))) 
+                        //xdebug_break(); 
                         if (isset($stfraction[$user][$questionid]) && (!($stfraction[$user][$questionid] == 'NA'))) {
                             //$myfraction = $stfraction[$user][$oldquestionid];
                             $myfraction = $stfraction[$user][$questionid];

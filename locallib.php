@@ -579,6 +579,33 @@ function liveviewgrid_get_answers($quizid) {
                 $stanswers[$usrid][$datum->questionid] = $tfresponse->answer;
                 $stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
             }
+        } else if ($question->qtype == 'numerical') {
+                //xdebug_break();
+            if ($datum->name == 'answer') {
+                $myresponse[$datum->name] = $datum->value;
+                // set stanswers
+                $mydm = new quiz_liveviewgrid_fraction($qubaid);
+                $response = $mydm->get_fraction($datum->slot, $myresponse);
+                if (isset($response[0])){$stanswers[$usrid][$datum->questionid]=$response[0];} 
+                  else { $stanswers[$usrid][$datum->questionid] = $datum->value; }
+                // set stfraction
+                if (isset($response[1])) {
+                    $stfraction[$usrid][$datum->questionid] = $response[1];
+                    if ($response[1] == 'NA') {// Make code and tags ineffective.
+                        $stanswers[$usrid][$datum->questionid] = $myresponse['answer'];
+                    }
+                } else { 
+		          if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
+			         $stfraction[$usrid][$datum->questionid] = 1.0;
+		          } else {
+			        $stfraction[$usrid][$datum->questionid] = .001;
+		          }
+                }
+                //set stlink
+                $stlink[$usrid][$datum->questionid] = ''; // $mydm->attachment_link(1);
+                //set stslot
+                $stslot[$usrid][$datum->questionid]=$datum->slot;
+            }
         } else {
             $myresponse = array();
             if (($datum->state == 'complete') || ($datum->state == 'invalid')
