@@ -453,7 +453,9 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                foreach ($slots as $questionid => $slotvalue) {
+                $slots=$stslot[$user];
+                /*
+                 foreach ($slots as $questionid => $slotvalue) {
                     if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
@@ -463,6 +465,7 @@ if ($showresponses) {
                         }
                     }
                 }
+                */
                 //  questionid for random selected are now on
                 $question = liveviewquestionall($slots, 0);
                 $slotswithgrade=0; // Twingsister
