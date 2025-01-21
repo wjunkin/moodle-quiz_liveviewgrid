@@ -453,19 +453,18 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                asort($stslot[$user]);$slots=$stslot[$user];
-                /*
-                 foreach ($slots as $questionid => $slotvalue) {
-                    if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
+                //asort($stslot[$user]);$slots=$stslot[$user];
+                foreach ($slots as $questionid => $slotvalue) {
+                    //if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
                                 $slots[$newquestionid]=$slotvalue;}
                         }
-                    }
+                    //}
                 }
-                */
+                asort($slots);
                 //  questionid for random selected are now on
                 $question = liveviewquestionall($slots, 0);
                 $slotswithgrade=0; // Twingsister
