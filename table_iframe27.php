@@ -454,14 +454,14 @@ if ($showresponses) {
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
                 foreach ($slots as $questionid => $slotvalue) {
-                    //if(isdummykey($questionid)){// useless if the two mapping disagree stlot rulez
+                    if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
                                 $slots[$newquestionid]=$slotvalue;}
                         }
-                    //}
+                    }
                 }
                 //  questionid for random selected are now on
                 $question = liveviewquestionall($slots, 0);
