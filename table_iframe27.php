@@ -453,7 +453,7 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                $slots=asort($stslot[$user]);
+                asort($stslot[$user]);$slots=$stslot[$user];
                 /*
                  foreach ($slots as $questionid => $slotvalue) {
                     if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
