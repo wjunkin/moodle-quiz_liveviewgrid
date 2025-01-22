@@ -65,6 +65,7 @@ require_login($course, true, $cm);
 $quizcontextid = $context->id;
 //xdebug_break();
 $slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
+asort($slots);
 $question = liveviewquestionall($slots, $singleqid);
 //$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 //xdebug_break();
@@ -454,16 +455,18 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                //asort($stslot[$user]);$slots=$stslot[$user];
+                asort($stslot[$user]);
+                //$slots=$stslot[$user];
                 $iterator=$slots;
                 foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
                         $israndom[$slotvalue]=true;
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
-                            if($slotvalue==$tryslotvalue){
+                            if($slotvalue===$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
                                 $slots[$newquestionid]=$slotvalue;}
+                                break;
                         }
                     }
                 }
