@@ -455,18 +455,19 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                asort($stslot[$user]);
+                $knownSlots=$stslot[$user];
+                asort($knownSlots);
                 //$slots=$stslot[$user];
                 $iterator=$slots;
                 foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
                         $israndom[$slotvalue]=true;
-                        foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
+                        foreach ($knownSlots as $newquestionid => $tryslotvalue) {
                             if($slotvalue===$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
-                                $slots[$newquestionid]=$slotvalue;}
-                                break;
+                                $slots[$newquestionid]=$slotvalue;
+                                break;}
                         }
                     }
                 }
