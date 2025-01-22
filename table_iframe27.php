@@ -51,7 +51,7 @@ echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_liv
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".
      $CFG->theme."/".$CFG->themerev."_2/all\" />";
 echo "\n</head><body>";
-$rowslots = array();
+$rowslots = array(); // a readonly copy. LAter on  we use $slots to put in random quiz id 
 $question = array();
 $users = array();
 $sofar = array();
@@ -458,7 +458,7 @@ if ($showresponses) {
                 $knownSlots=$new=unserialize(serialize($stslot[$user])); 
                 asort($knownSlots);
                 //$slots=$stslot[$user];
-                $slots=unserialize(serialize($rowslots)); 
+                $slots=unserialize(serialize($rowslots)); //hardcopy to $slos that will be changed to have quizid of the randomly selected quizzes 
                 $iterator=unserialize(serialize($slots)); 
                 foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez

@@ -578,6 +578,10 @@ function liveviewgrid_get_answers($quizid) {
                 $tfresponse = $DB->get_record('question_answers', array('id' => $tfans));
                 $stanswers[$usrid][$datum->questionid] = $tfresponse->answer;
                 $stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
+                //set stlink
+                $stlink[$usrid][$datum->questionid] = ''; // $mydm->attachment_link(1);
+                //set stslot
+                $stslot[$usrid][$datum->questionid]=$datum->slot;
             }
         } else if ($question->qtype == 'numerical') {
                 //xdebug_break();
