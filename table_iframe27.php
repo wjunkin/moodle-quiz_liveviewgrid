@@ -455,14 +455,14 @@ if ($showresponses) {
                 //xdebug_break();
                 //asort($stslot[$user]);$slots=$stslot[$user];
                 foreach ($slots as $questionid => $slotvalue) {
-                    //if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
+                    if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
                                 // delete $slots[$questionid] entry
                                 unset($slots[$questionid]);
                                 $slots[$newquestionid]=$slotvalue;}
                         }
-                    //}
+                    }
                 }
                 asort($slots);
                 //  questionid for random selected are now on
