@@ -51,7 +51,7 @@ echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_liv
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".
      $CFG->theme."/".$CFG->themerev."_2/all\" />";
 echo "\n</head><body>";
-$slots = array();
+$rowslots = array();
 $question = array();
 $users = array();
 $sofar = array();
@@ -64,9 +64,9 @@ require_capability('mod/quiz:viewreports', $context);
 require_login($course, true, $cm);
 $quizcontextid = $context->id;
 //xdebug_break();
-$slots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
-asort($slots);
-$question = liveviewquestionall($slots, $singleqid);
+$rowslots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
+asort($rowslots);
+$question = liveviewquestionall($rowslots, $singleqid);
 //$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 //xdebug_break();
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
@@ -331,7 +331,7 @@ $tooltiptext = array();
 $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';
 //xdebug_break();
-foreach ($slots as $key => $slotvalue) {
+foreach ($rowslots as $key => $slotvalue) {
     // Here is the header of the display one column for every question
     // ordetion without a reference (e.g. randomly selected) gets NOREF in the header
         $hidden['singleqid'] = $key;
@@ -342,7 +342,7 @@ foreach ($slots as $key => $slotvalue) {
         $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
         if (preg_match('/src=\"@@PLUGINFILE@@/', $myquestiontext, $matches)) {
             $quiz = $DB->get_record('quiz', array('id' => $quizid));
-            $qslot = $slots[$key];
+            $qslot = $rowslots[$key];
             $myquestiontext = changepic_url($myquestiontext, $key, $quiz->course, $qslot, $USER->id);
         }
         $ttiptext = get_string('clicksingleq', 'quiz_liveviewgrid').$safequestionname.'<br /><br />'.$myquestiontext;
@@ -426,7 +426,7 @@ if ($showresponses) {
                     $avg=0.0;
                     //$count=0.0;
                     //$countdummy=0;
-                    foreach ($slots as $questionid => $slotvalue) {
+                    foreach ($rowslots as $questionid => $slotvalue) {
                         if ((($questionid != "") && ($questionid != 0))&&
                         // old accepting also dummies for randomly questions if ((!isdummykey($questionid)&&($questionid != "") && ($questionid != 0)) &&
                             isset($stfraction[$user][$questionid]) &&(!($stfraction[$user][$questionid] == 'NA')) ) {
@@ -436,7 +436,7 @@ if ($showresponses) {
                       }
                     if(isset($stfraction[$user])) {
                         foreach ($stfraction[$user] as $questionid => $slotvalue) {
-                            if(!isset($slots[$questionid])){// in $slots there is a dummy
+                            if(!isset($rowslots[$questionid])){// in $slots there is a dummy
                                 //$count=$count+1.0;
                                 $avg=$avg+$stfraction[$user][$questionid];
                                 //$countdummy=$countdummy-1;
@@ -445,7 +445,7 @@ if ($showresponses) {
                       }
                       //if ($count>0 && $countdummy==0) {
                           //$avg=$avg/$count;
-                          $avg=$avg/count($slots);
+                          $avg=$avg/count($rowslots);
                           $stringavg=sprintf('%.02f',$avg*10.00);
                           $avgstr = "<td  ".liveviewgrid_color_for_grade($avg,$rag).">&nbsp; ".$stringavg." </td>";
                       //}else $avgstr="<td></td>";
@@ -455,10 +455,11 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                $knownSlots=$stslot[$user]->getArrayCopy();
+                $knownSlots=$new=unserialize(serialize($stslot[$user])); 
                 asort($knownSlots);
                 //$slots=$stslot[$user];
-                $iterator=$slots->getArrayCopy();
+                $slots=unserialize(serialize($rowslots)); 
+                $iterator=unserialize(serialize($slots)); 
                 foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
                         $israndom[$slotvalue]=true;
