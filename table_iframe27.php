@@ -455,7 +455,8 @@ if ($showresponses) {
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
                 //asort($stslot[$user]);$slots=$stslot[$user];
-                foreach ($slots as $questionid => $slotvalue) {
+                $iterator=$slots;
+                foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
                         $israndom[$slotvalue]=true;
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
