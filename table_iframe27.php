@@ -406,6 +406,7 @@ if ($showresponses) {
         $now = time();
         $firsttime = $now - $activetime * 60;
         echo "\n<tbody>";
+        $israndom=array();// keep track of the slots with a randomly selected question
         foreach ($users as $user) {
             // go if singleqid is  dummy
             // Display the row for the student if it is shownames or singleqid == 0 or there is an answer.
@@ -455,7 +456,8 @@ if ($showresponses) {
                 //xdebug_break();
                 //asort($stslot[$user]);$slots=$stslot[$user];
                 foreach ($slots as $questionid => $slotvalue) {
-                    if(isdummykey($questionid)){// useless if the two mapping disagree stslot rulez
+                    if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
+                        $israndom[$slotvalue]=true;
                         foreach ($stslot[$user] as $newquestionid => $tryslotvalue) {
                             if($slotvalue==$tryslotvalue){
                                 // delete $slots[$questionid] entry
