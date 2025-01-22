@@ -455,10 +455,10 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                $knownSlots=$stslot[$user];
+                $knownSlots=$stslot[$user]->getArrayCopy();
                 asort($knownSlots);
                 //$slots=$stslot[$user];
-                $iterator=$slots;
+                $iterator=$slots->getArrayCopy();
                 foreach ($iterator as $questionid => $slotvalue) {
                     if(isdummykey($questionid)||(isset($israndom[$slotvalue])&& $israndom[$slotvalue])){// useless if the two mapping disagree stslot rulez
                         $israndom[$slotvalue]=true;
