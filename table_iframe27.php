@@ -455,6 +455,7 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
+                //
                 $knownSlots=unserialize(serialize($stslot[$user])); 
                 asort($knownSlots);
                 //$slots=$stslot[$user];
