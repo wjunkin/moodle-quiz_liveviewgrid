@@ -455,7 +455,7 @@ if ($showresponses) {
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
-                $knownSlots=$new=unserialize(serialize($stslot[$user])); 
+                $knownSlots=unserialize(serialize($stslot[$user])); 
                 asort($knownSlots);
                 //$slots=$stslot[$user];
                 $slots=unserialize(serialize($rowslots)); //hardcopy to $slos that will be changed to have quizid of the randomly selected quizzes 
