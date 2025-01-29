@@ -456,7 +456,8 @@ if ($showresponses) {
                 // dummy questionid must be converted to real questionid before display
                 //xdebug_break();
                 //
-                $knownSlots=unserialize(serialize($stslot[$user])); 
+                //$knownSlots=unserialize(serialize($stslot[$user])); 
+                $knownSlots=json_decode(json_encode($stslot[$user]),true); 
                 asort($knownSlots);
                 //$slots=$stslot[$user];
                 $slots=unserialize(serialize($rowslots)); //hardcopy to $slos that will be changed to have quizid of the randomly selected quizzes 
