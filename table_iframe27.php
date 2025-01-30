@@ -421,7 +421,7 @@ if ($showresponses) {
                     }
                     echo "<td  class=\"first-col\" $bgcolor>".liveview_find_student_gridview($user)."</td>\n";
                 }
-                continue;
+                //as debug continue;
                 //xdebug_break();
                 if ($showaverage) {//Twingsister/ adding student average'';
                     $avg=0.0;
