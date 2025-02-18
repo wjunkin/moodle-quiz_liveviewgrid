@@ -65,7 +65,7 @@ require_login($course, true, $cm);
 $quizcontextid = $context->id;
 //xdebug_break();
 $rowslots = liveviewslotsall($quizid, $quizcontextid); //Twingsister  former livevieslots
-asort($rowslots);
+if(!is_null($rowslots)){asort($rowslots);}
 $question = liveviewquestionall($rowslots, $singleqid);
 //$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
 //xdebug_break();
@@ -459,7 +459,7 @@ if ($showresponses) {
                 //
                 //$knownSlots=unserialize(serialize($stslot[$user])); 
                 $knownSlots=json_decode(json_encode($stslot[$user]),true); 
-                asort($knownSlots);
+                if(!is_null($knownSlots)){asort($knownSlots);}
                 //$slots=$stslot[$user];
                 $slots=unserialize(serialize($rowslots)); //hardcopy to $slos that will be changed to have quizid of the randomly selected quizzes 
                 $iterator=unserialize(serialize($slots)); 
@@ -475,7 +475,7 @@ if ($showresponses) {
                         }
                     }
                 }
-                asort($slots);
+                if(!is_null($slots)){asort($slots);}
                 //  questionid for random selected are now on
                 $question = liveviewquestionall($slots, 0);
                 $slotswithgrade=0; // Twingsister

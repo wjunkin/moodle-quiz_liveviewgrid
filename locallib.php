@@ -1084,7 +1084,7 @@ $dummycnt=0;
         }
        if(!$found) $slots[dummykey()]=$toseek; // question with no $value->slot;
     }
-    asort($slots,SORT_NUMERIC);// Twingsister must be ordered according to values that are strings
+    if(!is_null($slots)){asort($slots,SORT_NUMERIC);}
     //echo json_encode($slots);
     return $slots;
 }
