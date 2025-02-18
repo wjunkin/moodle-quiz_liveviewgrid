@@ -455,7 +455,7 @@ if ($showresponses) {
                 $myrow = '';
                 // put a link if there is a reference
                 // dummy questionid must be converted to real questionid before display
-                xdebug_break();
+                //xdebug_break();
                 //
                 //$knownSlots=unserialize(serialize($stslot[$user])); 
                 $knownSlots=json_decode(json_encode($stslot[$user]),true); 
