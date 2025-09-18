@@ -525,7 +525,7 @@ function liveviewgrid_get_answers($quizid) {
                 
             }
         }
-        else if ($question->qtype == 'formulas'&& $datum->state == 'complete') {//Twingsister 
+        else if (($question->qtype == 'algebra')||($question->qtype == 'formulas'&& $datum->state == 'complete')) {//Twingsister 
             // Twingsister
                 //xdebug_break(); 
                 $stanswers[$usrid][$datum->questionid] =$datum->value;//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
