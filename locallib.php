@@ -260,9 +260,10 @@ function ggbTotal(array $answers,string $resp){
  }
     return array('summary'=>$summary, 'fraction'=>$fraction);//,'responseclass'=>$responseclass);
 } 
-// Algebra qtype must be installed to list Formula qtype
 global $CFG;
 require_once($CFG->dirroot . '/question/type/algebra/parser.php');
+// Algebra qtype must be installed to list Formula qtype
+//require_once($CFG->dirroot . '/question/type/mtf/somestub.php');
 /**
  * Only relevant attempts are left
  * @param array $datain The sequence of records to be filtered.
@@ -525,6 +526,12 @@ function liveviewgrid_get_answers($quizid) {
                 
             }
         }
+        else if (($question->qtype == 'mtf')){
+       		$stanswers[$usrid][$datum->questionid] =$datum->value;
+			$stfraction[$usrid][$datum->questionid]=1.0;
+            $stlink[$usrid][$datum->questionid] = ' ';
+            $stslot[$usrid][$datum->questionid] =$datum->slot; ;
+       	 }
         else if (($question->qtype == 'algebra')||($question->qtype == 'formulas'&& $datum->state == 'complete')) {//Twingsister 
             // Twingsister
                 //xdebug_break(); 
