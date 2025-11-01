@@ -529,7 +529,7 @@ function liveviewgrid_get_answers($quizid) {
         else if (($question->qtype == 'mtf')){
        		$stanswers[$usrid][$datum->questionid] =$datum->value;
 			$stfraction[$usrid][$datum->questionid]=1.0;
-            $stlink[$usrid][$datum->questionid] = ' ';
+            $stlink[$usrid][$datum->questionid] = 'HELLO EX BLANK ';
             $stslot[$usrid][$datum->questionid] =$datum->slot; ;
        	 }
         else if (($question->qtype == 'algebra')||($question->qtype == 'formulas'&& $datum->state == 'complete')) {//Twingsister 
