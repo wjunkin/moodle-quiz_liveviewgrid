@@ -527,9 +527,10 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
         else if (($question->qtype == 'mtf')){
-       		$stanswers[$usrid][$datum->questionid] =$datum->value;
+			xdebug_break(); 
+			$stanswers[$usrid][$datum->questionid] =$datum->value;
 			$stfraction[$usrid][$datum->questionid]=1.0;
-            $stlink[$usrid][$datum->questionid] = 'HELLO EX BLANK ';
+            $stlink[$usrid][$datum->questionid] = ' ';
             $stslot[$usrid][$datum->questionid] =$datum->slot; ;
        	 }
         else if (($question->qtype == 'algebra')||($question->qtype == 'formulas'&& $datum->state == 'complete')) {//Twingsister 
