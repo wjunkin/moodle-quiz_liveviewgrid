@@ -527,11 +527,16 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
         else if (($question->qtype == 'mtf')){
-			xdebug_break(); 
-			$stanswers[$usrid][$datum->questionid] =$datum->value;
-			$stfraction[$usrid][$datum->questionid]=1.0;
+			//xdebug_break(); 
+			$mydm = new quiz_liveviewgrid_fraction($qubaid);
+			$myres[$datum->name] = $datum->value;
+			$newres = $mydm->get_fraction($datum->slot, $myres);
+			$stfraction[$usrid][$datum->questionid] =$newres[1];
+			$stanswers[$usrid][$datum->questionid] =$newres[0];
+			//$stanswers[$usrid][$datum->questionid] =$datum->value;
+			//$stfraction[$usrid][$datum->questionid]=1.0;
             $stlink[$usrid][$datum->questionid] = ' ';
-            $stslot[$usrid][$datum->questionid] =$datum->slot; ;
+            $stslot[$usrid][$datum->questionid] =$datum->slot;
        	 }
         else if (($question->qtype == 'algebra')||($question->qtype == 'formulas'&& $datum->state == 'complete')) {//Twingsister 
             // Twingsister
