@@ -405,7 +405,6 @@ function liveviewgrid_get_answers($quizid) {
             $order[$usrid][$questionid] = $multidatum->value;
     }
     // load the answers for multiple choice
-    // initialize the return values
     $stanswers = array();
     $stfraction = array();
     $stlink = array();
@@ -560,7 +559,7 @@ function liveviewgrid_get_answers($quizid) {
                 $stlink[$usrid][$datum->questionid] = ' ';
         }
         else if(($question->qtype == 'formulas'&& $datum->state == 'complete')){
-            //xdebug_break();// difficult to handle formulas
+            xdebug_break();// difficult to handle formulas
             //$datum->rightanswer
             //must be a list of numbers, or a list of strings depending on the answer
             //type chosen. When there is only one answer, a number or string can be
@@ -572,23 +571,9 @@ function liveviewgrid_get_answers($quizid) {
             $expval = explode(",",$respv);
             $expval = array_map('trim', $expval); // leading & trailing forgotten 
             $parts = count($expval);
-            if(isset($stanswers[$usrid][$datum->questionid])){
-                $answersGiven=count(explode(",",$stanswers[$usrid][$datum->questionid]));
-            }else{$answersGiven=0;}
-            $rightanswer=$expval[$answersGiven];
-            if($datum->value===$rightanswer){ $ok=1.0;}else{$ok=0.0;}
-            $value=$ok/$parts;
-            // computing the fraction for this part of the answer 
-            if(isset($stfraction[$usrid][$datum->questionid])){
-                // already found an answer
-                $stfraction[$usrid][$datum->questionid]=
-                    $stfraction[$usrid][$datum->questionid]+$value; //sets the color// $tfresponse->fraction;
-                $stanswers[$usrid][$datum->questionid] =
-                 $stanswers[$usrid][$datum->questionid].",".($datum->value);
-            }else{
-                $stfraction[$usrid][$datum->questionid]=$value;
-                $stanswers[$usrid][$datum->questionid]=$datum->value;
-            }
+            $stanswers[$usrid][$datum->questionid] =$datum->value;//"A tooltip";  // TWINGSISTER DEBUG $datum->value;
+            $stfraction[$usrid][$datum->questionid]=
+             $stfraction[$usrid][$datum->questionid]+; //sets the color// $tfresponse->fraction;
             $stlink[$usrid][$datum->questionid] = ' ';
         }
         else if ($question->qtype == 'geogebra') { // Twingsister
