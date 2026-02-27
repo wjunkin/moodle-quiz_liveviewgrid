@@ -293,7 +293,7 @@ liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
 // Javascript to refresh the page if the contents of the table change.
 $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
 // The number of seconds before checking to see if the answers have changed is the $refreshtime.
-$refreshtime = 10 * $refresht;
+$refreshtime = $refresht;
 $sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
 $sessiontimeout = $sessionconfig->value;
 $maxrepeat = intval($sessiontimeout / $refreshtime);

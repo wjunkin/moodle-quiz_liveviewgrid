@@ -42,7 +42,8 @@ require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
  * @copyright 2018 William Junkin
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_liveviewgrid_report extends quiz_default_report {
+//class quiz_liveviewgrid_report extends quiz_default_report { //This was changed for Moodle 500 to the line below:
+class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
 
     /** @var context_module context of this quiz.*/
     protected $context;
@@ -87,7 +88,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $hidden = liveviewgrid_update_hidden($course);
         foreach ($hidden as $hkey => $hvalue) {
             $$hkey = $hvalue;
-        }
+        }// $cm is the row from the course_modules table for this quiz.
         // This is only needed if this code is going to display the table.
         if ($singleqid > 0) {
             $slots = array();
@@ -113,7 +114,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         $currentgroup = groups_get_activity_group($cm, true);
         $contextmodule = context_module::instance($cm->id);
         if ($refresht < 200) {
-            $myt = $refresht * 10;
+            $myt = $refresht;
             $refreshttitle = get_string('willautorefresh', 'quiz_liveviewgrid')."$myt".
                  get_string('ifnewresponse', 'quiz_liveviewgrid');
             $refreshmessage = get_string('autorefreshin', 'quiz_liveviewgrid')."$myt".
@@ -127,7 +128,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
         if ($showautorefresh == 1) {
             echo $refreshmessage;
         }
-        $showresponses = false;
+        $showresponses = false;// The contextmodule is the row from the context table for this quiz.
         $canaccess = has_capability('moodle/site:accessallgroups', $contextmodule);
         $geturl = $CFG->wwwroot.'/mod/quiz/report.php';
         $courseid = $course->id;
@@ -564,8 +565,8 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
                     $getvalues .= "&activetime=$activetime";
-                        echo "<iframe src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
-                            frameBorder=0 height='520' width='800'>";
+                        echo "<iframe style=\"height:4000px;\"src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+                            frameBorder=0 width='800'>";
                         echo "</iframe>";
                 } else if ($questiontext->qtype == 'matrix') {
                     $mdata = array();// An array for the number of times a row is answered correctly.
@@ -627,7 +628,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                     if ($refresht == 200) {
                         liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
                     } else {
-                        echo "<iframe src=\"$iframeurl\" frameBorder=0 width='800'>";
+                        echo "<iframe style=\"height:4000px;\" src=\"$iframeurl\" frameBorder=0 width='800'>";
                         echo "</iframe>";
                     }
                     // End of matrix histogram.
@@ -852,7 +853,7 @@ class quiz_liveviewgrid_report extends quiz_default_report {
                 $getvalues .= "&group=$group&showanswer=$showanswer&shownames=$shownames&status=$status&haslesson=$haslesson";
                 $getvalues .= "&showlesson=$showlesson&lessonid=$lessonid&refresht=$refresht&activetime=$activetime";
                 $tableiframeurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/table_iframe27.php?$getvalues";
-                echo "<iframe src=\"$tableiframeurl\" frameBorder=10 width='100%'>";
+                echo "<iframe style=\"height:4000px;\" src=\"$tableiframeurl\" frameBorder=10 width='100%'>";
                 echo "</iframe>";
             }
         }
