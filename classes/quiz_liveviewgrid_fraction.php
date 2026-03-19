@@ -63,7 +63,7 @@ class quiz_liveviewgrid_fraction {
      * @param string $myresponse The response that the student gave.
      * @return array ($response[0], $response[1]) The answer and fraction for the answer the student gave.
      */
-    public function get_fraction ($slot, $myresponse) {
+    public function get_fraction($slot, $myresponse) {
         $myquestion = $this->dm->get_question($slot);
         $response[0] = 'no summary available';
         if (method_exists($myquestion, 'summarise_response')) {
@@ -71,7 +71,7 @@ class quiz_liveviewgrid_fraction {
         }
         $response[1] = 'NA';
         if (method_exists($myquestion, 'grade_response')
-            && is_callable(array($myquestion, 'grade_response'))) {
+            && is_callable([$myquestion, 'grade_response'])) {
             $grade = $myquestion->grade_response($myresponse);
             if ($grade[0] == 0) {
                 $grade[0] = 0.001;// This is set so that the isset function returns a value of true.

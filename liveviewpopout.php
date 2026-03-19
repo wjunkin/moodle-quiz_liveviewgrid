@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Creates a statis LIve Report page.
+ * Creates a statis Live Report page when the teach clicks on the static option..
  *
  * @package   quiz_liveviewgrid
  * @copyright 2019 Eckerd College
@@ -39,13 +39,13 @@ $compact = optional_param('compact', 1, PARAM_INT);
 $singleqid = optional_param('singleqid', 0, PARAM_INT);
 $showanswer = optional_param('showanswer', 0, PARAM_INT);
 $shownames = optional_param('shownames', 1, PARAM_INT);
-$slots = array();
-$question = array();
-$users = array();
-$sofar = array();
-$cm = $DB->get_record('course_modules', array('id' => $id));
+$slots = [];
+$question = [];
+$users = [];
+$sofar = [];
+$cm = $DB->get_record('course_modules', ['id' => $id]);
 $quizid = $cm->instance;
-$quiz = $DB->get_record('quiz', array('id' => $quizid));
+$quiz = $DB->get_record('quiz', ['id' => $quizid]);
 echo "<html><head>";
 echo "<title>".$quiz->name."</title>";
 echo "</head><body>";
@@ -61,12 +61,12 @@ require_capability('mod/quiz:viewreports', $context);
 $quizcontextid = $context->id;
 $slots = liveviewslots($quizid, $quizcontextid);
 $question = liveviewquestion($slots, $singleqid);
-$course = $DB->get_record('course', array('id' => $quiz->course));
+$course = $DB->get_record('course', ['id' => $quiz->course]);
 require_login($course, true, $cm);
-$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+$quizattempts = $DB->get_records('quiz_attempts', ['quiz' => $quizid]);
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
-$stanswers = array();
-$stfraction = array();
+$stanswers = [];
+$stfraction = [];
 list($stanswers, $stfraction) = liveviewgrid_get_answers($quizid);
 // Check to see if the teacher has permissions to see all groups or the selected group.
 $groupmode = groups_get_activity_groupmode($cm, $course);
@@ -79,7 +79,7 @@ if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmo
         $showresponses = false;
         echo get_string('pickgroup', 'quiz_liveviewgrid');
     } else if ($currentgroup > 0) {
-        if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
+        if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $USER->id])) {
             // The teacher is a member of this group.
             $showresponses = true;
         } else {
@@ -93,7 +93,7 @@ if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmo
 }
 
 // The array of hidden values is hidden[].
-$hidden = array();
+$hidden = [];
 $hidden['id'] = $id;
 $hidden['mode'] = $mode;
 $hidden['rag'] = $rag;
@@ -113,7 +113,7 @@ if ($showresponses) {
         title=\"".get_string('printinfo', 'quiz_liveviewgrid')."\"
         value=\"".get_string('printpage', 'quiz_liveviewgrid')."\" />";
     if ($singleqid > 0) {
-        $questiontext = $DB->get_record('question', array('id' => $singleqid));
+        $questiontext = $DB->get_record('question', ['id' => $singleqid]);
         $qtext1 = preg_replace('/^<p>/', '', $questiontext->questiontext);
         $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
         echo "<span> ".get_string('questionis', 'quiz_liveviewgrid').$qtext2;
@@ -121,7 +121,7 @@ if ($showresponses) {
             if ($questiontext->qtype == 'essay') {
                 $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
             } else {
-                $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                $attempts = $DB->get_records('question_attempts', ['questionid' => $singleqid]);
                 foreach ($attempts as $attempt) {
                     $rightanswer = $attempt->rightanswer;
                 }
@@ -139,8 +139,8 @@ if ($showresponses) {
     echo "<input type='hidden' name='mode' value=$mode>";
     echo "<input type='hidden' name='singleqid' value=$singleqid>";
     echo "<input type='hidden' name='group' value=$group>";
-    $checked = array();
-    $notchecked = array();
+    $checked = [];
+    $notchecked = [];
     foreach ($hidden as $hiddenkey => $hiddenvalue) {
         if ($hiddenvalue) {
             $checked[$hiddenkey] = 'checked';
@@ -250,7 +250,7 @@ if ($compact) {
 echo "\n<table><tr><td>";
 echo get_string('responses', 'quiz_liveviewgrid');
 if ($group) {
-    $grpname = $DB->get_record('groups', array('id' => $group));
+    $grpname = $DB->get_record('groups', ['id' => $group]);
     echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
 } else if ($canaccess) {
     echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
@@ -260,12 +260,12 @@ if ($group) {
 
 // Getting and preparing to sorting users.
 // The first and last name are in the initials array.
-$initials = array();
+$initials = [];
 if (count($sofar) > 0) {
     foreach ($sofar as $unuser) {
         // If only a group is desired, make sure this student is in the group.
         if ($group) {
-            if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+            if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $unuser])) {
                 $getresponse = true;
             } else {
                 $getresponse = false;
@@ -274,7 +274,7 @@ if (count($sofar) > 0) {
             $getresponse = true;
         }
         if ($getresponse) {
-            $usr = $DB->get_record('user', array('id' => $unuser));
+            $usr = $DB->get_record('user', ['id' => $unuser]);
             if ($order) {
                 $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
             } else {
@@ -327,7 +327,7 @@ if (($singleqid > 0) && (!($shownames))) {
 
     $answertext = get_string('answeredquizno', 'quiz_liveviewgrid');
     if (count($initials) > 0) {
-        $noanswer = array();
+        $noanswer = [];
         $noa = 0;
         $answertext = get_string('answeredqno', 'quiz_liveviewgrid');
         foreach ($initials as $key => $initial) {
@@ -395,7 +395,7 @@ echo "</tr></table>";
 // Put in a histogram if the question has a histogram and a single question is displayed.
 if ($singleqid > 0) {
     $trun = 200;
-    $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+    $multitype = ['multichoice', 'truefalse', 'calculatedmulti'];
     if (in_array($questiontext->qtype, $multitype)) {
         $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
         $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames";
@@ -411,7 +411,7 @@ if ($shownames) {
     echo "<th>".get_string('name', 'quiz_liveviewgrid')."</th>";
 }
 // The array for storing the all the texts for tootips.
-$tooltiptext = array();
+$tooltiptext = [];
 
 $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
 $togglekey = '';

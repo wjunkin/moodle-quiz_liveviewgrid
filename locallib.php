@@ -30,20 +30,20 @@
  */
 function liveview_who_sofar_gridview($quizid) {
     global $DB;
-    $records = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
-    $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-    $quiz = $DB->get_record('quiz', array('id' => $quizid));
+    $records = $DB->get_records('quiz_attempts', ['quiz' => $quizid]);
+    $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+    $quiz = $DB->get_record('quiz', ['id' => $quizid]);
     $context = context_course::instance($quiz->course);
     foreach ($records as $record) {
-        if ($DB->get_record('role_assignments', array('contextid' => $context->id,
-            'roleid' => $studentrole->id, 'userid' => $record->userid))) {
+        if ($DB->get_record('role_assignments', ['contextid' => $context->id,
+            'roleid' => $studentrole->id, 'userid' => $record->userid])) {
             $userid[] = $record->userid;
         }
     }
     if (isset($userid)) {
         return(array_unique($userid));
     } else {
-        $userid = array();
+        $userid = [];
         return $userid;
     }
 }
@@ -57,13 +57,13 @@ function liveview_who_sofar_gridview($quizid) {
 function liveview_who_sofar_lesson($lessonid) {
     global $DB;
 
-    $records = $DB->get_records('lesson_attempts', array('lessonid' => $lessonid));
-    $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-    $lesson = $DB->get_record('lesson', array('id' => $lessonid));
+    $records = $DB->get_records('lesson_attempts', ['lessonid' => $lessonid]);
+    $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+    $lesson = $DB->get_record('lesson', ['id' => $lessonid]);
     $context = context_course::instance($lesson->course);
     foreach ($records as $record) {
-        if ($DB->get_record('role_assignments', array('contextid' => $context->id,
-            'roleid' => $studentrole->id, 'userid' => $record->userid))) {
+        if ($DB->get_record('role_assignments', ['contextid' => $context->id,
+            'roleid' => $studentrole->id, 'userid' => $record->userid])) {
             $userid[] = $record->userid;
         }
     }
@@ -82,7 +82,7 @@ function liveview_who_sofar_lesson($lessonid) {
  */
 function liveview_find_student_gridview($userid) {
      global $DB;
-     $user = $DB->get_record('user', array('id' => $userid));
+     $user = $DB->get_record('user', ['id' => $userid]);
      $name = $user->firstname." ".$user->lastname;
      return($name);
 }
@@ -119,7 +119,7 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
     global $DB, $USER;
     echo "\n<table border=0><tr><td valign=\"top\">";
     echo get_string('whichgroups', 'quiz_liveviewgrid')."</td>";
-    $groups = $DB->get_records('groups', array('courseid' => $courseid));
+    $groups = $DB->get_records('groups', ['courseid' => $courseid]);
     echo "\n<td><form action=\"$geturl\">";
     $mygroup = -1;
     foreach ($hidden as $key => $value) {
@@ -135,7 +135,7 @@ function liveviewgrid_group_dropdownmenu($courseid, $geturl, $canaccess, $hidden
         echo "\n<option value=\"0\">".get_string('allgroups', 'quiz_liveviewgrid')."</option>";
     }
     foreach ($groups as $grp) {
-        if ($DB->get_record('groups_members', array('groupid' => $grp->id, 'userid' => $USER->id)) || $canaccess) {
+        if ($DB->get_record('groups_members', ['groupid' => $grp->id, 'userid' => $USER->id]) || $canaccess) {
             $groupid = $grp->id;
             // This teacher can see this group.
             if ($groupid <> $mygroup) {
@@ -178,7 +178,7 @@ function liveviewgrid_question_dropdownmenu($quizid, $geturl, $hidden, $quizcont
         echo "\n<option value=\"0\">".get_string('allquestions', 'quiz_liveviewgrid')."</option>";
     }
     foreach ($slots as $slotkey => $slot) {
-        $question = $DB->get_record('question', array('id' => $slotkey));
+        $question = $DB->get_record('question', ['id' => $slotkey]);
         if ($question->id <> $mysingleqid) {
             $questionname = $question->name;
             if (strlen($questionname) > 80) {
@@ -219,7 +219,7 @@ function ggbtotal(array $answers, string $resp) {
     $summary = '';
     if (preg_match('/:/', $resp)) {
         $values = explode("%", $resp); // Twingsister.
-        $resmap = array();
+        $resmap = [];
         foreach ($values as $ans) {
             $tmp = explode(':', $ans);
             $resmap[$tmp[0]] = $tmp[1];
@@ -257,7 +257,7 @@ function ggbtotal(array $answers, string $resp) {
         $summary .= '; ' . get_string('total', 'grades') . ': ' . $fraction;
     }
     // Note: responseclass becomes $responseclass.
-    $return = array();
+    $return = [];
     $return['summary'] = $summary;
     $return['fraction'] = $fraction;
     return $return;
@@ -270,11 +270,11 @@ function ggbtotal(array $answers, string $resp) {
  **/
 function liveviewgrid_get_answers($quizid) {
     global $DB;
-    $role = $DB->get_record('role', array('shortname' => 'student'));
+    $role = $DB->get_record('role', ['shortname' => 'student']);
     $studentroleid = $role->id;
-    $quiz = $DB->get_record('quiz', array('id' => $quizid));
+    $quiz = $DB->get_record('quiz', ['id' => $quizid]);
     $courseid = $quiz->course;
-    $coursecontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+    $coursecontext = $DB->get_record('context', ['contextlevel' => 50, 'instanceid' => $courseid]);
     $coursecontextid = $coursecontext->id;
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
     $group = optional_param('group', 0, PARAM_INT);
@@ -297,26 +297,26 @@ function liveviewgrid_get_answers($quizid) {
         JOIN {role_assignments} ra ON qza.userid = ra.userid
         $groupjoin
         WHERE qza.quiz = $quizid AND ra.roleid = $studentroleid AND ra.contextid = $coursecontextid $whereqid $wheregroup";
-    $params = array();
+    $params = [];
     $data = $DB->get_records_sql($sqldata, $params);
     // These arrays are the 'answr' or 'fraction' or 'link' (for attachments) indexed by userid and questionid.
-    $stanswers = array();
-    $stfraction = array();
-    $ggbcode = array(); // Twingsister collect ggb last saved status.
-    $stlink = array();
+    $stanswers = [];
+    $stfraction = [];
+    $ggbcode = []; // Twingsister collect ggb last saved status.
+    $stlink = [];
     // The array for $data to multichoice questions with more than one answer (checkboxes).
-    $datum = array();
-    $multidata = array(); // Twingsister.
+    $datum = [];
+    $multidata = []; // Twingsister.
     foreach ($data as $key => $datum) {
         $usrid = $datum->userid;
         $qubaid = $datum->uniqueid;
-		$myrightanswer = $datum->rightanswer;
+        $myrightanswer = $datum->rightanswer;
         $mydm = new quiz_liveviewgrid_fraction($qubaid);
-        $question = $DB->get_record('question', array('id' => $datum->questionid));
+        $question = $DB->get_record('question', ['id' => $datum->questionid]);
         if ($question->qtype == 'geogebra') { // Twingsister.
             if ($datum->name == 'answer') {
                 // Get all the ->answer the name of the variable ->fraction the fraction in the note ->feedback.
-                $ggbanswers = $DB->get_records('question_answers', array('question' => $datum->questionid),
+                $ggbanswers = $DB->get_records('question_answers', ['question' => $datum->questionid],
                     $sort = '', $fields = '*', $limitfrom = 0, $limitnum = 0);
                 $tot = ggbtotal($ggbanswers, $datum->value);
                 $stanswers[$usrid][$datum->questionid] = $tot['summary'];// A tooltip.
@@ -331,18 +331,18 @@ function liveviewgrid_get_answers($quizid) {
             }
         } else if ($question->qtype == 'truefalse') {
             if ($datum->name == 'answer') {
-                $tfres = $DB->get_record('question_truefalse', array('question' => $datum->questionid));
+                $tfres = $DB->get_record('question_truefalse', ['question' => $datum->questionid]);
                 if ($datum->value == 1) {
                     $tfans = $tfres->trueanswer;
                 } else {
                     $tfans = $tfres->falseanswer;
                 }
-                $tfresponse = $DB->get_record('question_answers', array('id' => $tfans));
+                $tfresponse = $DB->get_record('question_answers', ['id' => $tfans]);
                 $stanswers[$usrid][$datum->questionid] = $tfresponse->answer;
                 $stfraction[$usrid][$datum->questionid] = $tfresponse->fraction;
             }
         } else {
-            $myresponse = array();
+            $myresponse = [];
             if (($datum->state == 'complete') || ($datum->state == 'invalid')
                 || ($datum->state == 'todo')) {
                 // Handling Cloze questions, 'invalid' and immediatefeedback, 'todo'.
@@ -354,9 +354,9 @@ function liveviewgrid_get_answers($quizid) {
                         $matchgrade[$datum->attemptstepid] = 0;
                         $matchanswer[$datum->attemptstepid] = '';
                     }
-                    $mymatch = array();
-                    $subquestions = $DB->get_records('qtype_match_subquestions', array('questionid' => $question->id));
-                    $myquestions = array();
+                    $mymatch = [];
+                    $subquestions = $DB->get_records('qtype_match_subquestions', ['questionid' => $question->id]);
+                    $myquestions = [];
                     foreach ($subquestions as $subid => $subquestion) {
                         $questiontext = preg_replace('/<p.*?>/', '', $subquestion->questiontext);
                         $mymatch[$subid]['qtext'] = preg_replace("/<\/p>/", '', $questiontext);
@@ -392,22 +392,22 @@ function liveviewgrid_get_answers($quizid) {
                     preg_match_all('/{{.+?}}/s', $questionsummary, $mymatches);
                 }
                 if (($question->qtype == 'matrix') && ($datum->state <> 'todo')) {
-                    if ($test = $DB->get_record('qtype_matrix', array('questionid' => $datum->questionid))) {
-						$dbmatrix = 'qtype_matrix';// New version of qtype matrix.
-					} else {
-						$dbmatrix = 'question_matrix';// Still using old code for qtype matrix.
-					}					
-					if (!(isset($matrixresponse[$datum->attemptstepid]))) {
-                        $matrixresponse[$datum->attemptstepid] = array();
+                    if ($test = $DB->get_record('qtype_matrix', ['questionid' => $datum->questionid])) {
+                        $dbmatrix = 'qtype_matrix';// New version of qtype matrix.
+                    } else {
+                        $dbmatrix = 'question_matrix';// Still using old code for qtype matrix.
                     }
-                    $qmatrix = $DB->get_record("$dbmatrix", array('questionid' => $datum->questionid));
-                    $rowlabels = $DB->get_records("$dbmatrix".'_rows', array('matrixid' => $qmatrix->id));
+                    if (!(isset($matrixresponse[$datum->attemptstepid]))) {
+                        $matrixresponse[$datum->attemptstepid] = [];
+                    }
+                    $qmatrix = $DB->get_record("$dbmatrix", ['questionid' => $datum->questionid]);
+                    $rowlabels = $DB->get_records("$dbmatrix".'_rows', ['matrixid' => $qmatrix->id]);
                     $numrows = count($rowlabels);
                     if (!(isset($matrixrowanswers[$qmatrix->id]))) {// This is the first time for this matrix.
                         // Get the correct columns for each row in the array matrixanswers[matrixid][rowid].
                         foreach ($rowlabels as $key => $rowlabel) {
-                            $matrixanswers[$qmatrix->id][$key] = array();
-                            $rowvalues = $DB->get_records("$dbmatrix".'_weights', array('rowid' => $key));
+                            $matrixanswers[$qmatrix->id][$key] = [];
+                            $rowvalues = $DB->get_records("$dbmatrix".'_weights', ['rowid' => $key]);
                             foreach ($rowvalues as $rkey => $rowvalue) {
                                 if ($rowvalue->weight > 0.9) {
                                     array_push($matrixanswers[$qmatrix->id][$key], $rowvalue->colid);
@@ -417,18 +417,18 @@ function liveviewgrid_get_answers($quizid) {
                         $matrixrowanswers[$qmatrix->id] = 1;
                     }
                     if (($qmatrix->multiple == 1) && (!(isset($mans[$datum->attemptstepid])))) {
-                        $mans[$datum->attemptstepid] = array();// An array for the checkbox answers, indexed by row and answer.
-                        $myrow[$datum->attemptstepid] = array();// An array to keep track of the rowids.
-                        $qtext[$datum->attemptstepid] = array();// An array for the text for each row.
-                        $myweight[$datum->attemptstepid] = array();
+                        $mans[$datum->attemptstepid] = [];// An array for the checkbox answers, indexed by row and answer.
+                        $myrow[$datum->attemptstepid] = [];// An array to keep track of the rowids.
+                        $qtext[$datum->attemptstepid] = [];// An array for the text for each row.
+                        $myweight[$datum->attemptstepid] = [];
                     }
                     // I need to find the column labels, row texts, and correct answer for each row of this matrix question.
                     // Get text for each row, subscripted by the row id.
-                    $rowtext = array();
+                    $rowtext = [];
                     foreach ($rowlabels as $key => $rowlabel) {
                         $rowtext[$rowlabel->id] = $rowlabel->shorttext;
                         if (!(isset($myweight[$datum->attemptstepid][$key]))) {
-                            $myweight[$datum->attemptstepid][$key] = array();
+                            $myweight[$datum->attemptstepid][$key] = [];
                         }
                     }
                     foreach ($myresponse as $key => $respon) {
@@ -440,7 +440,7 @@ function liveviewgrid_get_answers($quizid) {
                                 $colid = $matches[2];
                                 $weight = 0;
                                 if (($rowid > 0) && ($colid > 0)) {
-                                    $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                    $parms = ['rowid' => $rowid, 'colid' => $colid];
                                     if ($fract = $DB->get_record("$dbmatrix".'_weights', $parms)) {
                                         $weight = $fract->weight;
                                         if ($weight > 0.9) {
@@ -449,12 +449,12 @@ function liveviewgrid_get_answers($quizid) {
                                     }
                                 }
                                 $mrow[$datum->attemptstepid] = $DB->get_record("$dbmatrix".'_rows',
-                                    array('id' => $rowid, 'matrixid' => $qmatrix->id));
+                                    ['id' => $rowid, 'matrixid' => $qmatrix->id]);
                                 $qtext[$datum->attemptstepid][$rowid] = $mrow[$datum->attemptstepid]->shorttext;
                                 $mcol = $DB->get_record("$dbmatrix".'_cols',
-                                    array('id' => $colid, 'matrixid' => $qmatrix->id));
+                                    ['id' => $colid, 'matrixid' => $qmatrix->id]);
                                 $mans[$datum->attemptstepid][$rowid][$colid] = $mcol->shorttext;
-                                $parms = array('rowid' => $rowid, 'colid' => $colid);
+                                $parms = ['rowid' => $rowid, 'colid' => $colid];
                             }
                         } else {
                             // For matrix questions with radio buttons, the key will be cell(\d+).
@@ -463,10 +463,10 @@ function liveviewgrid_get_answers($quizid) {
                                 $rowid = $matches[1];
                                 $colid = $respon;
                                 $mrow = $DB->get_record("$dbmatrix".'_rows',
-                                    array('id' => $rowid, 'matrixid' => $qmatrix->id));
+                                    ['id' => $rowid, 'matrixid' => $qmatrix->id]);
                                 $qtext = $mrow->shorttext;
                                 $mcol = $DB->get_record("$dbmatrix".'_cols',
-                                    array('id' => $colid, 'matrixid' => $qmatrix->id));
+                                    ['id' => $colid, 'matrixid' => $qmatrix->id]);
                                 $mans[$datum->attemptstepid] = $mcol->shorttext;
                                 $matrixresponse[$datum->attemptstepid][] = $qtext.':&nbsp;'.$mans[$datum->attemptstepid];
                             }
@@ -483,9 +483,9 @@ function liveviewgrid_get_answers($quizid) {
                     $stanswers[$usrid][$datum->questionid] = join(';&nbsp;', $matrixresponse[$datum->attemptstepid]);
                     $stfraction[$usrid][$datum->questionid] = 0.0001;
                 } else if (count($myresponse) > 0) {
-                    $clozeresponse = array();// An array for the Close responses.
+                    $clozeresponse = [];// An array for the Close responses.
                     $clozegrade = 0;
-                    $multimresponse = array();
+                    $multimresponse = [];
                     $multimgrade = 0;
                     foreach ($myresponse as $key => $respon) {
                         // For cloze questions the key will be sub(\d+)_answer.
@@ -493,8 +493,8 @@ function liveviewgrid_get_answers($quizid) {
                         if (preg_match('/sub(\d+)\_answer/', $key, $matches)) {
                             $clozequestionid = $datum->questionid;
                             // Finding the number of parts.
-                            $numclozeparts = $DB->count_records('question', array('parent' => $clozequestionid));
-                            $myres = array();
+                            $numclozeparts = $DB->count_records('question', ['parent' => $clozequestionid]);
+                            $myres = [];
                             $myres[$key] = $respon;
                             $newres = $mydm->get_fraction($datum->slot, $myres);
                             $clozegrade = $clozegrade + $newres[1];
@@ -509,7 +509,7 @@ function liveviewgrid_get_answers($quizid) {
                         }
                         // For matrix questions the key will be cell(\d+).
                     }
-                    $response = array();
+                    $response = [];
                     if (isset($myresponse['attachments'])) {
                         // Get the linked icon appropriate for this attempt.
                         unset($myresponse['attachments']);
@@ -548,14 +548,14 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
-	if ($question->qtype == 'shortanswer') {
-		if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
-			$stfraction[$usrid][$datum->questionid] = 1.0;
-		} else {
-			$stfraction[$usrid][$datum->questionid] = .001;
-		}
-	}
-    $order = array(); // An array for keeping track of the order of choices for each quiz attemt of each question.
+    if ($question->qtype == 'shortanswer') {
+        if ($stanswers[$usrid][$datum->questionid] == $myrightanswer) {
+            $stfraction[$usrid][$datum->questionid] = 1.0;
+        } else {
+            $stfraction[$usrid][$datum->questionid] = .001;
+        }
+    }
+    $order = []; // An array for keeping track of the order of choices for each quiz attemt of each question.
     if (count($multidata) > 0) {// Here all questions are qtype = multichoice.
         foreach ($multidata as $mdkey => $multidatum) {
             $questionid = $multidatum->questionid;
@@ -571,12 +571,12 @@ function liveviewgrid_get_answers($quizid) {
             $myorder = explode(',', $order[$usrid][$questionid]);
             if ($multidatum->name == 'answer') {// Multichice with only one answer.
                 $chosen = $myorder[$multidatum->value];
-                $ans = $DB->get_record('question_answers', array('id' => $chosen));
+                $ans = $DB->get_record('question_answers', ['id' => $chosen]);
                 $anstext = preg_replace('/<p.*?>/', '', $ans->answer);
                 $anstext = preg_replace("/<\/p>/", '', $anstext);
                 // Check if answer has a picture.
                 if (preg_match('/src=\"@@PLUGINFILE@@/', $anstext, $matches)) {
-                    $quiz = $DB->get_record('quiz', array('id' => $quizid));
+                    $quiz = $DB->get_record('quiz', ['id' => $quizid]);
                     $anstext = answerpic_url($anstext, $questionid, $chosen, $courseid, $usrid);
                 }
                 $stanswers[$usrid][$questionid] = $anstext;
@@ -585,14 +585,14 @@ function liveviewgrid_get_answers($quizid) {
 
             if (preg_match('/^choice(\d+)/', $multidatum->name, $matches)) {// A multichoice with several answers (checkboxes).
                 if (!(isset($start[$multidatum->attemptstepid]))) {
-                    $multians[$multidatum->attemptstepid] = array();
+                    $multians[$multidatum->attemptstepid] = [];
                     $stfraction[$usrid][$questionid] = .001;
                     $start[$multidatum->attemptstepid] = 1;
-                    $yes = array();
+                    $yes = [];
                 }
                 if (!(isset($questionanswers[$questionid]))) {
-                    $qans = $DB->get_records('question_answers', array('question' => $questionid));
-                    $qarray = array();
+                    $qans = $DB->get_records('question_answers', ['question' => $questionid]);
+                    $qarray = [];
                     foreach ($qans as $qan) {
                         $qarray[$qan->id] = $qan;
                     }
@@ -609,7 +609,7 @@ function liveviewgrid_get_answers($quizid) {
             }
         }
     }
-    $returnvalues = array($stanswers, $stfraction, $stlink);
+    $returnvalues = [$stanswers, $stfraction, $stlink];
     return $returnvalues;
 }
 /**
@@ -626,13 +626,13 @@ function mmultichoice($qattempts, $usrid) {
     $multiorder = '';
     // Possibly multichoice with multiple answers.
     foreach ($qattempts as $qattempt) {
-        $myresponse = array();
-        $qattemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $qattempt->id));
+        $myresponse = [];
+        $qattemptsteps = $DB->get_records('question_attempt_steps', ['questionattemptid' => $qattempt->id]);
         foreach ($qattemptsteps as $qattemptstep) {
             if (($qattemptstep->state == 'complete') || ($qattemptstep->state == 'invalid')
                 || ($qattemptstep->state == 'todo')) {
-                $answers = $DB->get_records('question_attempt_step_data', array('attemptstepid' => $qattemptstep->id));
-                $mchoice = array();
+                $answers = $DB->get_records('question_attempt_step_data', ['attemptstepid' => $qattemptstep->id]);
+                $mchoice = [];
                 foreach ($answers as $key => $answer) {
                     $myresponse[$answer->name] = $answer->value;
                     if ($answer->name == '_order') {
@@ -644,7 +644,7 @@ function mmultichoice($qattempts, $usrid) {
                 $myorder = explode(",", $multiorder);
                 foreach ($mchoice as $mchosen) {
                     $mychoice = $myorder[$mchosen];// One of the chosen question answers.
-                    $myanswer = $DB->get_record('question_answers', array('id' => $mychoice));
+                    $myanswer = $DB->get_record('question_answers', ['id' => $mychoice]);
                     $multichoiceresponse .= $myanswer->answer;
                     $mgrade = $mgrade + $myanswer->fraction;
                 }
@@ -656,7 +656,7 @@ function mmultichoice($qattempts, $usrid) {
             }
         }
     }
-    $result = array($stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]);
+    $result = [$stanswers[$usrid][$qattempt->questionid], $stfraction[$usrid][$qattempt->questionid]];
     return $result;
 }
 /**
@@ -702,7 +702,7 @@ function liveviewgrid_display_question($cmid, $id) {
         }
     } else {
         // Get question text the old way.
-        $questionobj = $DB->get_record('question', array('id' => $id));
+        $questionobj = $DB->get_record('question', ['id' => $id]);
         $qtext1 = preg_replace('/^<p>/', '', $questionobj->questiontext);
         $qtext2 = preg_replace('/(<br>)*<\/p>$/', '<br />', $qtext1);
         $questiontext = $qtext2;
@@ -719,36 +719,36 @@ function liveviewgrid_display_question($cmid, $id) {
  */
 function goodans($questionid) {
     global $DB;
-	if ($test = $DB->get_record('qtype_matrix', array('questionid' => $questionid))) {
-		$dbmatrix = 'qtype_matrix';// New version of qtype matrix.
-	} else {
-		$dbmatrix = 'question_matrix';// Still using old code for qtype matrix.
-	}
+    if ($test = $DB->get_record('qtype_matrix', ['questionid' => $questionid])) {
+        $dbmatrix = 'qtype_matrix';// New version of qtype matrix.
+    } else {
+        $dbmatrix = 'question_matrix';// Still using old code for qtype matrix.
+    }
     // Get the column labels, row text, and correct answers.
-    $matrixquestion = $DB->get_record("$dbmatrix", array('questionid' => $questionid));
+    $matrixquestion = $DB->get_record("$dbmatrix", ['questionid' => $questionid]);
     $matrixid = $matrixquestion->id;
     $grademethod = $matrixquestion->grademethod;
-    $rowtext = array();// An array with the text for each row, indexed by row id.
-    $collabel = array();// An array with the label for each column, indexed by column id.
-    $rtexts = $DB->get_records("$dbmatrix".'_rows', array('matrixid' => $matrixid));
+    $rowtext = [];// An array with the text for each row, indexed by row id.
+    $collabel = [];// An array with the label for each column, indexed by column id.
+    $rtexts = $DB->get_records("$dbmatrix".'_rows', ['matrixid' => $matrixid]);
     foreach ($rtexts as $textkey => $rtext) {
         $rowtext[$rtext->id] = $rtext->shorttext;
     }
-    $clabels = $DB->get_records("$dbmatrix".'_cols', array('matrixid' => $matrixid));
+    $clabels = $DB->get_records("$dbmatrix".'_cols', ['matrixid' => $matrixid]);
     foreach ($clabels as $labelkey => $clabel) {
         $collabel[$clabel->id] = $clabel->shorttext;
     }
-    $goodans = array();// An array of correct choices for a given row, indexed by rodid.
+    $goodans = [];// An array of correct choices for a given row, indexed by rodid.
     foreach ($rowtext as $rkey => $rvalue) {
-        $rans = array();// An array of good answers from this row.
+        $rans = [];// An array of good answers from this row.
         foreach ($collabel as $ckey => $cvalue) {
-            if ($DB->record_exists("$dbmatrix".'_weights', array('rowid' => $rkey, 'colid' => $ckey))) {
+            if ($DB->record_exists("$dbmatrix".'_weights', ['rowid' => $rkey, 'colid' => $ckey])) {
                 $rans[$ckey] = $cvalue;
             }
         }
         $goodans[$rkey] = $rvalue.':&nbsp;'.implode(' & ', $rans);
     }
-    $return = array($rowtext, $collabel, $goodans, $grademethod);
+    $return = [$rowtext, $collabel, $goodans, $grademethod];
     return $return;
 }
 
@@ -760,25 +760,25 @@ function goodans($questionid) {
  */
 function liveviewslots($quizid, $quizcontextid) {
     global $DB;
-    $slots = array();
-    $slotsvalue = array();
-    $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+    $slots = [];
+    $slotsvalue = [];
+    $myslots = $DB->get_records('quiz_slots', ['quizid' => $quizid]);
     $singleqid = optional_param('singleqid', 0, PARAM_INT);
     foreach ($myslots as $key => $value) {
         $slotsvalue[$key] = $value->slot;
     }
     $qreferences = $DB->get_records('question_references',
-        array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+        ['component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot']);
     foreach ($qreferences as $qreference) {
         $slotid = $qreference->itemid;
         $questionbankentryid = $qreference->questionbankentryid;
-        $questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
+        $questionversions = $DB->get_records('question_versions', ['questionbankentryid' => $questionbankentryid]);
         foreach ($questionversions as $questionversion) {
             $questionid = $questionversion->questionid;
         }
-		if (($singleqid == 0) || ($singleqid == $questionid)) {
-			$slots[$questionid] = $slotsvalue[$slotid];
-		}
+        if (($singleqid == 0) || ($singleqid == $questionid)) {
+            $slots[$questionid] = $slotsvalue[$slotid];
+        }
     }
     return $slots;
 }
@@ -798,9 +798,9 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
     foreach ($hidden as $hkey => $hvalue) {
         $$hkey = $hvalue;
     }
-    $initials = array();
-    $slots = array();
-    $question = array();
+    $initials = [];
+    $slots = [];
+    $question = [];
     $slots = liveviewslots($quizid, $quizcontextid);
     $question = liveviewquestion($slots, $singleqid);
     $sofar = liveview_who_sofar_gridview($quizid);
@@ -808,7 +808,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
         foreach ($sofar as $unuser) {
             // If only a group is desired, make sure this student is in the group.
             if ($group) {
-                if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $unuser])) {
                     $getresponse = true;
                 } else {
                     $getresponse = false;
@@ -817,7 +817,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
                 $getresponse = true;
             }
             if ($getresponse) {
-                $usr = $DB->get_record('user', array('id' => $unuser));
+                $usr = $DB->get_record('user', ['id' => $unuser]);
                 if ($order) {
                     $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
                 } else {
@@ -855,7 +855,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
         echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
     }
     // The array for storing the all the texts for tootips.
-    $tooltiptext = array();
+    $tooltiptext = [];
     $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
     $togglekey = '';
     foreach ($slots as $key => $slotvalue) {
@@ -865,7 +865,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
             $buttontext = trim($safequestionname);
             $myquestiontext = preg_replace("/[\r\n]+/", '<br />', $question['questiontext'][$key]);
             if (preg_match('/src=\"@@PLUGINFILE@@/', $myquestiontext, $matches)) {
-                $quiz = $DB->get_record('quiz', array('id' => $quizid));
+                $quiz = $DB->get_record('quiz', ['id' => $quizid]);
                 $qslot = $slots[$key];
                 $myquestiontext = changepic_url($myquestiontext, $key, $quiz->course, $qslot, $USER->id);
             }
@@ -895,7 +895,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
         }
         if ($question['qtype'][$key] == 'matrix') {
             // Put in correct row answers for each matrix question.
-            $goodans[$key] = array();// The good answer for each row, indexed by row. There each question has unique rowids.
+            $goodans[$key] = [];// The good answer for each row, indexed by row. There each question has unique rowids.
             list($rowtext[$key], $collabel[$key], $goodans[$key], $grademethod[$key]) = goodans($key);
         }
     }
@@ -909,7 +909,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
             foreach ($sofar as $unuser) {
                 // If only a group is desired, make sure this student is in the group.
                 if ($group) {
-                    if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                    if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $unuser])) {
                         $getresponse = true;
                     } else {
                         $getresponse = false;
@@ -918,7 +918,7 @@ function liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizconte
                     $getresponse = true;
                 }
                 if ($getresponse) {
-                    $usr = $DB->get_record('user', array('id' => $unuser));
+                    $usr = $DB->get_record('user', ['id' => $unuser]);
                     if ($order) {
                         $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
                     } else {
@@ -1134,7 +1134,7 @@ function liveviewgrid_update_hidden ($course) {
     $shownames = optional_param('shownames', 1, PARAM_INT);
     $status = optional_param('status', 0, PARAM_INT);
     $showautorefresh = optional_param('showautorefresh', 1, PARAM_INT);
-    if ($lessons = $DB->get_records('lesson', array('course' => $course->id))) {
+    if ($lessons = $DB->get_records('lesson', ['course' => $course->id])) {
         $haslesson = 1;
         $lessonid = optional_param('lessonid', 0, PARAM_INT);
         $showlesson = optional_param('showlesson', 0, PARAM_INT);
@@ -1146,7 +1146,7 @@ function liveviewgrid_update_hidden ($course) {
     $refresht = optional_param('refresht', 30, PARAM_INT);
     $activetime = optional_param('activetime', 10, PARAM_INT);
     // The array of hidden values is hidden[].
-    $hidden = array();
+    $hidden = [];
     $hidden['rag'] = $rag;
     $hidden['id'] = $id;
     $hidden['mode'] = $mode;
@@ -1216,8 +1216,8 @@ function liveviewgrid_display_option_form ($hidden) {
     if ($haslesson) {
         echo "<input type='hidden' name='lessonid' value=$lessonid>";
     }
-    $checked = array();
-    $notchecked = array();
+    $checked = [];
+    $notchecked = [];
     foreach ($hidden as $hiddenkey => $hiddenvalue) {
         if ($hiddenvalue) {
             $checked[$hiddenkey] = 'checked';
@@ -1227,7 +1227,7 @@ function liveviewgrid_display_option_form ($hidden) {
             $notchecked[$hiddenkey] = 'checked';
         }
     }
-    $twait = array(5, 10, 20, 30, 60, 200);
+    $twait = [5, 10, 20, 30, 60, 200];
     foreach ($twait as $myt) {
         $tindex = 'refresht'.$myt;
         if ($refresht == $myt) {
@@ -1236,7 +1236,7 @@ function liveviewgrid_display_option_form ($hidden) {
             $checked[$tindex] = '';
         }
     }
-    $tactive = array(5, 10, 30, 60, 600);
+    $tactive = [5, 10, 30, 60, 600];
     foreach ($tactive as $mat) {
         $aindex = 'activet'.$mat;
         if ($activetime == $mat) {
@@ -1333,16 +1333,16 @@ function liveviewgrid_display_option_form ($hidden) {
  */
 function liveviewquestion($slots, $singleqid) {
     global $DB;
-    $question = array();
+    $question = [];
     if ($singleqid > 0) {
         $questionid = $singleqid;
-        $myquestion = $DB->get_record('question', array('id' => $questionid));
+        $myquestion = $DB->get_record('question', ['id' => $questionid]);
         $question['qtype'][$questionid] = $myquestion->qtype;
         $question['name'][$questionid] = $myquestion->name;
         $question['questiontext'][$questionid] = $myquestion->questiontext;
     } else {
         foreach ($slots as $questionid => $slotvalue) {
-            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+            if ($myquestion = $DB->get_record('question', ['id' => $questionid])) {
                 $question['qtype'][$questionid] = $myquestion->qtype;
                 $question['name'][$questionid] = $myquestion->name;
                 $question['questiontext'][$questionid] = $myquestion->questiontext;
@@ -1362,14 +1362,14 @@ function liveviewquestion($slots, $singleqid) {
  */
 function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
     global $CFG, $DB;
-    $pics = array();
+    $pics = [];
     $pics = explode('@@PLUGINFILE@@/', $qtext2);
     $time = time();
     if ($maxtimes = $DB->get_records_sql("SELECT MAX(timemodified) FROM {question_attempts} WHERE questionid = $questionid")) {
         foreach ($maxtimes as $tkey => $maxtime) {
             $timemodified = $tkey;
         }
-        $qattempts = $DB->get_records('question_attempts', array('timemodified' => $timemodified));
+        $qattempts = $DB->get_records('question_attempts', ['timemodified' => $timemodified]);
         foreach ($qattempts as $qattempt) {
             $behaviour = $qattempt->behaviour;
             $variant = $qattempt->variant;
@@ -1388,18 +1388,18 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
         $qsummary = '';
         $rightanswer = '';
     }
-    $ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+    $ccontext = $DB->get_record('context', ['contextlevel' => 50, 'instanceid' => $courseid]);
     $coursecontextid = $ccontext->id;
-    $ucontext = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $userid));
+    $ucontext = $DB->get_record('context', ['contextlevel' => 30, 'instanceid' => $userid]);
     $usercontextid = $ucontext->id;
-    $quba = $DB->insert_record('question_usages', array('contextid' => $usercontextid,
-        'component' => 'core_question_preview', 'preferredbehaviour' => 'deferredfeedback'));
+    $quba = $DB->insert_record('question_usages', ['contextid' => $usercontextid,
+        'component' => 'core_question_preview', 'preferredbehaviour' => 'deferredfeedback']);
     $attempt =
-        $DB->insert_record('question_attempts', array('questionusageid' => $quba, 'slot' => $slot, 'behaviour' => $behaviour,
+        $DB->insert_record('question_attempts', ['questionusageid' => $quba, 'slot' => $slot, 'behaviour' => $behaviour,
         'questionid' => $questionid, 'variant' => $variant, 'maxmark' => $maxmark, 'minfraction' => $minfraction,
-        'flagged' => $flagged, 'questionsummary' => $qsummary, 'rightanswer' => $rightanswer, 'timemodified' => $time));
-    $astep = $DB->insert_record('question_attempt_steps', array('questionattemptid' => $attempt, 'sequencenumber' => 0,
-        'state' => 'todo', 'timecreated' => $time, 'userid' => $userid));
+        'flagged' => $flagged, 'questionsummary' => $qsummary, 'rightanswer' => $rightanswer, 'timemodified' => $time]);
+    $astep = $DB->insert_record('question_attempt_steps', ['questionattemptid' => $attempt, 'sequencenumber' => 0,
+        'state' => 'todo', 'timecreated' => $time, 'userid' => $userid]);
     $replacetext = $CFG->wwwroot."/pluginfile.php/$coursecontextid/question/questiontext/$quba/$slot/$questionid/";
     $qtextgood = implode($replacetext, $pics);
     return $qtextgood;
@@ -1414,7 +1414,7 @@ function changepic_url($qtext2, $questionid, $courseid, $slot, $userid) {
  */
 function answerpic_url($answer, $questionid, $answerid, $courseid, $userid) {
     global $CFG, $DB;
-    $pics = array();
+    $pics = [];
     $pics = explode('@@PLUGINFILE@@/', $answer);
     $time = time();
     $slot = 1;// Just a dummy number.
@@ -1422,7 +1422,7 @@ function answerpic_url($answer, $questionid, $answerid, $courseid, $userid) {
         foreach ($maxtimes as $tkey => $maxtime) {
             $timemodified = $tkey;
         }
-        $qattempts = $DB->get_records('question_attempts', array('timemodified' => $timemodified));
+        $qattempts = $DB->get_records('question_attempts', ['timemodified' => $timemodified]);
         foreach ($qattempts as $qattempt) {
             $behaviour = $qattempt->behaviour;
             $variant = $qattempt->variant;
@@ -1441,20 +1441,20 @@ function answerpic_url($answer, $questionid, $answerid, $courseid, $userid) {
         $qsummary = '';
         $rightanswer = '';
     }
-     $ccontext = $DB->get_record('context', array('contextlevel' => 50, 'instanceid' => $courseid));
+     $ccontext = $DB->get_record('context', ['contextlevel' => 50, 'instanceid' => $courseid]);
     $coursecontextid = $ccontext->id;
-    $ucontext = $DB->get_record('context', array('contextlevel' => 30, 'instanceid' => $userid));
+    $ucontext = $DB->get_record('context', ['contextlevel' => 30, 'instanceid' => $userid]);
     $usercontextid = $ucontext->id;
-    $quba = $DB->insert_record('question_usages', array('contextid' => $usercontextid, 'component' => 'core_question_preview',
-        'preferredbehaviour' => 'deferredfeedback'));
+    $quba = $DB->insert_record('question_usages', ['contextid' => $usercontextid, 'component' => 'core_question_preview',
+        'preferredbehaviour' => 'deferredfeedback']);
     $attempt =
-        $DB->insert_record('question_attempts', array('questionusageid' => $quba, 'slot' => $slot, 'behaviour' => $behaviour,
+        $DB->insert_record('question_attempts', ['questionusageid' => $quba, 'slot' => $slot, 'behaviour' => $behaviour,
         'questionid' => $questionid, 'variant' => $variant, 'maxmark' => $maxmark, 'minfraction' => $minfraction,
-        'flagged' => $flagged, 'questionsummary' => $qsummary, 'rightanswer' => $rightanswer, 'timemodified' => $time));
-    $astep = $DB->insert_record('question_attempt_steps', array('questionattemptid' => $attempt, 'sequencenumber' => 0,
-        'state' => 'todo', 'timecreated' => $time, 'userid' => $userid));
+        'flagged' => $flagged, 'questionsummary' => $qsummary, 'rightanswer' => $rightanswer, 'timemodified' => $time]);
+    $astep = $DB->insert_record('question_attempt_steps', ['questionattemptid' => $attempt, 'sequencenumber' => 0,
+        'state' => 'todo', 'timecreated' => $time, 'userid' => $userid]);
     $astepdata = $DB->insert_record('question_attempt_step_data',
-        array('attemptstepid' => $astep, 'name' => '_order', 'value' => $answerid));
+        ['attemptstepid' => $astep, 'name' => '_order', 'value' => $answerid]);
     $replacetext = $CFG->wwwroot."/pluginfile.php/$coursecontextid/question/answer/$quba/$slot/$answerid/";
     $answergood = implode($replacetext, $pics);
     return $answergood;

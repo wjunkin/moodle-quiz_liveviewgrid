@@ -103,3 +103,7 @@ Changes for version v5.0.13 (2023041100)
     The teacher has the option to hide the key of grading colors.
     The teacher can choose how often to refresh the view.
     The program starts to handle geogebra questiontypes correctly.
+Changes for version v5.0.17 (2026031900)
+    The program now workd with Moodle 5.0+.
+    The program handles matrix qtype questions.
+    The program meets Moodle coding standards. (Biggest change: Using php short array syntax, i.e. $x = []; instead of $x = array().

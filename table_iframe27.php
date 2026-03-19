@@ -22,6 +22,7 @@
  * @author    William (Bill) Junkin <junkinwf@eckerd.edu>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewgrid_fraction.php");
@@ -35,9 +36,9 @@ require_once($CFG->dirroot."/question/engine/lib.php");
 
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
 $id = optional_param('id', 0, PARAM_INT);
-$cm = $DB->get_record('course_modules', array('id' => $id));
-$course = $DB->get_record('course', array('id' => $cm->course));
-$quiz = $DB->get_record('quiz', array('id' => $cm->instance));
+$cm = $DB->get_record('course_modules', ['id' => $id]);
+$course = $DB->get_record('course', ['id' => $cm->course]);
+$quiz = $DB->get_record('quiz', ['id' => $cm->instance]);
 $hidden = liveviewgrid_update_hidden($course);
 foreach ($hidden as $hkey => $hvalue) {
     $$hkey = $hvalue;
@@ -50,10 +51,10 @@ echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_liv
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"".$CFG->wwwroot."/theme/styles.php/".
      $CFG->theme."/".$CFG->themerev."_2/all\" />";
 echo "\n</head><body>";
-$slots = array();
-$question = array();
-$users = array();
-$sofar = array();
+$slots = [];
+$question = [];
+$users = [];
+$sofar = [];
 $quizid = $quiz->id;
 $answer = '';
 $graphicshashurl = '';
@@ -64,17 +65,17 @@ require_login($course, true, $cm);
 $quizcontextid = $context->id;
 $slots = liveviewslots($quizid, $quizcontextid);
 $question = liveviewquestion($slots, $singleqid);
-$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+$quizattempts = $DB->get_records('quiz_attempts', ['quiz' => $quizid]);
 // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
-$stanswers = array();
-$stfraction = array();
+$stanswers = [];
+$stfraction = [];
 list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
 // Check to see if the teacher has permissions to see all groups or the selected group.
 $groupmode = groups_get_activity_groupmode($cm, $course);
 $currentgroup = groups_get_activity_group($cm, true);
 $contextmodule = context_module::instance($cm->id);
 // The array of hidden values is hidden[].
-$hidden = array();
+$hidden = [];
 $hidden['rag'] = $rag;
 $hidden['id'] = $id;
 $hidden['mode'] = $mode;
@@ -109,7 +110,7 @@ if ($groupmode == 1 && !has_capability('moodle/site:accessallgroups', $contextmo
         $showresponses = false;
         echo get_string('pickgroup', 'quiz_liveviewgrid');
     } else if ($currentgroup > 0) {
-        if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
+        if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $USER->id])) {
             // The teacher is a member of this group.
             $showresponses = true;
         } else {
@@ -155,13 +156,13 @@ $courseid = $course->id;
 // If the code there changes, this will have to be modified accordingly.
 if (($lessonid) && (count($sofar))) {
     require_once($CFG->dirroot.'/mod/lesson/locallib.php');
-    $lessonmoduleid = $DB->get_record('modules', array('name' => 'lesson'));
+    $lessonmoduleid = $DB->get_record('modules', ['name' => 'lesson']);
     $lmid = $lessonmoduleid->id;
-    $cm = $DB->get_record('course_modules', array('instance' => $lessonid, 'course' => $course->id, 'module' => $lmid));
-    $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST), $cm, $course);
+    $cm = $DB->get_record('course_modules', ['instance' => $lessonid, 'course' => $course->id, 'module' => $lmid]);
+    $lesson = new lesson($DB->get_record('lesson', ['id' => $cm->instance], '*', MUST_EXIST), $cm, $course);
     // I can't use any method from the lesson class that uses the $USER global variable.
     $pages = $lesson->load_all_pages();
-    $lessonstatus = array();// The array that has the text for lesson status.
+    $lessonstatus = [];// The array that has the text for lesson status.
     foreach ($sofar as $myuserid) {
         foreach ($pages as $page) {
             if ($page->prevpageid == 0) {
@@ -169,17 +170,17 @@ if (($lessonid) && (count($sofar))) {
                 break;
             }
         }
-        if (!$ntries = $DB->count_records("lesson_grades", array("lessonid" => $lessonid, "userid" => $myuserid))) {
+        if (!$ntries = $DB->count_records("lesson_grades", ["lessonid" => $lessonid, "userid" => $myuserid])) {
             $ntries = 0;// May not be necessary.
         }
-        $viewedpageids = array();
-        $myparams = array("lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries);
+        $viewedpageids = [];
+        $myparams = ["lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries];
         if ($attempts = $DB->get_records('lesson_attempts', $myparams, 'timeseen ASC')) {
             foreach ($attempts as $attempt) {
                 $viewedpageids[$attempt->pageid] = $attempt;
             }
         }
-        $viewedbranches = array();
+        $viewedbranches = [];
         // Collect all of the branch tables viewed.
         if ($branches = $lesson->get_content_pages_viewed($ntries, $myuserid, 'timeseen ASC', 'id, pageid')) {
             foreach ($branches as $branch) {
@@ -193,7 +194,7 @@ if (($lessonid) && (count($sofar))) {
         // - Pages found inside of Clusters
         // Do not filter out Cluster Page(s) because we count a cluster as one.
         // By keeping the cluster page, we get our 1.
-        $validpages = array();
+        $validpages = [];
         while ($pageid != 0) {
             $pageid = $pages[$pageid]->valid_page_and_view($validpages, $viewedpageids);
         }
@@ -256,12 +257,12 @@ echo "\n }";
 echo "\n</script>";
 // Getting and preparing to sorting users.
 // The first and last name are in the initials array.
-$initials = array();
+$initials = [];
 if (count($sofar) > 0) {
     foreach ($sofar as $unuser) {
         // If only a group is desired, make sure this student is in the group.
         if ($group) {
-            if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+            if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $unuser])) {
                 $getresponse = true;
             } else {
                 $getresponse = false;
@@ -270,7 +271,7 @@ if (count($sofar) > 0) {
             $getresponse = true;
         }
         if ($getresponse) {
-            $usr = $DB->get_record('user', array('id' => $unuser));
+            $usr = $DB->get_record('user', ['id' => $unuser]);
             if ($order) {
                 $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
             } else {
@@ -294,7 +295,7 @@ liveviewgrid_display_table($hidden, $showresponses, $quizid, $quizcontextid);
 $graphicshashurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/graphicshash.php?id=$id";
 // The number of seconds before checking to see if the answers have changed is the $refreshtime.
 $refreshtime = $refresht;
-$sessionconfig = $DB->get_record('config', array('name' => 'sessiontimeout'));
+$sessionconfig = $DB->get_record('config', ['name' => 'sessiontimeout']);
 $sessiontimeout = $sessionconfig->value;
 $maxrepeat = intval($sessiontimeout / $refreshtime);
 // The number of refreshes without a new answer is $numrefresh.
@@ -342,7 +343,7 @@ echo "\n</body></html>";
 function liveviewlessonmenu($courseid, $geturl, $canaccess, $hidden) {
     global $DB, $USER;
     echo "\n<table border=0><tr>";
-    $lessons = $DB->get_records('lesson', array('course' => $courseid));
+    $lessons = $DB->get_records('lesson', ['course' => $courseid]);
     echo "\n<td><form action=\"$geturl\">";
     foreach ($hidden as $key => $value) {
         if ($key <> 'lessonid') {
@@ -372,7 +373,7 @@ function liveviewquizmaxtime($quizcontextid) {
         SELECT max(qa.timemodified)
         FROM {question_attempts} qa
         JOIN {question_usages} qu ON qu.id = qa.questionusageid
-        WHERE qu.contextid = ?", array($quizcontextid));
+        WHERE qu.contextid = ?", [$quizcontextid]);
     $arg = 'max(qa.timemodified)';
     $qmaxtime = intval($quiztime->$arg) + 1;
     return $qmaxtime;

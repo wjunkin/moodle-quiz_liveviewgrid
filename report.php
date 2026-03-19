@@ -33,6 +33,8 @@ require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/classes/quiz_liveviewg
 // The function liveviewgrid_get_answers($quizid).
 
 require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
+
+// Class quiz_liveviewgrid_report extends quiz_default_report. This was changed for Moodle 500 to the line below.
 /**
  * The class quiz_liveviewgrid_report provides a dynamic spreadsheet of the quiz.
  *
@@ -42,7 +44,6 @@ require_once($CFG->dirroot."/mod/quiz/report/liveviewgrid/locallib.php");
  * @copyright 2018 William Junkin
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-//class quiz_liveviewgrid_report extends quiz_default_report { //This was changed for Moodle 500 to the line below:
 class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
 
     /** @var context_module context of this quiz.*/
@@ -63,17 +64,17 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
     protected $qmaxtime = 0;
     /** @var int The course module id for the quiz. */
     protected $id = 0;
-    /** @var String The string that tells the code in quiz/report which sub-module to use. */
+    /** @var string The string that tells the code in quiz/report which sub-module to use. */
     protected $mode = '';
     /** @var int The context id for the quiz. */
     protected $quizcontextid = 0;
-    /** @var Array The sorted array of the students who are attempting the quiz. */
-    protected $users = array();
-    /** @var Array The array of the students who have attempted the quiz. */
-    protected $sofar = array();
-    /** @var String The answer submitted to a question. */
+    /** @var array The sorted array of the students who are attempting the quiz. */
+    protected $users = [];
+    /** @var array The array of the students who have attempted the quiz. */
+    protected $sofar = [];
+    /** @var string The answer submitted to a question. */
     protected $answer = '';
-    /** @var String The URL where the program can find out if a new response has been submitted and thus update the spreadsheet. */
+    /** @var string The URL where the program can find out if a new response has been submitted and thus update the spreadsheet. */
     protected $graphicshashurl = '';
 
     /**
@@ -91,10 +92,10 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
         }// $cm is the row from the course_modules table for this quiz.
         // This is only needed if this code is going to display the table.
         if ($singleqid > 0) {
-            $slots = array();
-            $question = array();
-            $users = array();
-            $sofar = array();
+            $slots = [];
+            $question = [];
+            $users = [];
+            $sofar = [];
         }
         $quizid = $quiz->id;
         $answer = '';
@@ -107,7 +108,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
         // Since report.php is being displayed from /quiz/report, we need absolute address to get into the liveviewgrid directory.
         echo "\n<link href=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/css/quiz_livereport.css\"
             type=\"text/css\" rel=\"stylesheet\">";
-        $context = $DB->get_record('context', array('instanceid' => $cm->id, 'contextlevel' => 70));
+        $context = $DB->get_record('context', ['instanceid' => $cm->id, 'contextlevel' => 70]);
         $quizcontextid = $context->id;
         // Check to see if the teacher has permissions to see all groups or the selected group.
         $groupmode = groups_get_activity_groupmode($cm, $course);
@@ -147,7 +148,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                 }
                 return true;// Don't show anything if teacher has to select a group and hasn't done this.
             } else if ($currentgroup > 0) {
-                if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $USER->id))) {
+                if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $USER->id])) {
                     // The teacher is a member of this group.
                     $showresponses = true;
                 } else {
@@ -164,10 +165,10 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
         if ($singleqid > 0) {
             $slots = $this->liveviewslots($quizid, $quizcontextid);
             $question = $this->liveviewquestion($slots);
-            $quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+            $quizattempts = $DB->get_records('quiz_attempts', ['quiz' => $quizid]);
             // These arrays are the 'answr' or 'fraction' indexed by userid and questionid.
-            $stanswers = array();
-            $stfraction = array();
+            $stanswers = [];
+            $stfraction = [];
             list($stanswers, $stfraction, $stlink) = liveviewgrid_get_answers($quizid);
             // End of new location for the above code.
             $qmaxtime = $this->liveviewquizmaxtime($quizcontextid);
@@ -188,9 +189,6 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             echo "\n<br /><a href='".$backurl."'><button class='btn btn-primary'>".
                  get_string('back', 'quiz_liveviewgrid')."</button></a>";
         }
-        $allresponsesurl = $CFG->wwwroot."/mod/quiz/report/liveviewgrid/allresponses.php?";
-        $allresponsesurl .= "rag=$rag&evaluate=$evaluate&showkey=$showkey&order=$order&group=$group";
-        $allresponsesurl .= "&id=$id&mode=$mode&compact=$compact&showanswer=$showanswer&shownames=$shownames";
         if ($showresponses) {
             // CSS style for the table.
             echo "\n<style>";
@@ -199,7 +197,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             echo "\n    }";
             echo "\n</style>";
             if ($singleqid > 0) {
-                $questiontext = $DB->get_record('question', array('id' => $singleqid));
+                $questiontext = $DB->get_record('question', ['id' => $singleqid]);
                 $qtext2 = $questiontext->questiontext;
                 if (preg_match('/src=\"@@PLUGINFILE@@/', $qtext2, $matches)) {
                     $qslot = $slots[$singleqid];
@@ -213,20 +211,20 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                     if ($questiontext->qtype == 'essay') {
                         $rightanswer = get_string('rightansweressay', 'quiz_liveviewgrid');
                     } else if ($questiontext->qtype == 'matrix') {
-                        if ($matrixquestion = $DB->get_record('question_matrix', array
-                            ('questionid' => $singleqid, 'multiple' => 1))) {// Matrix question with checkboxes.
+                        if ($matrixquestion = $DB->get_record('question_matrix',
+                            ['questionid' => $singleqid, 'multiple' => 1])) {// Matrix question with checkboxes.
                             $rightanswer = implode(';&nbsp;', $goodans);
                             // Get correct answers. Get text for rows and labels for answers.
                             $matrixquestionid = $matrixquestion->id;
-                            $matrixrows = $DB->get_records('question_matrix_rows', array('matrixid' => $matrixquestionid));
+                            $matrixrows = $DB->get_records('question_matrix_rows', ['matrixid' => $matrixquestionid]);
                         } else {
-                            $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                            $attempts = $DB->get_records('question_attempts', ['questionid' => $singleqid]);
                             foreach ($attempts as $attempt) {
                                 $rightanswer = $attempt->rightanswer;
                             }
                         }
                     } else {
-                        $attempts = $DB->get_records('question_attempts', array('questionid' => $singleqid));
+                        $attempts = $DB->get_records('question_attempts', ['questionid' => $singleqid]);
                         foreach ($attempts as $attempt) {
                             $rightanswer = $attempt->rightanswer;
                         }
@@ -255,13 +253,13 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             // If the code there changes, this will have to be modified accordingly.
             if (($lessonid) && (count($sofar))) {
                 require_once($CFG->dirroot.'/mod/lesson/locallib.php');
-                $lessonmoduleid = $DB->get_record('modules', array('name' => 'lesson'));
+                $lessonmoduleid = $DB->get_record('modules', ['name' => 'lesson']);
                 $lmid = $lessonmoduleid->id;
-                $cm = $DB->get_record('course_modules', array('instance' => $lessonid, 'course' => $course->id, 'module' => $lmid));
-                $lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST), $cm, $course);
+                $cm = $DB->get_record('course_modules', ['instance' => $lessonid, 'course' => $course->id, 'module' => $lmid]);
+                $lesson = new lesson($DB->get_record('lesson', ['id' => $cm->instance], '*', MUST_EXIST), $cm, $course);
                 // I can't use any method from the lesson class that uses the $USER global variable.
                 $pages = $lesson->load_all_pages();
-                $lessonstatus = array();// The array that has the text for lesson status.
+                $lessonstatus = [];// The array that has the text for lesson status.
                 foreach ($sofar as $myuserid) {
                     foreach ($pages as $page) {
                         if ($page->prevpageid == 0) {
@@ -269,17 +267,17 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                             break;
                         }
                     }
-                    if (!$ntries = $DB->count_records("lesson_grades", array("lessonid" => $lessonid, "userid" => $myuserid))) {
+                    if (!$ntries = $DB->count_records("lesson_grades", ["lessonid" => $lessonid, "userid" => $myuserid])) {
                         $ntries = 0;  // May not be necessary.
                     }
-                    $viewedpageids = array();
-                    $myparams = array("lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries);
+                    $viewedpageids = [];
+                    $myparams = ["lessonid" => $lessonid, "userid" => $myuserid, "retry" => $ntries];
                     if ($attempts = $DB->get_records('lesson_attempts', $myparams, 'timeseen ASC')) {
                         foreach ($attempts as $attempt) {
                             $viewedpageids[$attempt->pageid] = $attempt;
                         }
                     }
-                    $viewedbranches = array();
+                    $viewedbranches = [];
                     // Collect all of the branch tables viewed.
                     if ($branches = $lesson->get_content_pages_viewed($ntries, $myuserid, 'timeseen ASC', 'id, pageid')) {
                         foreach ($branches as $branch) {
@@ -293,7 +291,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                     // - Pages found inside of Clusters
                     // Do not filter out Cluster Page(s) because we count a cluster as one.
                     // By keeping the cluster page, we get our 1.
-                    $validpages = array();
+                    $validpages = [];
                     while ($pageid != 0) {
                         $pageid = $pages[$pageid]->valid_page_and_view($validpages, $viewedpageids);
                     }
@@ -389,7 +387,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
         echo "\n<table><tr><td>";
         echo get_string('responses', 'quiz_liveviewgrid');
         if ($group) {
-            $grpname = $DB->get_record('groups', array('id' => $group));
+            $grpname = $DB->get_record('groups', ['id' => $group]);
             echo get_string('from', 'quiz_liveviewgrid').$grpname->name;
         } else if ($canaccess) {
             echo ' -- ('.get_string('allgroups', 'quiz_liveviewgrid').')';
@@ -408,12 +406,12 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             // Find any student who has not submitted an answer if names are hidden.
             // Getting and preparing to sorting users.
             // The first and last name are in the initials array.
-            $initials = array();
+            $initials = [];
             if (count($sofar) > 0) {
                 foreach ($sofar as $unuser) {
                     // If only a group is desired, make sure this student is in the group.
                     if ($group) {
-                        if ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $unuser))) {
+                        if ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $unuser])) {
                             $getresponse = true;
                         } else {
                             $getresponse = false;
@@ -422,7 +420,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                         $getresponse = true;
                     }
                     if ($getresponse) {
-                        $usr = $DB->get_record('user', array('id' => $unuser));
+                        $usr = $DB->get_record('user', ['id' => $unuser]);
                         if ($order) {
                             $initials[$unuser] = $usr->firstname.'&nbsp;'.$usr->lastname;
                         } else {
@@ -476,7 +474,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
 
             $answertext = get_string('answeredquizno', 'quiz_liveviewgrid');
             if (count($initials) > 0) {
-                $noanswer = array();
+                $noanswer = [];
                 $noa = 0;
                 $answertext = get_string('answeredqno', 'quiz_liveviewgrid');
                 foreach ($initials as $key => $initial) {
@@ -560,17 +558,18 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             // Put in a histogram if the question has a histogram and a single question is displayed.
             if ($singleqid > 0) {
                 $trun = 200;
-                $multitype = array('multichoice', 'truefalse', 'calculatedmulti');
+                $multitype = ['multichoice', 'truefalse', 'calculatedmulti'];
                 if (in_array($questiontext->qtype, $multitype)) {
                     $getvalues = "questionid=".$questiontext->id."&evaluate=$evaluate&courseid=".$quiz->course;
                     $getvalues .= "&quizid=$quizid&group=$group&cmid=".$cm->id."&order=$order&shownames=$shownames&rag=$rag";
                     $getvalues .= "&activetime=$activetime";
-                        echo "<iframe style=\"height:4000px;\"src=\"".$CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
+                        echo "<iframe style=\"height:4000px;\"src=\"".
+                            $CFG->wwwroot."/mod/quiz/report/liveviewgrid/tooltip_histogram.php?$getvalues\"
                             frameBorder=0 width='800'>";
                         echo "</iframe>";
                 } else if ($questiontext->qtype == 'matrix') {
-                    $mdata = array();// An array for the number of times a row is answered correctly.
-                    $mdatax = array();// An array for the number of times a row is answered incorrectly.
+                    $mdata = [];// An array for the number of times a row is answered correctly.
+                    $mdatax = [];// An array for the number of times a row is answered incorrectly.
                     $rowcount = count($rowtext);
                     foreach ($rowtext as $key => $value) {
                         $mdata[$key] = 0;
@@ -654,7 +653,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
                 echo "<td>".get_string('progress', 'quiz_liveviewgrid')."</td>";
             }
             // The array for storing the all the texts for tootips.
-            $tooltiptext = array();
+            $tooltiptext = [];
 
             $geturl = $CFG->wwwroot.'/mod/quiz/report/liveviewgrid/report.php';
             foreach ($slots as $key => $slotvalue) {
@@ -871,7 +870,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
     private function liveviewlessonmenu($courseid, $geturl, $canaccess, $hidden) {
         global $DB, $USER;
         echo "\n<table border=0><tr>";
-        $lessons = $DB->get_records('lesson', array('course' => $courseid));
+        $lessons = $DB->get_records('lesson', ['course' => $courseid]);
         echo "\n<td><form action=\"$geturl\">";
         foreach ($hidden as $key => $value) {
             if ($key <> 'lessonid') {
@@ -901,7 +900,7 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
             SELECT max(qa.timemodified)
             FROM {question_attempts} qa
             JOIN {question_usages} qu ON qu.id = qa.questionusageid
-            WHERE qu.contextid = ?", array($quizcontextid));
+            WHERE qu.contextid = ?", [$quizcontextid]);
         $arg = 'max(qa.timemodified)';
         $qmaxtime = intval($quiztime->$arg) + 1;
         return $qmaxtime;
@@ -915,19 +914,19 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
      */
     private function liveviewslots($quizid, $quizcontextid) {
         global $DB;
-        $slots = array();
-        $slotsvalue = array();
-        $myslots = $DB->get_records('quiz_slots', array('quizid' => $quizid));
+        $slots = [];
+        $slotsvalue = [];
+        $myslots = $DB->get_records('quiz_slots', ['quizid' => $quizid]);
         $singleqid = optional_param('singleqid', 0, PARAM_INT);
         foreach ($myslots as $key => $value) {
             $slotsvalue[$key] = $value->slot;
         }
         $qreferences = $DB->get_records('question_references',
-             array('component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot'));
+             ['component' => 'mod_quiz', 'usingcontextid' => $quizcontextid, 'questionarea' => 'slot']);
         foreach ($qreferences as $qreference) {
             $slotid = $qreference->itemid;
             $questionbankentryid = $qreference->questionbankentryid;
-            $questionversions = $DB->get_records('question_versions', array('questionbankentryid' => $questionbankentryid));
+            $questionversions = $DB->get_records('question_versions', ['questionbankentryid' => $questionbankentryid]);
             foreach ($questionversions as $questionversion) {
                 $questionid = $questionversion->questionid;
             }
@@ -945,9 +944,9 @@ class quiz_liveviewgrid_report extends mod_quiz\local\reports\report_base {
      */
     private function liveviewquestion($slots) {
         global $DB;
-        $question = array();
+        $question = [];
         foreach ($slots as $questionid => $slotvalue) {
-            if ($myquestion = $DB->get_record('question', array('id' => $questionid))) {
+            if ($myquestion = $DB->get_record('question', ['id' => $questionid])) {
                 $question['qtype'][$questionid] = $myquestion->qtype;
                 $question['name'][$questionid] = $myquestion->name;
                 $question['questiontext'][$questionid] = $myquestion->questiontext;

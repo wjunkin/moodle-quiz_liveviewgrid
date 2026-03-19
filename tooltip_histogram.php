@@ -23,6 +23,7 @@
  * @copyright  2012 W. F. Junkin, Eckerd College, http://www.eckerd.edu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
 defined('MOODLE_INTERNAL') || die();
 $rag = optional_param('rag', 1, PARAM_INT);
@@ -33,16 +34,16 @@ $evaluate = optional_param('evaluate', 1, PARAM_INT);
 $group = optional_param('group', 0, PARAM_INT);
 $shownames = optional_param('shownames', 0, PARAM_INT);
 $order = optional_param('order', 0, PARAM_INT);
-$questiontext = $DB->get_record('question', array('id' => $questionid));
+$questiontext = $DB->get_record('question', ['id' => $questionid]);
 $cmid = optional_param('cmid', 0, PARAM_INT);
 $cm = get_coursemodule_from_id('quiz', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $courseid));
+$course = $DB->get_record('course', ['id' => $courseid]);
 require_login($course, true, $cm);
 $context = context_module::instance($cmid);
 require_capability('mod/quiz:manage', $context);
-$barnames = array(); // An array of the names associated with each choice. Index = choice and value = studentid.
+$barnames = []; // An array of the names associated with each choice. Index = choice and value = studentid.
 // For those questions that have answers, get the possible answers and create the labels for the histogram.
-if ($answers = $DB->get_records('question_answers', array('question' => $questionid))) {
+if ($answers = $DB->get_records('question_answers', ['question' => $questionid])) {
     $labels = '';
     $fraction = '';
     $n = 0;
@@ -59,26 +60,26 @@ if ($answers = $DB->get_records('question_answers', array('question' => $questio
         $n++;
     }
 }
-$stans = array();// The string of answers for each student to this question, indexed by the $userid.
-$startedquiz = array();// An array, one for each person who has started the quiz.
-$quizattempts = $DB->get_records('quiz_attempts', array('quiz' => $quizid));
+$stans = [];// The string of answers for each student to this question, indexed by the $userid.
+$startedquiz = [];// An array, one for each person who has started the quiz.
+$quizattempts = $DB->get_records('quiz_attempts', ['quiz' => $quizid]);
 foreach ($quizattempts as $quizattempt) {
     $userid = $quizattempt->userid;
     // Check that groups are not being used or that the student is a member of the group.
-    if (($group == 0) || ($DB->get_record('groups_members', array('groupid' => $group, 'userid' => $userid)))) {
+    if (($group == 0) || ($DB->get_record('groups_members', ['groupid' => $group, 'userid' => $userid]))) {
         $startedquiz[$userid] = $userid;
         $uniqueid = $quizattempt->uniqueid;
         $questionattempts = $DB->get_records('question_attempts'
-            , array('questionusageid' => $uniqueid, 'questionid' => $questionid));
+            , ['questionusageid' => $uniqueid, 'questionid' => $questionid]);
         foreach ($questionattempts as $questionattempt) {
             $attemptid = $questionattempt->id;
-            $attemptsteps = $DB->get_records('question_attempt_steps', array('questionattemptid' => $attemptid));
+            $attemptsteps = $DB->get_records('question_attempt_steps', ['questionattemptid' => $attemptid]);
             foreach ($attemptsteps as $attemptstep) {
                 // Every time a student submits an answer, this generates a new question_attempt_step.
                 // Submitting one answer can generate several rows in the question_attempt_step_data table.
-                $stanswer = array();// The array of questionanswerids for this student for multichoice with several answers.
+                $stanswer = [];// The array of questionanswerids for this student for multichoice with several answers.
                 $attemptstepid = $attemptstep->id;
-                $attemptdata = $DB->get_records('question_attempt_step_data',  array('attemptstepid' => $attemptstepid));
+                $attemptdata = $DB->get_records('question_attempt_step_data',  ['attemptstepid' => $attemptstepid]);
                 foreach ($attemptdata as $datainfo) {
                     $name = $datainfo->name;
                     $value = $datainfo->value;
@@ -114,7 +115,7 @@ foreach ($quizattempts as $quizattempt) {
     }
 }
 $noansweryet = $startedquiz;// As each student submits an answer, their element in the $noanswer array is removed.
-$myx = array();
+$myx = [];
 foreach ($qanswerids as $qanswerid) {
     $myx[$qanswerid] = 0;
     $barnames[$qanswerid] = '';
@@ -126,7 +127,7 @@ foreach ($stans as $key => $value) {
         foreach ($values as $qansid) {
             if (isset($myx[$qansid])) {
                 $myx[$qansid] ++;
-                $name = $DB->get_record('user', array('id' => $key));
+                $name = $DB->get_record('user', ['id' => $key]);
                 if ($order == 1) {// Order by first name.
                     $barnames[$qansid] .= $name->firstname.'&nbsp;'.$name->lastname.';;';
                 } else {
@@ -139,7 +140,7 @@ foreach ($stans as $key => $value) {
     }
 }
 // If the count of $noansweryet > 0 and show names, a new bar will be created with these noanswer names and its %.
-$qanswers = $DB->get_records('question_answers', array('question' => $questionid));
+$qanswers = $DB->get_records('question_answers', ['question' => $questionid]);
 $i = 0;
 foreach ($qanswers as $qanswer) {
     $mynames[$i] = $barnames[$qanswer->id];
@@ -153,7 +154,7 @@ if ((count($noansweryet) > 0) && $shownames) {
     $addedbar = $i++;
     $barnames[$addedbar] = '';
     foreach ($noansweryet as $key => $value) {
-        $name = $DB->get_record('user', array('id' => $key));
+        $name = $DB->get_record('user', ['id' => $key]);
         if ($order == 1) {// Order by first name.
             $barnames[$addedbar] .= $name->firstname.'&nbsp;'.$name->lastname.';;';
         } else {
@@ -163,7 +164,7 @@ if ((count($noansweryet) > 0) && $shownames) {
     $mynames[$addedbar] = $barnames[$addedbar];
     $myx[] = count($noansweryet);// The myx is indexed by answer number, all others start with 0.
     // No need to add in a fraction, since the default color will be blue.
-    $labels = $labels."&x[$addedbar]=".get_string('NA', 'quiz_liveviewgrid');// NA stands for No Answer.
+    $labels = $labels."&x[$addedbar]=".get_string('na', 'quiz_liveviewgrid');// NA stands for No Answer.
     $numofbars ++;
 }
 $mygraphinfo = "data=".implode(",", $myx).$labels.$fraction."&total=10&cmid=$cmid";
@@ -258,7 +259,7 @@ echo "
 ";
 echo "\n</style>";
 echo "\n<body style=\"text-align:center;\">";
-$y = array();
+$y = [];
 $xaxis = '';
 for ($i = 0; $i < $numofbars; $i++) {
     $y[$i] = $i + 1;

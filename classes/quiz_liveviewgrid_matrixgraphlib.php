@@ -34,7 +34,7 @@ class quiz_liveviewgrid_matrixgraphlib {
     /**
      * @var array of input parameters
      */
-    public $parameter         = array(        // Input parameters.
+    public $parameter         = [        // Input parameters.
         'width'              => 320,          // Default width of image.
         'height'             => 240,          // Default height of image.
         'file_name'          => 'none',        // Name of file for file to be saved as.
@@ -136,13 +136,13 @@ class quiz_liveviewgrid_matrixgraphlib {
         'decimal_point'      => '.',           // Symbol for decimal separation  '.' or ',' *european support.
         'thousand_sep'       => ',',           // Symbol for thousand separation ',' or ''.
 
-    );
+    ];
     /**
-     * @var Array of text values for y-axis tick labels.
+     * @var array of text values for y-axis tick labels.
      */
     public $yticklabels     = null;
     /**
-     * @var Array of offsets for different sets of data.
+     * @var array of offsets for different sets of data.
      */
     public $offsetrelation   = null;
 
@@ -306,7 +306,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         $fromx = 0;
         $fromy = 'none';
 
-        $lvcolours = array('red', 'orange', 'black', 'yellow', 'ltred', 'ltorange', 'lime', 'gray', 'green', 'ltgreen', 'green');
+        $lvcolours = ['red', 'orange', 'black', 'yellow', 'ltred', 'ltorange', 'lime', 'gray', 'green', 'ltgreen', 'green'];
         $nonzeroi = 0;
         while ($yvalue == 0) {
             $yvalue = $this->calculated['y_plot']['responses'][$nonzeroi];
@@ -464,24 +464,24 @@ class quiz_liveviewgrid_matrixgraphlib {
         }
         // Legend border.
         if ($bordercolour != 'none') {
-            $this->draw_rectangle(array('top' => $top,
+            $this->draw_rectangle(['top' => $top,
                 'left' => $left,
                 'bottom' => $bottom,
-                'right' => $right), $this->parameter['legend_border'], 'box');
+                'right' => $right], $this->parameter['legend_border'], 'box');
             // Draw the histogram for the wrong answers.
             $newtop = $top + 2;
             $newbottom = $top;
-            $this->draw_rectangle(array('top' => $newtop,
+            $this->draw_rectangle(['top' => $newtop,
                 'left' => $left,
                 'bottom' => $newbottom,
-                'right' => $right), $this->parameter['legend_border'], 'box');
+                'right' => $right], $this->parameter['legend_border'], 'box');
         }
 
         // Legend text.
-        $legendtext = array('points' => $this->parameter['legend_size'],
+        $legendtext = ['points' => $this->parameter['legend_size'],
             'angle'  => 0,
             'font'   => $this->parameter['legend_font'],
-            'colour' => $this->parameter['legend_colour']);
+            'colour' => $this->parameter['legend_colour']];
 
         $box = $this->calculated['legend']['boundary_box_max']['height']; // Use max height for legend square size.
         $x = $left + $padding;
@@ -498,7 +498,7 @@ class quiz_liveviewgrid_matrixgraphlib {
                 imagefilledrectangle($this->image, $x, $y, $x + $box, $y + $box, $boxcolour);
 
                 // Draw text.
-                $coords = array('x' => $x + $box * 2, 'y' => $y, 'reference' => 'top-left');
+                $coords = ['x' => $x + $box * 2, 'y' => $y, 'reference' => 'top-left'];
                 $legendtext['boundary_box'] = $this->calculated['legend']['boundary_box'][$set];
                 $this->update_boundarybox($legendtext['boundary_box'], $coords);
                 $this->print_ttf($legendtext);
@@ -525,7 +525,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         $y = ($this->calculated['boundary_box']['bottom'] + $this->calculated['boundary_box']['top']) / 2;
 
         $label = $this->calculated['y_label_right'];
-        $coords = array('x' => $x, 'y' => $y, 'reference' => 'left-center');
+        $coords = ['x' => $x, 'y' => $y, 'reference' => 'left-center'];
         $this->update_boundarybox($label['boundary_box'], $coords);
         $this->print_ttf($label);
     }
@@ -547,7 +547,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         $y = ($this->calculated['boundary_box']['bottom'] + $this->calculated['boundary_box']['top']) / 2;
 
         $label = $this->calculated['y_label_left'];
-        $coords = array('x' => $x, 'y' => $y, 'reference' => 'right-center');
+        $coords = ['x' => $x, 'y' => $y, 'reference' => 'right-center'];
         $this->update_boundarybox($label['boundary_box'], $coords);
         $this->print_ttf($label);
     }
@@ -564,7 +564,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         $y = $this->calculated['boundary_box']['top'] - $this->parameter['outer_padding'];
         $x = ($this->calculated['boundary_box']['right'] + $this->calculated['boundary_box']['left']) / 2;
         $label = $this->calculated['title'];
-        $coords = array('x' => $x, 'y' => $y, 'reference' => 'bottom-center');
+        $coords = ['x' => $x, 'y' => $y, 'reference' => 'bottom-center'];
         $this->update_boundarybox($label['boundary_box'], $coords);
         $this->print_ttf($label);
     }
@@ -584,7 +584,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         }
         $x = ($this->calculated['boundary_box']['right'] + $this->calculated['boundary_box']['left']) / 2;
         $label = $this->calculated['x_label'];
-        $coords = array('x' => $x, 'y' => $y, 'reference' => 'top-center');
+        $coords = ['x' => $x, 'y' => $y, 'reference' => 'top-center'];
         $this->update_boundarybox($label['boundary_box'], $coords);
         $this->print_ttf($label);
     }
@@ -663,7 +663,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         }
 
         // Generic tag information. applies to all axis text.
-        $axistag = array('points' => $axissize, 'angle' => $axisangle, 'font' => $axisfont, 'colour' => $axiscolour);
+        $axistag = ['points' => $axissize, 'angle' => $axisangle, 'font' => $axisfont, 'colour' => $axiscolour];
 
         foreach ($this->calculated['x_axis']['tick_x'] as $set => $tickx) {
             // Draw x grid if colour specified.
@@ -686,7 +686,7 @@ class quiz_liveviewgrid_matrixgraphlib {
                 }
 
                 // Draw axis text.
-                $coords = array('x' => $tickx, 'y' => $textbottom, 'reference' => $reference);
+                $coords = ['x' => $tickx, 'y' => $textbottom, 'reference' => $reference];
                 $axistag['text'] = $this->calculated['x_axis']['text'][$set];
                 $axistag['boundary_box'] = $this->calculated['x_axis']['boundary_box'][$set];
                 $this->update_boundarybox($axistag['boundary_box'], $coords);
@@ -711,7 +711,7 @@ class quiz_liveviewgrid_matrixgraphlib {
         $axisfont    = $this->parameter['axisfont'];
         $axissize    = $this->parameter['axissize'];
         $axisangle   = $this->parameter['y_axisangle'];
-        $axistag = array('points' => $axissize, 'angle' => $axisangle, 'font' => $axisfont, 'colour' => $axiscolour);
+        $axistag = ['points' => $axissize, 'angle' => $axisangle, 'font' => $axisfont, 'colour' => $axiscolour];
 
         if ($this->calculated['y_axis_left']['has_data']) {
             // LEFT HAND SIDE.
@@ -760,7 +760,7 @@ class quiz_liveviewgrid_matrixgraphlib {
                     }
 
                     // Draw axis text...
-                    $coords = array('x' => $textright, 'y' => $ticky, 'reference' => $reference);
+                    $coords = ['x' => $textright, 'y' => $ticky, 'reference' => $reference];
                     $axistag['text'] = $this->calculated['y_axis_left']['text'][$set];
                     $axistag['boundary_box'] = $this->calculated['y_axis_left']['boundary_box'][$set];
                     $this->update_boundarybox($axistag['boundary_box'], $coords);
@@ -814,7 +814,7 @@ class quiz_liveviewgrid_matrixgraphlib {
                     }
 
                     // Draw axis text...
-                    $coords = array('x' => $textleft, 'y' => $ticky, 'reference' => $reference);
+                    $coords = ['x' => $textleft, 'y' => $ticky, 'reference' => $reference];
                     $axistag['text'] = $this->calculated['y_axis_right']['text'][$set];
                     $axistag['boundary_box'] = $this->calculated['y_axis_left']['boundary_box'][$set];
                     $this->update_boundarybox($axistag['boundary_box'], $coords);
@@ -829,7 +829,7 @@ class quiz_liveviewgrid_matrixgraphlib {
      *
      */
     public function init_data() {
-        $this->calculated['y_plot'] = array(); // Array to hold pixel plotting coords for y axis.
+        $this->calculated['y_plot'] = []; // Array to hold pixel plotting coords for y axis.
         $height = $this->calculated['boundary_box']['bottom'] - $this->calculated['boundary_box']['top'];
         $width  = $this->calculated['boundary_box']['right'] - $this->calculated['boundary_box']['left'];
 
@@ -967,10 +967,10 @@ class quiz_liveviewgrid_matrixgraphlib {
     public function init_labels() {
         if ($this->parameter['title']) {
             $size = $this->get_boundarybox(
-                array('points' => $this->parameter['title_size'],
+                ['points' => $this->parameter['title_size'],
                       'angle'  => 0,
                       'font'   => $this->parameter['title_font'],
-                      'text'   => $this->parameter['title']));
+                      'text'   => $this->parameter['title']]);
             $this->calculated['title']['boundary_box']  = $size;
             $this->calculated['title']['text']         = $this->parameter['title'];
             $this->calculated['title']['font']         = $this->parameter['title_font'];
@@ -1037,7 +1037,7 @@ class quiz_liveviewgrid_matrixgraphlib {
      *
      */
     public function init_legend() {
-        $this->calculated['legend'] = array(); // Array to hold calculated values for legend.
+        $this->calculated['legend'] = []; // Array to hold calculated values for legend.
         $this->calculated['legend']['boundary_box_max'] = $this->get_null_size();
         if ($this->parameter['legend'] == 'none') {
             return;
@@ -1053,10 +1053,10 @@ class quiz_liveviewgrid_matrixgraphlib {
         foreach ($this->y_order as $set) {
              $text = isset($this->y_format[$set]['legend']) ? $this->y_format[$set]['legend'] : 'none';
              $size = $this->get_boundarybox(
-                  array('points' => $this->parameter['legend_size'],
+                  ['points' => $this->parameter['legend_size'],
                        'angle'  => 0,
                        'font'   => $this->parameter['legend_font'],
-                       'text'   => $text));
+                       'text'   => $text]);
 
              $this->calculated['legend']['boundary_box'][$set] = $size;
              $this->calculated['legend']['text'][$set]        = $text;
@@ -1078,10 +1078,10 @@ class quiz_liveviewgrid_matrixgraphlib {
         $width = $padding * 2 + $textwidth + $textheight * 2;  // Left and right padding + maximum text width + space for square.
         $height = ($padding + $textheight) * $numsets + $padding; // Top and bottom padding + padding between text + text.
 
-        $this->calculated['legend']['boundary_box_all'] = array('width'     => $width,
+        $this->calculated['legend']['boundary_box_all'] = ['width'     => $width,
                                                               'height'    => $height,
                                                               'offset'    => $offset,
-                                                              'reference' => $position);
+                                                              'reference' => $position];
 
         switch ($position) { // Move in right or bottom if legend is outside data plotting area.
             case 'outside-top' :
@@ -1107,9 +1107,9 @@ class quiz_liveviewgrid_matrixgraphlib {
      *
      */
     public function init_y_axis() {
-        $this->calculated['y_axis_left'] = array(); // Array to hold calculated values for y_axis on left.
+        $this->calculated['y_axis_left'] = []; // Array to hold calculated values for y_axis on left.
         $this->calculated['y_axis_left']['boundary_box_max'] = $this->get_null_size();
-        $this->calculated['y_axis_right'] = array(); // Array to hold calculated values for y_axis on right.
+        $this->calculated['y_axis_right'] = []; // Array to hold calculated values for y_axis on right.
         $this->calculated['y_axis_right']['boundary_box_max'] = $this->get_null_size();
 
         $axisfont       = $this->parameter['axisfont'];
@@ -1126,8 +1126,8 @@ class quiz_liveviewgrid_matrixgraphlib {
         $maxrleft = $this->parameter['y_max_left'];
         $minright = $this->parameter['y_min_right'];
         $maxright = $this->parameter['y_max_right'];
-        $dataleft = array();
-        $dataright = array();
+        $dataleft = [];
+        $dataright = [];
         foreach ($this->y_order as $order => $set) {
             if (isset($this->y_format[$set]['y_axis']) && $this->y_format[$set]['y_axis'] == 'right') {
                 $this->calculated['y_axis_right']['has_data'] = true;
@@ -1167,11 +1167,11 @@ class quiz_liveviewgrid_matrixgraphlib {
                 $this->calculated['y_axis_left']['text'][$i]  = $value; // Text is formatted raw data.
 
                 $size = $this->get_boundarybox(
-                    array('points' => $axissize,
+                    ['points' => $axissize,
                           'font'   => $axisfont,
                           'angle'  => $axisangle,
                           'colour' => $axiscolour,
-                          'text'   => $value));
+                          'text'   => $value]);
                 $this->calculated['y_axis_left']['boundary_box'][$i] = $size;
 
                 if ($size['height'] > $this->calculated['y_axis_left']['boundary_box_max']['height']) {
@@ -1195,11 +1195,11 @@ class quiz_liveviewgrid_matrixgraphlib {
                 $this->calculated['y_axis_right']['data'][$i]  = $startright;
                 $this->calculated['y_axis_right']['text'][$i]  = $value; // Text is formatted raw data.
                 $size = $this->get_boundarybox(
-                    array('points' => $axissize,
+                    ['points' => $axissize,
                           'font'   => $axisfont,
                           'angle'  => $axisangle,
                           'colour' => $axiscolour,
-                          'text'   => $value));
+                          'text'   => $value]);
                 $this->calculated['y_axis_right']['boundary_box'][$i] = $size;
 
                 if ($size['height'] > $this->calculated['y_axis_right']['boundary_box_max']['height']) {
@@ -1221,8 +1221,8 @@ class quiz_liveviewgrid_matrixgraphlib {
      *
      */
     public function init_x_axis() {
-        $this->calculated['x_axis'] = array(); // Array to hold calculated values for x_axis.
-        $this->calculated['x_axis']['boundary_box_max'] = array('height' => 0, 'width' => 0);
+        $this->calculated['x_axis'] = []; // Array to hold calculated values for x_axis.
+        $this->calculated['x_axis']['boundary_box_max'] = ['height' => 0, 'width' => 0];
 
         $axisfont       = $this->parameter['axisfont'];
         $axissize       = $this->parameter['axissize'];
@@ -1238,11 +1238,11 @@ class quiz_liveviewgrid_matrixgraphlib {
                 $this->calculated['x_axis']['data'][$i]  = $value;
                 $this->calculated['x_axis']['text'][$i]  = $value; // Raw data and text are both the same in this case.
                 $size = $this->get_boundarybox(
-                    array('points' => $axissize,
+                    ['points' => $axissize,
                           'font'   => $axisfont,
                           'angle'  => $axisangle,
                           'colour' => $axiscolour,
-                          'text'   => $value));
+                          'text'   => $value]);
                 $this->calculated['x_axis']['boundary_box'][$i] = $size;
                 if ($size['height'] > $this->calculated['x_axis']['boundary_box_max']['height']) {
                     $this->calculated['x_axis']['boundary_box_max'] = $size;
@@ -1254,7 +1254,7 @@ class quiz_liveviewgrid_matrixgraphlib {
 
             $min = $this->parameter['x_min'];
             $max = $this->parameter['x_max'];
-            $data = array();
+            $data = [];
             $data = $this->find_range($this->x_data, $min, $max, $this->parameter['x_resolution']);
             $min = $data['min'];
             $max = $data['max'];
@@ -1271,11 +1271,11 @@ class quiz_liveviewgrid_matrixgraphlib {
                 $this->calculated['x_axis']['text'][$i]  = $value; // Text is formatted raw data.
 
                 $size = $this->get_boundarybox(
-                    array('points' => $axissize,
+                    ['points' => $axissize,
                           'font'   => $axisfont,
                           'angle'  => $axisangle,
                           'colour' => $axiscolour,
-                          'text'   => $value));
+                          'text'   => $value]);
                 $this->calculated['x_axis']['boundary_box'][$i] = $size;
 
                 if ($size['height'] > $this->calculated['x_axis']['boundary_box_max']['height']) {
@@ -1302,7 +1302,7 @@ class quiz_liveviewgrid_matrixgraphlib {
      */
     public function find_range($data, $min, $max, $resolution) {
         if (count($data) == 0 ) {
-            return array('min' => 0, 'max' => 0);
+            return ['min' => 0, 'max' => 0];
         }
         foreach ($data as $key => $value) {
             if ($value == 'none') {
@@ -1331,7 +1331,7 @@ class quiz_liveviewgrid_matrixgraphlib {
 
         $max = $factor * @ceil($max / $factor);
         $min = $factor * @floor($min / $factor);
-        return array('min' => $min, 'max' => $max);
+        return ['min' => $min, 'max' => $max];
     }
 
     /**
@@ -1344,11 +1344,11 @@ class quiz_liveviewgrid_matrixgraphlib {
             $this->parameter['width']  = func_get_arg(0);
             $this->parameter['height'] = func_get_arg(1);
         }
-        $this->calculated['boundary_box'] = array(
+        $this->calculated['boundary_box'] = [
             'left'      => 0,
             'top'       => 0,
             'right'     => $this->parameter['width'] - 1,
-            'bottom'    => $this->parameter['height'] - 1);
+            'bottom'    => $this->parameter['height'] - 1];
 
         $this->init_colours();
     }
@@ -1510,13 +1510,13 @@ class quiz_liveviewgrid_matrixgraphlib {
                 break;
         }
 
-        $boundarybox = array_merge($boundarybox, array('top'       => $top,
+        $boundarybox = array_merge($boundarybox, ['top'       => $top,
                                                        'bottom'    => $bottom,
                                                        'left'      => $left,
                                                        'right'     => $right,
                                                        'x'         => $x,
                                                        'y'         => $y,
-                                                       'reference' => $reference));
+                                                       'reference' => $reference]);
     }
 
     /**
@@ -1525,11 +1525,11 @@ class quiz_liveviewgrid_matrixgraphlib {
      * @return array The Parameters if there is no histogram.
      */
     public function get_null_size() {
-        return array('width'      => 0,
+        return ['width'      => 0,
                      'height'     => 0,
                      'offsetx'    => 0,
                      'offsety'    => 0,
-                     );
+                     ];
     }
 
     /**
@@ -1580,11 +1580,11 @@ class quiz_liveviewgrid_matrixgraphlib {
         }
 
         // Return values.
-        return array('width'      => $width,
+        return ['width'      => $width,
                      'height'     => $height,
                      'offsetx'    => $offsetx,
                      'offsety'    => $offsety,
-                     );
+                     ];
     }
 
     /**
